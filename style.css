@@ -1,0 +1,53 @@
+/* 基本的なリセットとフォント設定 */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    /* モダンな印象のサンセリフフォントを指定 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+}
+
+body {
+    /* Flexboxを使って子要素(center-box)を上下左右中央に配置 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* 背景色を少しグレーに */
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+/* 中央の長方形のスタイル */
+#center-box {
+    /* ビューポート（表示領域）の幅・高さの50%に設定 */
+    width: 50vw; 
+    height: 50vh;
+
+    background-color: #ffffff; /* 背景は白 */
+    border-radius: 12px; /* 角を少し丸める */
+
+    /* 影をつけて立体感を出す */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); 
+
+    /* ボックスの中身(pタグ)も中央に配置 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 2rem; /* 内側の余白 */
+    overflow: hidden; /* 中身がはみ出たら隠す */
+}
+
+/* ボックス内のテキストスタイル */
+#box-text {
+    font-size: 1.5rem; /* 文字サイズ */
+    font-weight: 300; /* 少し細めのフォント */
+    text-align: center;
+    color: #555;
+}
