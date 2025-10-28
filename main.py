@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware # この行を追加
+from fastapi.responses import HTMLResponse # 正しい
 
 app = FastAPI()
 
@@ -20,9 +21,11 @@ app.add_middleware(
 # --- ここまで追加 ---
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+# ルートURLにアクセスがあったら、HTMLファイルを返すようにする
+@app.get("/", response_class=HTMLResponse)
+async def read_root_html():
+    with open("index.html") as f:
+        return f.read()
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int, q: str | None = None):
