@@ -1,34 +1,21 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware # この行を追加
-from fastapi.responses import HTMLResponse # 正しい
+import http.server
+import socketserver
+import os
 
-app = FastAPI()
+# プレビューを表示するポート番号
+PORT = 8080 
+socketserver.TCPServer.allow_reuse_address = True
 
-# --- CORS設定を追加 ---
-origins = [
-    # ここに許可したいフロントエンドのURLを追加します
-    # 今回はローカルのHTMLファイルからアクセスするため、 "*" ですべてを許可します
-    "*" 
-]
+# HTMLファイルがあるディレクトリを指定
+# (main.py と index.html が同じ場所にあればこれでOK)
+web_dir = os.path.join(os.path.dirname(__file__), '.')
+os.chdir(web_dir)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"], # すべてのHTTPメソッドを許可
-    allow_headers=["*"], # すべてのHTTPヘッダーを許可
-)
-# --- ここまで追加 ---
+Handler = http.server.SimpleHTTPRequestHandler
+httpd = socketserver.TCPServer(("", PORT), Handler)
 
+print(f"サーバーが http://0.0.0.0:{PORT} で起動しました")
+print("WebViewパネルで index.html が表示されます。")
 
-# ルートURLにアクセスがあったら、HTMLファイルを返すようにする
-@app.get("/", response_class=HTMLResponse)
-async def read_root_html():
-    with open("index.html") as f:
-        return f.read()
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    if q:
-        return {"item_id": item_id, "q": q}
-    return {"item_id": item_id}
+# サーバーを起動
+httpd.serve_forever()
