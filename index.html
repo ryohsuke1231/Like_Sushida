@@ -9,7 +9,63 @@
 <body>
 
     <div id="center-box">
-        <p id="box-text"></p>
+        <!-- 残り時間（秒） -->
+        <p id="remaining-time">残り時間: 60秒</p>
+        <label for="renda">連打メーター</label>
+        <progress id="renda" max="130" value="0"></progress>
+        <div id="odai-box">
+            <p id="yomi-text"></p>
+            <p id="box-text"></p>
+        </div>
+        <!-- ゲットした皿の数の合計 -->
+        <p id="total_got_odai"></p>
+        <table>
+            <caption>げっちゅした皿</caption>
+            <thead>
+                <tr>
+                    <th scope="col">100</th>
+                    <th scope="col">180</th>
+                    <th scope="col">240</th>
+                    <th scope="col">380</th>
+                    <th scope="col">500</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row" id="100_count">0</th>
+                    <th scope="row" id="180_count"">0</th>
+                    <th scope="row" id="240_count">0</th>
+                    <th scope="row" id="380_count"">0</th>
+                    <th scope="row" id="500_count">0</th>
+                </tr>
+        </table>
+    </div>
+    <div id="result-box">
+        <p id="result-total">〜円分のお寿司をゲット！</p>
+        <p id="haratta">3000円 払って・・・</p>
+        <div id="otoku-box">
+            <p id="otoku">円分〜でした</p>
+        </div>
+        <table>
+            <caption>結果</caption>
+            <thead>
+                <tr>
+                    <th scope="col">正しく打ったキーの数</th>
+                    <th scope="col">平均キータイプ数</th>
+                    <th scope="col">ミスタイプ数</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row" id="correct_keys_count">0</th>
+                    <th scope="row" id="average_keys_count">0</th>
+                    <th scope="row" id="incorrect_keys_count">0</th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="start-box">
+        <p id="start-text">スペースかEnterキーを押すとスタートします</p>
     </div>
 
     <script src="script.js"></script>

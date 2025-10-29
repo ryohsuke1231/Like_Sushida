@@ -25,29 +25,234 @@ body {
 
 /* 中央の長方形のスタイル */
 #center-box {
-    /* ビューポート（表示領域）の幅・高さの50%に設定 */
-    width: 50vw; 
-    height: 50vh;
+    width: 80vw; 
+    height: 70vh;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 
-    background-color: #ffffff; /* 背景は白 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem; /* 子要素の間隔を均等に */
+
+    padding: 2rem;
+    overflow: hidden;
+}
+
+
+#remaining-time {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #333;
+}
+#odai-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    width: 50%;
+    height: 30%;
+    background-color: #daa520; /* 背景は茶色 */
     border-radius: 12px; /* 角を少し丸める */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    /* 上側の余白を設定 */
+    margin-top: 1rem;
+    
+}
+#renda {
+    width: 80%;
+    margin-bottom: 1rem;
+}
+/* ボックス内のテキストスタイル */
+#box-text {
+    font-size: 2.0rem; /* 文字サイズ */
+    font-weight: 600; /* 少し細めのフォント */
+    text-align: center;
+    color: #000;
+}
+#yomi-text {
+    font-size: 1.5rem; /* 文字サイズ */
+    font-weight: 400; /* 少し細めのフォント */
+    text-align: center;
+    color: #333
+}
+#center-box table {
+    /* ★ 要望: 親(#center-box)の幅の80%にする */
+    width: 80%;
 
-    /* 影をつけて立体感を出す */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); 
+    /* ★ 削除: 'width: 80%' を妨げていた指定を削除 */
+    /* max-width: 500px; */
 
-    /* ボックスの中身(pタグ)も中央に配置 */
+    /* ★ 競合するため削除 (または必要なら '80%' と調整) */
+    /* min-width: 400px; */
+
+    /* ★ 継続: Flexbox内で下端に配置するために必要 */
+    margin-top: auto;
+
+    /* ★ 不要: 親の 'align-items: center' が中央揃えを行うため削除 */
+    /* margin-left: auto; */
+    /* margin-right: auto; */
+
+    /* ----- 以下は装飾用のスタイル (元のCSSから移動・統合) ----- */
+    border-collapse: collapse;
+    margin-bottom: 0; /* tableルールにあったものをこちらへ */
+    font-size: 0.8rem; /* tableルールにあったものをこちらへ */
+    font-family: sans-serif;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border: 2px solid rgb(140 140 140);
+    letter-spacing: 1px;
+}
+
+/* ★ 修正点: 
+   汎用的な 'table' ルールからは、
+   #center-box table に移動したサイズや配置の指定を削除します。
+   (もし他のページでも使うスタイルなら残してもOKです)
+*/
+table {
+    border-collapse: collapse;
+    border: 2px solid rgb(140 140 140);
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    /* width, min-width, margin-top, margin-left, margin-right は削除 */
+}
+
+caption {
+  caption-side: bottom;
+  padding: 10px;
+  font-weight: bold;
+}
+
+thead,
+tfoot {
+  background-color: rgb(228 240 245);
+}
+
+th,
+td {
+  border: 1px solid rgb(160 160 160);
+  padding: 8px 10px;
+}
+
+td:last-of-type {
+  text-align: center;
+}
+
+tbody > tr:nth-of-type(even) {
+  background-color: rgb(237 238 242);
+}
+
+tfoot th {
+  text-align: right;
+}
+
+tfoot td {
+  font-weight: bold;
+}
+
+#result-box {
+    display: none;
+    width: 80vw;
+    height: 70vh;
+    background-color: #f0e68c;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 2rem; /* 内側の余白 */
-    overflow: hidden; /* 中身がはみ出たら隠す */
+    padding: 2rem;
+    overflow: hidden;
+    flex-direction: column;
+    gap: 2rem;
 }
-
-/* ボックス内のテキストスタイル */
-#box-text {
-    font-size: 1.5rem; /* 文字サイズ */
-    font-weight: 300; /* 少し細めのフォント */
+#result-total {
+    font-size: 1.5rem;
+    font-weight: 600;
     text-align: center;
-    color: #555;
+    color: #000;
+}
+#haratta {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+}
+#otoku-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    width: 50%;
+    height: 30%;
+    background-color: #daa520; /* 背景は茶色 */
+    border-radius: 12px; /* 角を少し丸める */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    /* 上側の余白を設定 */
+    margin-top: 1rem;
+    border-color: #000;
+}
+#otoku {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+}
+#result-box table {
+    /* ★ 要望: 親(#center-box)の幅の80%にする */
+    width: 80%;
+
+    /* ★ 削除: 'width: 80%' を妨げていた指定を削除 */
+    /* max-width: 500px; */
+
+    /* ★ 競合するため削除 (または必要なら '80%' と調整) */
+    /* min-width: 400px; */
+
+    /* ★ 継続: Flexbox内で下端に配置するために必要 */
+    margin-top: auto;
+
+    /* ★ 不要: 親の 'align-items: center' が中央揃えを行うため削除 */
+    /* margin-left: auto; */
+    /* margin-right: auto; */
+
+    /* ----- 以下は装飾用のスタイル (元のCSSから移動・統合) ----- */
+    border-collapse: collapse;
+    margin-bottom: 0; /* tableルールにあったものをこちらへ */
+    font-size: 0.8rem; /* tableルールにあったものをこちらへ */
+    font-family: sans-serif;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border: 2px solid rgb(140 140 140);
+    letter-spacing: 1px;
+}
+#start-box {
+    display: flex;
+    width: 80vw;
+    height: 70vh;
+    background-color: #b8860b;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow: hidden;
+    flex-direction: column;
+}
+#start-text {
+    font-size: 1.7rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000
+}
+#total_got_odai {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
 }
