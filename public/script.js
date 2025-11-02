@@ -591,12 +591,15 @@ function setupEventListeners() {
     document.getElementById('koukyuu').addEventListener('click', () => startCourse(courses.koukyuu));
 
     // 結果画面ボタン
-    document.getElementById('retry').addEventListener('click', () => {
-        if (currentCourseConfig.name) {
-            startCourse(currentCourseConfig); // 同じコースでリトライ
-        } else {
-            showCourseSelection(); // 念のためコース選択へ
-        }
+    const retryButtons = document.querySelectorAll('.retry');
+    retryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (currentCourseConfig.name) {
+                startCourse(currentCourseConfig); // 同じコースでリトライ
+            } else {
+                showCourseSelection(); // 念のためコース選択へ
+            }
+        });
     });
     // CSSセレクタ（.クラス名）を使って要素すべてを取得します
     // document.querySelectorAll は forEach メソッドが使える NodeList を返すため、より簡潔に書けます

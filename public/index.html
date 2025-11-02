@@ -8,9 +8,46 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <style>
+        /* * 認証が完了するまでページ内容を非表示にし、
+         * 認証されていないコンテンツが一瞬表示される（FOUC）のを防ぐ 
+         */
+        body {
+            visibility: hidden;
+            /* * オプション: 
+             * display:none と違い、レイアウトは維持されるため、
+             * 認証成功時の表示ガクツキが少ない
+             */
+        }
+    </style>
+
+    <script>
+        // <head> 内で即時実行
+        (async () => {
+            try {
+                const response = await fetch('/api/check');
+
+                if (!response.ok) {
+                    // 認証失敗 (401など) だったらリダイレクト
+                    window.location.href = '/password.html';
+
+                    // ★重要: リダイレクトが実行されるまで、これ以降の処理はしない
+                    return; 
+                }
+
+                // 認証成功 (200) 
+                // -> 非表示にしていた body を表示する
+                document.body.style.visibility = 'visible';
+
+            } catch (error) {
+                // APIリクエスト自体が失敗した場合もリダイレクト
+                console.error('Auth check failed:', error);
+                window.location.href = '/password.html';
+            }
+        })();
+    </script>
 </head>
 <body>
-
     <div id="center-box">
         <!-- 残り時間（秒） -->
         <label id="remaining-time" for="jikan">残り時間: 60秒</label>
@@ -52,7 +89,7 @@
         </table>
         <div class="button-box">
             <button class="result-button select-course">コース選択</button>
-            <button class="result-button" id="retry">もう一度</button>
+            <button class="result-button retry">もう一度</button>
         </div>
     </div>
     <div id="result-box">
@@ -79,7 +116,7 @@
             </tbody>
         </table>
         <div class="button-box">
-            <button class="result-button" id="retry">もう一度</button>
+            <button class="result-button retry">もう一度</button>
             <button class="result-button select-course">コース選択</button>
         </div>
     </div>
@@ -132,25 +169,6 @@
     <div id="end-box">
         <p id="end-text">終了！</p>
     </div>
-    <script>
-        // 
-        (async () => {
-            try {
-                const response = await fetch('/api/check');
-
-                if (!response.ok) {
-                    // 認証失敗 (401など) だったらログインページに強制リダイレクト
-                    window.location.href = '/password.html';
-                }
-                // 認証成功 (200) だったら、そのままページを表示
-
-            } catch (error) {
-                // APIリクエスト自体が失敗した場合もリダイレクト
-                console.error('Auth check failed:', error);
-                window.location.href = '/password.html';
-            }
-        })();
-    </script>
     <script src="script.js"></script>
 
 </body>
