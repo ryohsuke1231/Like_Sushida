@@ -418,7 +418,7 @@ progress::-moz-progress-bar {
 .course-option {
     display: flex;
     align-items: center;
-    width: auto;
+    width: 70%;
     background-color: #fdf5e6; /* 明るい背景色 */
 
     /* ↓ 修正箇所： 0.5rem (約8px) に統一 */
