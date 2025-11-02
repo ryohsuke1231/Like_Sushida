@@ -39,7 +39,7 @@ body {
     gap: 1.6rem; /* 子要素の間隔を均等に */
 
     padding: 2rem;
-    overflow: hidden;
+    overflow-y: visible;
 }
 
 
