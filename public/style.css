@@ -286,7 +286,7 @@ progress::-moz-progress-bar {
 }
 
 #possible {
-    font-family: "Ubuntu";
+    font-family: "Ubuntu Mono";
     font-size: 0;
 }
 #possible span {
