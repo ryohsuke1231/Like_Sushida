@@ -13,7 +13,7 @@ AUTH_COOKIE_NAME = 'my_auth_session'
 # Vercelは 'app' という名前のFlaskインスタンスを探します
 app = Flask(__name__)
 
-@app.route('/', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def handle_login():
     auth_header = request.headers.get('Authorization')
 
