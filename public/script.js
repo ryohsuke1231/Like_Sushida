@@ -1017,6 +1017,7 @@ function setNextWord(isFirstWord = false) {
  * ゲーム終了時の結果表示処理
  */
 function endGame() {
+    start = null;
     // 「終了！」表示から1秒待って結果画面を表示
     setTimeout(() => {
         let total = 0;

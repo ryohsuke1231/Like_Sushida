@@ -418,15 +418,15 @@ progress::-moz-progress-bar {
 .course-option {
     display: flex;
     align-items: center;
-    width: 70%;
+    width: 75%;
     background-color: #fdf5e6; /* 明るい背景色 */
 
     /* ↓ 修正箇所： 0.5rem (約8px) に統一 */
     border: 0.5rem solid #8B4513; /* 濃い茶色の枠 (通常時) */
 
-    border-radius: 1rem;
+    border-radius: 1.2rem;
     margin-bottom: 1.5rem;
-    padding: 1.5rem;
+    padding: 1.0rem;
     box-sizing: border-box; /* paddingを含めて幅を計算 */
 
     /* ホバー時の変化を滑らかにする（お好みで） */
