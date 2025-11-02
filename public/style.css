@@ -173,7 +173,7 @@ tfoot td {
 #result-box {
     display: none;
     width: 80vw;
-    min-height: 70vw;
+    min-height: 70vh;
     background-color: #f0e68c;
     border-radius: 5rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -234,7 +234,7 @@ tfoot td {
     /* min-width: 400px; */
 
     /* ★ 継続: Flexbox内で下端に配置するために必要 */
-    margin-top: auto;
+    /*margin-top: auto;*/
 
     /* ★ 不要: 親の 'align-items: center' が中央揃えを行うため削除 */
     /* margin-left: auto; */
