@@ -701,8 +701,11 @@ function startCourse(config) {
     remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
     jikan.setAttribute('max', config.time); // 時間経過progressのmax
     jikan.value = 0;
-
-    document.getElementById('course').textContent = config.name;
+    let plus = "";
+    if (ippatsu === true) {
+        plus = "　一発勝負";
+    }
+    document.getElementById('course').textContent = config.name + plus;
     document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
     start_text.textContent = 'スペースかEnterキーを押すとスタートします';
 
@@ -1029,6 +1032,11 @@ function endGame() {
         const otokuBoxEl = document.getElementById('otoku-box');
         const otokuEl = document.getElementById('otoku');
         const resultTableEl = document.getElementById('result-table');
+        let plus = "";
+        if (ippatsu === true) {
+            plus = "　一発勝負";
+        }
+        document.getElementById('course').textContent = currentCourseConfig.name + plus;
 
         // (1) 画面切り替え (startBox -> resultBox)
         startBox.style.display = 'none';

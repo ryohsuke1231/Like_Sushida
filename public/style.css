@@ -494,6 +494,22 @@ progress::-moz-progress-bar {
     border-style: solid;
     border-color: #f5f5dc;
 }
+#course-result {
+    top: 10%;
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    width: 80%;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-radius: 12px;
+    border-width: 0.2rem;
+    border-style: solid;
+    border-color: #f5f5dc;
+}
+
 
 .button-box {
     display: flex;
