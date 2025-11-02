@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', initGame);
 async function initGame() {
     // 1. 単語データを先に読み込む
     try {
-        allWords = await readWords("sushida/word.txt", true);
+        allWords = await readWords("word.txt", true);
         console.log("単語データ読み込み完了:", allWords);
     } catch (error) {
         console.error("単語ファイルの読み込みに失敗しました:", error);
