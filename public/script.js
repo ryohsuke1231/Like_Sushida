@@ -1036,7 +1036,7 @@ function endGame() {
         if (ippatsu === true) {
             plus = "　一発勝負";
         }
-        document.getElementById('course').textContent = currentCourseConfig.name + plus;
+        document.getElementById('course-result').textContent = currentCourseConfig.name + plus;
 
         // (1) 画面切り替え (startBox -> resultBox)
         startBox.style.display = 'none';
