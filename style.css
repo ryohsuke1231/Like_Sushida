@@ -8,7 +8,7 @@
 html, body {
     height: 100%;
     /* モダンな印象のサンセリフフォントを指定 */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: "Ubuntu";
     line-height: 1.6;
 }
 
@@ -28,14 +28,15 @@ body {
     width: 80vw; 
     height: 70vh;
     background-color: #ffffff;
-    border-radius: 12px;
+    border-radius: 5rem;
+    /*border: 0.5rem solid #2f4f4f;*/
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2rem; /* 子要素の間隔を均等に */
+    gap: 1.6rem; /* 子要素の間隔を均等に */
 
     padding: 2rem;
     overflow: hidden;
@@ -43,10 +44,11 @@ body {
 
 
 #remaining-time {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 600;
     text-align: center;
     color: #333;
+    padding: 0.5rem;
 }
 #odai-box {
     display: flex;
@@ -64,8 +66,21 @@ body {
     
 }
 #renda {
-    width: 80%;
-    margin-bottom: 1rem;
+    width: 100%;
+    /*margin-bottom: 1rem;*/
+    position: relative;
+    height: 100%;
+    top: 0;
+    --stop-a: 0%;
+    --stop-b: 0%;
+    --stop-c: 0%;
+    /* ブラウザのデフォルトの見た目をリセット */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+    /* ★↓ これを L359 からコピーして追加（Firefox用） */
+    
 }
 /* ボックス内のテキストスタイル */
 #box-text {
@@ -160,15 +175,15 @@ tfoot td {
     width: 80vw;
     height: 70vh;
     background-color: #f0e68c;
-    border-radius: 12px;
+    border-radius: 5rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem;
     overflow: hidden;
     flex-direction: column;
     gap: 2rem;
+    margin: auto;
 }
 #result-total {
     font-size: 1.5rem;
@@ -196,6 +211,11 @@ tfoot td {
     /* 上側の余白を設定 */
     margin-top: 1rem;
     border-color: #000;
+    /*各方向に余白*/
+    padding: 1rem;
+    /*上下の余白*/
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 #otoku {
     font-size: 1.5rem;
@@ -230,29 +250,404 @@ tfoot td {
     border: 2px solid rgb(140 140 140);
     letter-spacing: 1px;
 }
-#start-box {
-    display: flex;
-    width: 80vw;
-    height: 70vh;
-    background-color: #b8860b;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    overflow: hidden;
-    flex-direction: column;
-}
-#start-text {
-    font-size: 1.7rem;
-    font-weight: 600;
-    text-align: center;
-    color: #000
-}
+
 #total_got_odai {
     font-size: 1.5rem;
     font-weight: 600;
     text-align: center;
     color: #000;
+}
+
+progress {
+  -webkit-appearance: none; /* Safari対策 */
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #eee;
+}
+
+progress::-webkit-progress-bar {
+  background-color: #eee;
+  border-radius: 7px;
+}
+
+progress::-webkit-progress-value {
+  background-color: #1e90ff;
+  border-radius: 7px;
+}
+progress::-moz-progress-bar {
+    background-color: #1e90ff;
+    border-radius: 7px;
+}
+#jikan {
+    display: none !important;
+}
+
+#possible {
+    font-family: "Ubuntu";
+    font-size: 0;
+}
+#possible span {
+    font-size: 1.5rem;
+}
+.target-marker {
+  position: absolute;
+  top: 0;           /* ← バーの上端にぴったり重ねる */
+  height: 100%;     /* ← バーの高さと同じにする */
+  width: 2px;       /* 線の太さ */
+  background-color: #333;
+  z-index: 10;
+  display: none !important; 
+}
+
+.progress-container {
+    position: relative; /* 子要素の絶対配置を基準にする */
+    width: 80%;
+    /*margin-bottom: 1rem;*/
+    height: 2%;
+    padding: 0;
+}
+/* Chrome/Safari/Edge (WebKit) 用のスタイル */
+#renda::-webkit-progress-bar {
+  background-image: linear-gradient(
+    to right,
+    /* 0% から --stop-a まで: 青色 */
+    /*透明度は15%*/
+    #007bff3d 0%,
+    #007bff3d var(--stop-a),
+
+    /* --stop-a から --stop-b まで: 緑色 */
+    #adff2f3d var(--stop-a), 
+    #adff2f3d var(--stop-b),
+
+    /* --stop-b から 100% まで: 青色 */
+    #ffd7003d var(--stop-b), 
+    #ffd7003d var(--stop-c),
+
+    /* --stop-c から 100% まで: 青色 */
+    #ffa5003d var(--stop-c),
+    #ffa5003d 100%
+  );
+}
+
+/* Firefox 用のスタイル */
+/* L359 の Firefox 用のスタイルを以下に差し替え */
+#renda::-moz-progress-bar {
+/* 進捗を透明にして、背景のグラデーションが見えるようにする */
+/*background-color: transparent;*/
+}
+/* WebKit (Chrome/Safari) 用の進捗（value）を透明にする */
+#renda::-webkit-progress-value {
+/*background-color: transparent;*/
+}
+/* 元のCSS（一部調整） */
+#select-box {
+    /* display: none; */ /* 表示/非表示はJavaScriptで制御する想定 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    justify-content: flex-start; /* 上寄せに変更 */
+    width: 80%; /* 幅を調整 */
+    /*max-width: 700px; /* PCでも見やすいように最大幅を指定 */
+    height: auto;
+    background-color: #b8860b; /* 背景色（木目調の代わり） */
+    border-radius: 5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    overflow-y: visible;
+    margin: 2rem auto; /* ページ中央に配置 */
+    transition: background-color 0.7s ease;
+}
+
+
+
+#select-text {
+    font-size: 1.7rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    margin-bottom: 1.5rem; /* コースとの間隔 */
+}
+
+/* --- ここから画像に近づけるための追加CSS --- */
+
+
+
+/* 最後のコースの下マージンを削除 */
+#koukyuu {
+    margin-bottom: 0;
+}
+
+/* コース左側（名前と価格） */
+.course-primary {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; /* テキストを左寄せ */
+    flex-basis: 40%; /* 左側の幅 */
+    padding-right: 1rem;
+    box-sizing: border-box;
+}
+
+/* コース右側（詳細）と仕切り線 */
+.course-secondary {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start; /* テキストを左寄せ */
+    flex-basis: 60%; /* 右側の幅 */
+    padding-left: 1.5rem;
+    border-left: 3px solid #8B4513; /* 仕切り線 */
+    box-sizing: border-box;
+}
+
+/* --- テキストスタイルの調整 --- */
+
+/* コース名（お手軽、お勧め、高級） */
+#otegaru-text,
+#osusume-text,
+#koukyuu-text {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+/* 各コースの共通スタイル (IDセレクタからクラスセレクタに変更) */
+/* 各コースの共通スタイル */
+.course-option {
+    display: flex;
+    align-items: center;
+    width: 60%;
+    background-color: #fdf5e6; /* 明るい背景色 */
+
+    /* ↓ 修正箇所： 0.5rem (約8px) に統一 */
+    border: 0.5rem solid #8B4513; /* 濃い茶色の枠 (通常時) */
+
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    box-sizing: border-box; /* paddingを含めて幅を計算 */
+
+    /* ホバー時の変化を滑らかにする（お好みで） */
+    transition: border-color 0.3s ease, transform 0.3s ease;
+    cursor: pointer; /* マウスカーソルを指に変更 */
+}
+
+/* 最後のコースの下マージンを削除 */
+#koukyuu { /* これだけID指定のまま（最後の要素として特定したいため） */
+    margin-bottom: 0;
+}
+
+/* --- ここを追加 --- */
+/* ホバー時のスタイル */
+.course-option:hover {
+    border-color: #e74c3c; /* ホバー時の色（例：高級の赤色） */
+    transform: scale(1.02); /* 少しだけ拡大する（お好みで） */
+}
+
+/* コース名の色 */
+#otegaru-text {
+    color: #FFD700; /* オレンジ系 */
+}
+#osusume-text {
+    color: #70A0A6; /* 青系 */
+}
+#koukyuu-text {
+    color: #8b0000; /* 赤系 */
+}
+
+/* コース価格 */
+.course-price {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #000;
+}
+
+/* コース詳細（文字数、制限時間） */
+.course-description {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333; /* 少し薄い黒 */
+    margin: 0.2rem 0;
+}
+
+
+.result-button:hover {
+    background-color: #ffd700;
+    transform: scale(1.02);
+    border-color: #8b0000; /* ホバー時の色 */
+}
+
+#course {
+    top: 10%;
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    width: 80%;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-radius: 12px;
+    border-width: 0.2rem;
+    border-style: solid;
+    border-color: #f5f5dc;
+}
+
+.button-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: auto; /* 💥 これを追加 💥 */
+    margin-bottom: 0; /* 既存の margin-bottom は 0 または PADDING に合わせる */
+}
+#start-box {
+    display: none; /* JavaScriptなどで 'flex' に変更する想定 */
+    width: 80vw;
+    height: 70vh;
+    background-color: #b8860b;
+    border-radius: 5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    align-items: center; /* 横方向中央 (テキスト・ボタン) */
+    justify-content: center; /* 縦方向中央 (テキスト用) */
+    padding: 2rem;
+    overflow: hidden;
+    flex-direction: column;
+
+    position: relative; /* 💥 基準点として追加 💥 */
+}
+
+#start-text {
+    font-size: 1.7rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    /* 真ん中に配置*/
+    position: absolute;
+    top: 50%;
+}
+
+.result-button {
+    /* ... 既存のスタイル ... */
+    border-radius: 12px;
+    border-width: 0.2rem;
+    padding: 1rem;
+    cursor: pointer;
+    border-style: solid;
+    border-color: #000;
+    background-color: #daa520;
+    font-size: 1.2rem;
+    transition: border-color 0.3s ease, transform 0.3s ease;
+    bottom: 2rem;
+    /* 💥 --- 下に配置するための変更 --- 💥 */
+    /*position: absolute;
+    bottom: 2rem; /* 親の padding (2rem) の内側に配置 */
+    
+    /* * 親が align-items: center のため、ボタンも中央揃えになっています。
+     * もしボタンの幅を親に合わせたい場合は、
+     * left: 2rem; right: 2rem; width: auto; などを指定します。
+     * 現在のコードでは、ボタンは内容に応じた幅で中央に配置されます。
+    */
+    /* margin-top: auto; 💥 削除 💥 */
+}
+
+#end-text {
+    font-size: 1.7rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+}
+#end-box {
+    display: none; /* JavaScriptなどで 'flex' に変更する想定 */
+    width: 80vw;
+    height: 70vh;
+    background-color: #b8860b;
+    border-radius: 5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    align-items: center; /* 横方向中央 (テキスト・ボタン) */
+    justify-content: center; /* 縦方向中央 (テキスト用) */
+    padding: 2rem;
+    overflow: hidden;
+    flex-direction: column;
+
+    position: relative; /* 💥 基準点として追加 💥 */
+}
+/* --- 相対サイズ (em) に変更したCSS (ここから) --- */
+input.cmn-toggle-round-flat + label {
+  display: block;      /* width/height を指定するため */
+  position: relative;  /* ::before, ::after の基準点 */
+  cursor: pointer;     /* クリック可能を示す */
+
+  padding: 0.125em;  /* 基準サイズ (例: 16px) の 0.125倍 (2px相当) */
+  width: 3.75em;     /* 基準サイズ の 3.75倍 (60px相当) */
+  height: 2em;       /* 基準サイズ の 2倍 (32px相当) */
+  background-color: #dddddd;
+  border-radius: 2em;  /* height と同じ値で円形に */
+  transition: background 0.4s;
+}
+input.cmn-toggle-round-flat + label:before,
+input.cmn-toggle-round-flat + label:after {
+  display: block;
+  position: absolute;
+  content: "";
+}
+input.cmn-toggle-round-flat + label:before {
+  top: 0.125em;    /* 2px相当 */
+  left: 0.125em;   /* 2px相当 */
+  bottom: 0.125em; /* 2px相当 */
+  right: 0.125em;  /* 2px相当 */
+  background-color: #fff;
+  border-radius: 2em; /* 親の radius と合わせる */
+  transition: background 0.4s;
+}
+input.cmn-toggle-round-flat + label:after {
+  top: 0.25em;     /* 4px相当 */
+  left: 0.25em;    /* 4px相当 */
+  bottom: 0.25em;  /* 4px相当 */
+  /* ツマミの幅: height(2em) - top(0.25) - bottom(0.25) = 1.5em */
+  width: 1.5em;    
+  background-color: #dddddd;
+  border-radius: 1.5em; /* 自身の width と同じ値で円形に */
+  transition: margin 0.4s, background 0.4s;
+}
+input.cmn-toggle-round-flat:checked + label {
+  background-color: #1e90ff;
+}
+input.cmn-toggle-round-flat:checked + label:after {
+  /* 移動距離 = スイッチ幅(3.75em) - ツマミ幅(1.5em) - 左の隙間(0.25em) - 右の隙間(0.25em) */
+  /* 3.75 - 1.5 - 0.25 - 0.25 = 1.75em */
+  margin-left: 1.75em; 
+  background-color: #1e90ff;
+}
+/* --- 相対サイズ (em) に変更したCSS (ここまで) --- */
+/* このルールをCSSのどこかに追加してください (例: #select-text の後など) */
+.switch {
+  /* ★ この font-size がトグルスイッチの基準サイズになります。
+    ここを 1rem, 1.2rem, 0.8rem などに変更するだけで、
+    スイッチ全体の大きさを相対的に変更できます。
+  */
+  font-size: 1rem; /* まずは 1rem (基本のフォントサイズ) で試してみてください */
+
+  /* 上のテキスト(#select-text)との間隔はすでにあるので、
+     下のコース(.course-option)との間隔を設定します */
+  margin-bottom: 1.5rem; 
+    flex-direction: row;
+    display: flex;
+}
+input.cmn-toggle-round-flat {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-label {
+    font-size: 1.2rem;
+    font-weight: 400;
+    text-align: center;
+    color: #000;
+    margin-right: 1rem;
 }

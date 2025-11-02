@@ -5,19 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>モダンデザイン サンプル</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <div id="center-box">
         <!-- 残り時間（秒） -->
-        <p id="remaining-time">残り時間: 60秒</p>
+        <label id="remaining-time" for="jikan">残り時間: 60秒</label>
+        <progress id="jikan" max="60" value="0" style="display: none !important;"></progress>
         <label for="renda">連打メーター</label>
-        <progress id="renda" max="130" value="0"></progress>
+        <div class="progress-container">
+            <progress id="renda" value="0" max="130" data-color-stops="28,59,93,130"></progress>
+            <div class="target-marker" data-target="28"></div>
+            <div class="target-marker" data-target="59"></div>
+            <div class="target-marker" data-target="93"></div>
+            <div class="target-marker" data-target="130"></div>
+        </div>
         <div id="odai-box">
             <p id="yomi-text"></p>
             <p id="box-text"></p>
+            <p id="possible"></p>
         </div>
-        <!-- ゲットした皿の数の合計 -->
+        <!-- ゲットした皿の数の合計 -->     
         <p id="total_got_odai"></p>
         <table>
             <caption>げっちゅした皿</caption>
@@ -39,6 +50,10 @@
                     <th scope="row" id="500_count">0</th>
                 </tr>
         </table>
+        <div class="button-box">
+            <button class="result-button select-course">コース選択</button>
+            <button class="result-button" id="retry">もう一度</button>
+        </div>
     </div>
     <div id="result-box">
         <p id="result-total">〜円分のお寿司をゲット！</p>
@@ -46,7 +61,7 @@
         <div id="otoku-box">
             <p id="otoku">円分〜でした</p>
         </div>
-        <table>
+        <table id="result-table">
             <caption>結果</caption>
             <thead>
                 <tr>
@@ -63,11 +78,63 @@
                 </tr>
             </tbody>
         </table>
+        <div class="button-box">
+            <button class="result-button" id="retry">もう一度</button>
+            <button class="result-button select-course">コース選択</button>
+        </div>
     </div>
     <div id="start-box">
+        <p id="course"></p>
         <p id="start-text">スペースかEnterキーを押すとスタートします</p>
+        <div class="button-box">
+            <button class="result-button select-course">コース選択</button>
+        </div>
     </div>
-
+    <div id="select-box">
+        <p id="select-text">コースを選択してください</p>
+        <div class="switch">
+            <label for="cmn-toggle-4" class="switch-label">一発勝負</label>
+          <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round-flat" type="checkbox">
+          <label for="cmn-toggle-4"></label>
+        </div>
+        
+        <div id="otegaru" class="course-option">
+            <div class="course-primary">
+                <span id="otegaru-text">お手軽</span>
+                <span class="course-price">3,000円コース</span>
+            </div>
+            <div class="course-secondary">
+                <span class="course-description">文字数　：2〜7文字</span>
+                <span class="course-description">制限時間：60秒</span>
+            </div>
+        </div>
+        <div id="osusume" class="course-option">
+            <div class="course-primary">
+                <span id="osusume-text">お勧め</span>
+                <span class="course-price">5,000円コース</span>
+            </div>
+            <div class="course-secondary">
+                <span class="course-description">文字数　：5〜10文字</span>
+                <span class="course-description">制限時間：90秒</span>
+            </div>
+        </div>
+        <div id="koukyuu" class="course-option">
+            <div class="course-primary">
+                <span id="koukyuu-text">高級</span>
+                <span class="course-price">10,000円コース</span>
+            </div>
+            <div class="course-secondary">
+                <span class="course-description">文字数　：9〜14文字以上</span>
+                <span class="course-description">制限時間：120秒</span>
+            </div>
+        </div>
+    </div>
+    <div id="end-box">
+        <p id="end-text">終了！</p>
+    </div>
     <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
 </body>
 </html>

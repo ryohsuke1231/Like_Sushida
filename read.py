@@ -244,17 +244,24 @@ class TypingJudge:
         self.buffer = test_buffer # バッファを更新
         return True# テスト
 def read_words(yeah):
+    max_len = 0
+    max_len_word = ""
     with open("sushida/word.txt", "r", encoding="utf-8") as file:
         words = file.read().splitlines()
         levels = {}
         now_level = 0
         for word in words:
+            if len(word.split(",")[0]) > max_len:
+                max_len = len(word)
+                max_len_word = word
             m = re.search(r"txt(\d+)", word)
             if m:
                 now_level = int(m.group(1))
             if now_level not in levels:
                 levels[now_level] = []
             levels[now_level].append(word)
+        print(max_len)
+        print(max_len_word)
         if yeah:
             return levels
         else:
