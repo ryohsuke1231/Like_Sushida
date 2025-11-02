@@ -79,6 +79,7 @@ body {
     -moz-appearance: none;
     appearance: none;
     border: none;
+    display: flex;
     /* ★↓ これを L359 からコピーして追加（Firefox用） */
     
 }
