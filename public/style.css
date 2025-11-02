@@ -79,7 +79,6 @@ body {
     -moz-appearance: none;
     appearance: none;
     border: none;
-    display: flex;
     /* ★↓ これを L359 からコピーして追加（Firefox用） */
     
 }
@@ -309,6 +308,7 @@ progress::-moz-progress-bar {
     /*margin-bottom: 1rem;*/
     height: 2%;
     padding: 0;
+    display: flex;
 }
 /* Chrome/Safari/Edge (WebKit) 用のスタイル */
 #renda::-webkit-progress-bar {
