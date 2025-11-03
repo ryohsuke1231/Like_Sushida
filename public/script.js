@@ -740,8 +740,6 @@ function prepareWords(relevantKeys, flow) {
     // グローバル変数の yomi, kanji をリセット
     yomi = [];
     kanji = [];
-    yomi.push("ちぇっくめいと");
-    kanji.push("チェックメイト");
 
     let running = true;
     while (running) {
