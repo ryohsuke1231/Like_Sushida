@@ -791,10 +791,10 @@ function prepareWords(relevantKeys, flow) {
  * Enter/Space が押されたらゲームを開始する
  */
 function startGame() {
-    if (start) return; // 既に開始している場合は何もしない
+    if (start === true) return; // 既に開始している場合は何もしない
 
     document.getElementById('start-text').textContent = 'スタート！';
-
+    start = 1;
     // 1秒待ってからゲーム画面へ
     setTimeout(() => {
         resultBox.style.display = 'none';
