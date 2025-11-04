@@ -1122,7 +1122,7 @@ class TypingJudge {
         "きゃ": ["kya", "kixya"], "きゅ": ["kyu", "kixyu"], "きぇ": ["kye", "kixye"], "きょ": ["kyo", "kixyo"],
         "ぎゃ": ["gya", "gixya"], "ぎゅ": ["gyu", "gixyu"], "ぎぇ": ["gye", "gixye"],"ぎょ": ["gyo", "gixyo"],
         "しゃ": ["sha", "sya", "sixya"], "しゅ": ["shu", "syu", "sixyu"], "しぇ": ["she", "sye", "sixye"], "しょ": ["sho", "syo", "sixyo"],
-        "じゃ": ["ja", "zya", "jixya"], "じゅ": ["ju", "zyu", "jixyu"], "じょ": ["jo", "zyo", "jixyo"],
+        "じゃ": ["ja", "zya", "jixya"], "じゅ": ["ju", "zyu", "jixyu"], "じぇ": ["je", "zye", "jixye"], "じょ": ["jo", "zyo", "jixyo"],
         "ちゃ": ["tya", "cha", "chixya"], "ちゅ": ["tyu", "chu", "chixyu"], "ちぇ": ["tye", "che", "chixye"], "ちょ": ["tyo", "cho", "chixyo"],
         "ぢゃ": ["dya"], "ぢゅ": ["dyu"], "ぢぇ": ["dye"], "ぢょ": ["dyo"],
         "にゃ": ["nya", "nixya"], "にゅ": ["nyu", "nixyu"], "にょ": ["nyo", "nixyo"],
