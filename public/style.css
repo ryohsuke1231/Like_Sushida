@@ -57,10 +57,10 @@ body {
     justify-content: center;
     margin-bottom: 1rem;
     width: auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
     height: 30%;
-    white-space: nowrap;
+    min-width: 50%;
     background-color: #daa520; /* 背景は茶色 */
     border-radius: 12px; /* 角を少し丸める */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -91,12 +91,14 @@ body {
     font-weight: 600; /* 少し細めのフォント */
     text-align: center;
     color: #000;
+    white-space: nowrap;
 }
 #yomi-text {
     font-size: 1.5rem; /* 文字サイズ */
     font-weight: 400; /* 少し細めのフォント */
     text-align: center;
-    color: #333
+    color: #333;
+    white-space: nowrap;
 }
 #center-box table {
     /* ★ 要望: 親(#center-box)の幅の80%にする */
@@ -297,6 +299,7 @@ progress::-moz-progress-bar {
 }
 #possible span {
     font-size: 1.5rem;
+    white-space: nowrap;
 }
 .target-marker {
   position: absolute;
