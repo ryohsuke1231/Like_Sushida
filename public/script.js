@@ -366,7 +366,7 @@ function splitWithContext(text) {
                 // startIndexから「。」の位置までを切り出す
                 segments.push(text.substring(startIndex, i + 1));
                 // 次のセグメントの開始位置を「。」の直後に更新
-                startIndex = i + 2;
+                startIndex = i + 1;
             }
         }
     }

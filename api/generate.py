@@ -68,6 +68,7 @@ def generate_text():
 
     # furigana_text 生成後に追加
     furigana_text = kata_to_hira(furigana_text)
+    
 
     return jsonify(
         kanji=message,
