@@ -132,6 +132,7 @@ body {
     background-color: #fff;
     border: 2px solid rgb(140 140 140);
     letter-spacing: 1px;
+    display: none !important;
 }
 
 /* ★ 修正点: 
@@ -263,6 +264,12 @@ tfoot td {
 }
 
 #total_got_odai {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+}
+#keys-per-second {
     font-size: 1.5rem;
     font-weight: 600;
     text-align: center;

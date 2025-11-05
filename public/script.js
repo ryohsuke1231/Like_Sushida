@@ -493,7 +493,8 @@ function handleKeyDown(event) {
     if (isSingleCharacter) {
 
         const result = judge.check(event.key);
-
+        let now_time = Date.now();
+        let elapsed_time = now_time - start_time;
         if (result === null) { // null は「完了」
             // ★修正: 完了キーも「正解」としてカウント
             correct_keys_count += 1; 
@@ -519,6 +520,7 @@ function handleKeyDown(event) {
 
             // 合計皿数
             document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
+            document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(2)} キー/秒`;
 
             // 次の単語へ
             setNextWord();
@@ -534,7 +536,7 @@ function handleKeyDown(event) {
                 <span style="color: #444;">${buffer}</span>
                 <span style="color: #eee;">${String(judge.getBestMatch(buffer)).substring(buffer.length)}</span>
             `;
-
+            document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(2)} キー/秒`;
             updateRendaTime();
 
         } else { // false は「間違い」
@@ -562,6 +564,7 @@ function handleKeyDown(event) {
             incorrect_keys_count += 1;
             renda_count = 0;
             renda.value = renda_count;
+            document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(2)} キー/秒`;
         }
     }
 }
