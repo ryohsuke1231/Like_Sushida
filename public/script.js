@@ -86,7 +86,7 @@ async function initGame() {
         setupEventListeners();
         showCourseSelection();
 
-    }, 2000);
+    }, 800);
 }
 
 
