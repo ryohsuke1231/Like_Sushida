@@ -1,7 +1,8 @@
 import requests
 import json
+import os
 
-APP_ID = "dj00aiZpPUtUc3hEUWRkc0VTdiZzPWNvbnN1bWVyc2VjcmV0Jng9OGY-" 
+APP_ID = os.environ.get("YAHOO_APP_ID")
 API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
 def get_furigana(sentence):
