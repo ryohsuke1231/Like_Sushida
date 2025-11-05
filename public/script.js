@@ -153,6 +153,10 @@ function grabDomElements() {
  */
 function setupUI() {
     // 連打メーターのマーカー設定
+    document.getElementById('jikan-plus').textContent = "　";
+    document.getElementById('jikan-plus').classList.remove('fade');
+    void document.getElementById('jikan-plus').offsetWidth;
+    document.getElementById('jikan-plus').classList.add('fade');
     const markers = document.querySelectorAll('.target-marker');
     const max = parseFloat(renda.getAttribute('max'));
     if (max > 0) {
