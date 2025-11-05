@@ -364,9 +364,9 @@ function splitWithContext(text) {
             // カッコの *外* にある「。」の場合のみ分割
             if (inKakko === 0 && inKagikakko === 0) {
                 // startIndexから「。」の位置までを切り出す
-                segments.push(text.substring(startIndex, i));
+                segments.push(text.substring(startIndex, i + 1));
                 // 次のセグメントの開始位置を「。」の直後に更新
-                startIndex = i + 1;
+                startIndex = i + 2;
             }
         }
     }

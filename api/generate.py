@@ -12,6 +12,12 @@ client = OpenAI(
     api_key=
     api_key
 )
+def kata_to_hira(s):
+    return s.translate(str.maketrans(
+        "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッー",
+        "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっー"
+    ))
+
 
 prompt = "変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　200文字を目安に"
 @app.route('/api/generate', methods=['GET'])
@@ -60,7 +66,9 @@ def generate_text():
         return None
     """
 
-    
+    # furigana_text 生成後に追加
+    furigana_text = kata_to_hira(furigana_text)
+
     return jsonify(
         kanji=message,
         yomi=furigana_text
