@@ -461,31 +461,26 @@ document.addEventListener('load', initGame);
  * ページの読み込みが完了したら実行される
  */
 async function initGame() {
-    setTimeout(() => {
+    setTimeout(async () => {
         document.getElementById('splash').classList.add('hide');
-    // 1. 単語データを先に読み込む
-    try {
-        allWords = await readWords("word.txt", true);
-        console.log("単語データ読み込み完了:", allWords);
-    } catch (error) {
-        console.error("単語ファイルの読み込みに失敗しました:", error);
-        document.getElementById('select-text').textContent = "エラー: 単語ファイルを読み込めません。";
-        return;
-    }
 
-    // 2. DOM要素を取得
-    grabDomElements();
+        try {
+            allWords = await readWords("word.txt", true);
+            console.log("単語データ読み込み完了:", allWords);
+        } catch (error) {
+            console.error("単語ファイルの読み込みに失敗しました:", error);
+            document.getElementById('select-text').textContent = "エラー: 単語ファイルを読み込めません。";
+            return;
+        }
 
-    // 3. UIの初期設定 (プログレスバーなど)
-    setupUI();
+        grabDomElements();
+        setupUI();
+        setupEventListeners();
+        showCourseSelection();
 
-    // 4. イベントリスナーを設定
-    setupEventListeners();
-
-    // 5. 最初の画面（コース選択）を表示
-    showCourseSelection();
     }, 2000);
 }
+
 
 /**
  * 必要なDOM要素を変数に格納する

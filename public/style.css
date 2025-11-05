@@ -710,7 +710,7 @@ input.cmn-toggle-round-flat {
 
 /* ロゴ画像 */
 .logo {
-    width: 50%;
+    height: 50%;
     animation: logoPop 1s ease forwards;
 }
 
