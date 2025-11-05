@@ -291,10 +291,16 @@ function resetGameState() {
  * 選択されたコースを開始準備する
  * @param {object} config - courses オブジェクト (例: courses.otegaru)
  */
-function startCourse(config) {
+async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
     if (config === "ai_mode") {
         /*ここで実装*/
+        const response = await fetch('/api/generate');
+        const data = await response.json();
+        yomi = splitWithContext(data.yomi);
+        kanji = splitWithContext(data.kanji);
+        console.log(yomi);
+        console.log(kanji);
         return;
     }
     currentCourseConfig = config;
@@ -332,6 +338,52 @@ function startCourse(config) {
     resultBox.style.display = 'none';
 
     // start フラグは false のまま (handleKeyDown が Enter/Space を待つ)
+}
+function splitWithContext(text) {
+    const segments = [];
+    let startIndex = 0;
+    let inKakko = 0;      // () のネストレベル
+    let inKagikakko = 0; // 「」のネストレベル
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+
+        // カウンターの更新
+        if (char === '(') {
+            inKakko++;
+        } else if (char === ')') {
+            if (inKakko > 0) inKakko--;
+        } else if (char === '「') {
+            inKagikakko++;
+        } else if (char === '」') {
+            if (inKagikakko > 0) inKagikakko--;
+        }
+
+        // 分割判定
+        if (char === '。') {
+            // カッコの *外* にある「。」の場合のみ分割
+            if (inKakko === 0 && inKagikakko === 0) {
+                // startIndexから「。」の位置までを切り出す
+                segments.push(text.substring(startIndex, i));
+                // 次のセグメントの開始位置を「。」の直後に更新
+                startIndex = i + 1;
+            }
+        }
+    }
+
+    // 最後の「。」の後ろに残った文字列、
+    // または「。」が一つもなかった場合の全文字列を追加
+    // （startIndexが文字列長より短い場合のみ）
+    if (startIndex < text.length) {
+        segments.push(text.substring(startIndex));
+    } else if (startIndex === text.length && text.endsWith('。')) {
+        // 文字列が「。」でぴったり終わる場合は、
+        // splitの挙動（最後に空文字列が入る）に合わせる
+        //segments.push("");
+    }
+
+
+    return segments;
 }
 
 /**
@@ -408,7 +460,7 @@ function prepareWords(relevantKeys, flow) {
  */
 function startGame() {
     if (start === true) return; // 既に開始している場合は何もしない
-
+    document.getElementById('start-box-button').disabled = true;
     document.getElementById('start-text').textContent = 'スタート！';
     start = 1;
     // 1秒待ってからゲーム画面へ
@@ -430,6 +482,7 @@ function startGame() {
 
         // タイマースタート
         startTimer();
+        document.getElementById('start-box-button').disabled = false;
 
     }, 1000);
 }
