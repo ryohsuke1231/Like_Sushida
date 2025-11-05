@@ -742,7 +742,7 @@ input.cmn-toggle-round-flat {
 /* 1. ロゴ拡大 (0s -> 1.5s) */
 @keyframes zoomIn {
     0% {
-        transform: scale(0);
+        transform: scale(0.5);
         opacity: 0;
     }
     100% {
