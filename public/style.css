@@ -689,61 +689,90 @@ input.cmn-toggle-round-flat {
 
 
 
+/* スプラッシュスクリーンの設定 */
 #splash {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #778899;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: splashFadeIn 1.5s ease forwards;
-  transition: opacity 1.5s ease, transform 1.5s ease, visibility 1.5s ease;
-  z-index: 9999;
+    /* 画面全体を覆う */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh; /* 100% だとスクロールバーが出た時に問題になることがあるため vh を推奨 */
+    z-index: 9999; /* 最前面に */
+
+    /* ご指定の背景色 */
+    background-color: #778899;
+
+    /* ロゴを中央に配置 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* アニメーション：1.5秒待機し、1秒かけてフェードアウト */
+    /* animation-fill-mode: forwards; でアニメーション後の状態を維持 */
+    animation: splashFadeOut 1s ease-in 1.5s forwards;
 }
 
-/* スプラッシュ背景 */
-#splash.hide {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 1.5s ease, visibility 1.5s ease;
-}
-
-/* ロゴは少し遅れてふわっと */
-#splash.hide .logo {
-  opacity: 0;
-  transform: scale(0.7);
-  transition: opacity 1.5s ease 0.3s, transform 1.5s ease 0.3s; /* ← 0.3秒遅らせる */
-}
-
-
-
-/* ロゴ画像 */
-.logo {
+/* ロゴの設定 */
+#splash .logo {
+    /* ご指定の高さ */
     height: 50%;
-    animation: logoPop 1s ease forwards;
+    width: auto; /* アスペクト比を維持 */
+
+    /* アニメーションのシーケンス:
+       1. zoomIn: 0秒から1.5秒かけて実行 (拡大)
+       2. zoomOutFade: 1.5秒待機し、1秒かけて実行 (縮小・フェードアウト)
+    */
+    animation: zoomIn 1.5s ease-out forwards, 
+               zoomOutFade 1s ease-in 1.5s forwards;
+
+    /* アニメーション開始前の初期状態 (zoomIn の 0% と一致させる) */
+    transform: scale(0);
+    opacity: 0;
 }
 
-/* メインは最初は見えない */
+/* メインコンテンツは、スプラッシュが非表示になるまで操作させない */
 #main {
-  opacity: 0;
-  transition: opacity 1.2s ease;
+    /* アニメーション中はメインコンテンツが操作されないように */
+    /* (必要に応じて設定) */
 }
 
-/* スプラッシュが消えたら表示 */
-#splash.hide ~ #main {
-  opacity: 1;
+
+/* --- アニメーションのキーフレーム定義 --- */
+
+/* 1. ロゴ拡大 (0s -> 1.5s) */
+@keyframes zoomIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1); /* 基準サイズに */
+        opacity: 1;
+    }
 }
 
-@keyframes splashFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* 2. ロゴ縮小・フェードアウト (1.5s -> 2.5s) */
+@keyframes zoomOutFade {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.8); /* 少し小さくしながら */
+        opacity: 0;
+    }
 }
 
-@keyframes logoPop {
-  0% { opacity: 0; transform: scale(0.8); }
-  60% { opacity: 1; transform: scale(1.05); }
-  100% { transform: scale(1); }
+/* 3. スプラッシュ背景フェードアウト (1.5s -> 2.5s) */
+@keyframes splashFadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        /* アニメーション終了後、要素を非表示にして
+           背面の #main コンテンツをクリックできるようにする 
+        */
+        visibility: hidden; 
+    }
 }

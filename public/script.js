@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', initGame);
  * ページの読み込みが完了したら実行される
  */
 async function initGame() {
-    setTimeout(async () => {
-        document.getElementById('splash').classList.add('hide');
+    //setTimeout(async () => {
+        //document.getElementById('splash').classList.add('hide');
 
         try {
             allWords = await readWords("word.txt", true);
@@ -86,7 +86,7 @@ async function initGame() {
         setupEventListeners();
         showCourseSelection();
 
-    }, 1500);
+    //}, 1500);
 }
 
 
