@@ -455,12 +455,14 @@ const courses = {
 
 // --- 初期化処理 ---
 
-document.addEventListener('DOMContentLoaded', initGame);
+document.addEventListener('load', initGame);
 
 /**
  * ページの読み込みが完了したら実行される
  */
 async function initGame() {
+    setTimeout(() => {
+        document.getElementById('splash').classList.add('hide');
     // 1. 単語データを先に読み込む
     try {
         allWords = await readWords("word.txt", true);
@@ -482,6 +484,7 @@ async function initGame() {
 
     // 5. 最初の画面（コース選択）を表示
     showCourseSelection();
+    }, 2000);
 }
 
 /**
@@ -589,6 +592,7 @@ function setupEventListeners() {
     document.getElementById('otegaru').addEventListener('click', () => startCourse(courses.otegaru));
     document.getElementById('osusume').addEventListener('click', () => startCourse(courses.osusume));
     document.getElementById('koukyuu').addEventListener('click', () => startCourse(courses.koukyuu));
+    document.getElementById('ai-mode').addEventListener('click', () => startCourse("ai_mode"));
 
     // 結果画面ボタン
     const retryButtons = document.querySelectorAll('.retry');
@@ -681,6 +685,10 @@ function resetGameState() {
  */
 function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
+    if (config === "ai_mode") {
+        /*ここで実装*/
+        return;
+    }
     currentCourseConfig = config;
 
     // 1. ゲーム状態をリセット

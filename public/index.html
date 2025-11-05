@@ -54,127 +54,142 @@
  
 </head>
 <body>
-    <div id="center-box">
-        <!-- 残り時間（秒） -->
-        <label id="remaining-time" for="jikan">残り時間: 60秒</label>
-        <progress id="jikan" max="60" value="0" style="display: none !important;"></progress>
-        <label for="renda">連打メーター</label>
-        <div class="progress-container">
-            <progress id="renda" value="0" max="130" data-color-stops="28,59,93,130"></progress>
-            <div class="target-marker" data-target="28"></div>
-            <div class="target-marker" data-target="59"></div>
-            <div class="target-marker" data-target="93"></div>
-            <div class="target-marker" data-target="130"></div>
-        </div>
-        <div id="odai-box">
-            <p id="yomi-text"></p>
-            <p id="box-text"></p>
-            <p id="possible"></p>
-        </div>
-        <!-- ゲットした皿の数の合計 -->     
-        <p id="total_got_odai"></p>
-        <table>
-            <caption>げっちゅした皿</caption>
-            <thead>
-                <tr>
-                    <th scope="col">100</th>
-                    <th scope="col">180</th>
-                    <th scope="col">240</th>
-                    <th scope="col">380</th>
-                    <th scope="col">500</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th scope="row" id="100_count">0</th>
-                    <th scope="row" id="180_count"">0</th>
-                    <th scope="row" id="240_count">0</th>
-                    <th scope="row" id="380_count"">0</th>
-                    <th scope="row" id="500_count">0</th>
-                </tr>
-        </table>
-        <div class="button-box">
-            <button class="result-button retry">もう一度</button>
-            <button class="result-button select-course">コース選択</button>
-        </div>
+    <div id="splash">
+        <img src="logo.png" alt="Logo" class="logo">
     </div>
-    <div id="result-box">
-        <p id="course-result"></p>
-        <p id="result-total">〜円分のお寿司をゲット！</p>
-        <p id="haratta">3000円 払って・・・</p>
-        <div id="otoku-box">
-            <p id="otoku">円分〜でした</p>
-        </div>
-        <table id="result-table">
-            <caption>結果</caption>
-            <thead>
-                <tr>
-                    <th scope="col">正しく打ったキーの数</th>
-                    <th scope="col">平均キータイプ数</th>
-                    <th scope="col">ミスタイプ数</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th scope="row" id="correct_keys_count">0</th>
-                    <th scope="row" id="average_keys_count">0</th>
-                    <th scope="row" id="incorrect_keys_count">0</th>
-                </tr>
-            </tbody>
-        </table>
-        <div class="button-box">
-            <button class="result-button retry">もう一度</button>
-            <button class="result-button select-course">コース選択</button>
-        </div>
-    </div>
-    <div id="start-box">
-        <p id="course"></p>
-        <p id="start-text">スペースかEnterキーを押すとスタートします</p>
-        <div class="button-box">
-            <button class="result-button select-course">コース選択</button>
-        </div>
-    </div>
-    <div id="select-box">
-        <p id="select-text">コースを選択してください</p>
-        <div class="switch">
-            <label for="cmn-toggle-4" class="switch-label">一発勝負</label>
-          <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round-flat" type="checkbox">
-          <label for="cmn-toggle-4"></label>
-        </div>
-        
-        <div id="otegaru" class="course-option">
-            <div class="course-primary">
-                <span id="otegaru-text">お手軽</span>
-                <span class="course-price">3,000円コース</span>
+    <div id="main">
+        <div id="center-box">
+            <!-- 残り時間（秒） -->
+            <label id="remaining-time" for="jikan">残り時間: 60秒</label>
+            <progress id="jikan" max="60" value="0" style="display: none !important;"></progress>
+            <label for="renda">連打メーター</label>
+            <div class="progress-container">
+                <progress id="renda" value="0" max="130" data-color-stops="28,59,93,130"></progress>
+                <div class="target-marker" data-target="28"></div>
+                <div class="target-marker" data-target="59"></div>
+                <div class="target-marker" data-target="93"></div>
+                <div class="target-marker" data-target="130"></div>
             </div>
-            <div class="course-secondary">
-                <span class="course-description">文字数　：2〜7文字</span>
-                <span class="course-description">制限時間：60秒</span>
+            <div id="odai-box">
+                <p id="yomi-text"></p>
+                <p id="box-text"></p>
+                <p id="possible"></p>
+            </div>
+            <!-- ゲットした皿の数の合計 -->     
+            <p id="total_got_odai"></p>
+            <table>
+                <caption id="got_odai">げっちゅした皿</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">100</th>
+                        <th scope="col">180</th>
+                        <th scope="col">240</th>
+                        <th scope="col">380</th>
+                        <th scope="col">500</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row" id="100_count">0</th>
+                        <th scope="row" id="180_count"">0</th>
+                        <th scope="row" id="240_count">0</th>
+                        <th scope="row" id="380_count"">0</th>
+                        <th scope="row" id="500_count">0</th>
+                    </tr>
+            </table>
+            <div class="button-box">
+                <button class="result-button retry">もう一度</button>
+                <button class="result-button select-course">コース選択</button>
             </div>
         </div>
-        <div id="osusume" class="course-option">
-            <div class="course-primary">
-                <span id="osusume-text">お勧め</span>
-                <span class="course-price">5,000円コース</span>
+        <div id="result-box">
+            <p id="course-result"></p>
+            <p id="result-total">〜円分のお寿司をゲット！</p>
+            <p id="haratta">3000円 払って・・・</p>
+            <div id="otoku-box">
+                <p id="otoku">円分〜でした</p>
             </div>
-            <div class="course-secondary">
-                <span class="course-description">文字数　：5〜10文字</span>
-                <span class="course-description">制限時間：90秒</span>
+            <table id="result-table">
+                <caption>結果</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">正しく打ったキーの数</th>
+                        <th scope="col">平均キータイプ数</th>
+                        <th scope="col">ミスタイプ数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row" id="correct_keys_count">0</th>
+                        <th scope="row" id="average_keys_count">0</th>
+                        <th scope="row" id="incorrect_keys_count">0</th>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="button-box">
+                <button class="result-button retry">もう一度</button>
+                <button class="result-button select-course">コース選択</button>
             </div>
         </div>
-        <div id="koukyuu" class="course-option">
-            <div class="course-primary">
-                <span id="koukyuu-text">高級</span>
-                <span class="course-price">10,000円コース</span>
-            </div>
-            <div class="course-secondary">
-                <span class="course-description">文字数　：9〜14文字以上</span>
-                <span class="course-description">制限時間：120秒</span>
+        <div id="start-box">
+            <p id="course"></p>
+            <p id="start-text">スペースかEnterキーを押すとスタートします</p>
+            <div class="button-box">
+                <button class="result-button select-course">コース選択</button>
             </div>
         </div>
-    </div>
-    <div id="end-box">
-        <p id="end-text">終了！</p>
+        <div id="select-box">
+            <p id="select-text">コースを選択してください</p>
+            <div class="switch">
+                <label for="cmn-toggle-4" class="switch-label">一発勝負</label>
+              <input id="cmn-toggle-4" class="cmn-toggle cmn-toggle-round-flat" type="checkbox">
+              <label for="cmn-toggle-4"></label>
+            </div>
+            
+            <div id="otegaru" class="course-option">
+                <div class="course-primary">
+                    <span id="otegaru-text">お手軽</span>
+                    <span class="course-price">3,000円コース</span>
+                </div>
+                <div class="course-secondary">
+                    <span class="course-description">文字数　：2〜7文字</span>
+                    <span class="course-description">制限時間：60秒</span>
+                </div>
+            </div>
+            <div id="osusume" class="course-option">
+                <div class="course-primary">
+                    <span id="osusume-text">お勧め</span>
+                    <span class="course-price">5,000円コース</span>
+                </div>
+                <div class="course-secondary">
+                    <span class="course-description">文字数　：5〜10文字</span>
+                    <span class="course-description">制限時間：90秒</span>
+                </div>
+            </div>
+            <div id="koukyuu" class="course-option">
+                <div class="course-primary">
+                    <span id="koukyuu-text">高級</span>
+                    <span class="course-price">10,000円コース</span>
+                </div>
+                <div class="course-secondary">
+                    <span class="course-description">文字数　：9〜14文字以上</span>
+                    <span class="course-description">制限時間：120秒</span>
+                </div>
+            </div>
+            <div id="ai-mode" class="course-option">
+                <div class="course-primary">
+                    <span id="ai-mode-text">なぞのAIモード？</span>
+                    <span class="course-price">いやっほー</span>
+                </div>
+                <div class="course-secondary">
+                    <span class="course-description">文字数　：？</span>
+                    <span class="course-description">制限時間：？</span>
+                </div>
+            </div>
+        </div>
+        <div id="end-box">
+            <p id="end-text">終了！</p>
+        </div>
     </div>
     <script src="script.js"></script>
 
