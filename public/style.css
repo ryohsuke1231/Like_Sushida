@@ -392,7 +392,7 @@ progress::-moz-progress-bar {
 
 
 /* 最後のコースの下マージンを削除 */
-#koukyuu {
+#ai-mode-text {
     margin-bottom: 0;
 }
 
@@ -424,6 +424,7 @@ progress::-moz-progress-bar {
 /* コース名（お手軽、お勧め、高級） */
 #otegaru-text,
 #osusume-text,
+#ai-mode-text,
 #koukyuu-text {
     font-size: 1.8rem;
     font-weight: bold;
@@ -450,10 +451,6 @@ progress::-moz-progress-bar {
     cursor: pointer; /* マウスカーソルを指に変更 */
 }
 
-/* 最後のコースの下マージンを削除 */
-#koukyuu { /* これだけID指定のまま（最後の要素として特定したいため） */
-    margin-bottom: 0;
-}
 
 /* --- ここを追加 --- */
 /* ホバー時のスタイル */
