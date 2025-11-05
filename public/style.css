@@ -709,7 +709,7 @@ input.cmn-toggle-round-flat {
 
     /* アニメーション：1.5秒待機し、1秒かけてフェードアウト */
     /* animation-fill-mode: forwards; でアニメーション後の状態を維持 */
-    animation: splashFadeOut 1s ease-in 1.5s forwards;
+    animation: splashFadeOut 1s ease-in 1s forwards;
 }
 
 /* ロゴの設定 */
@@ -722,8 +722,8 @@ input.cmn-toggle-round-flat {
        1. zoomIn: 0秒から1.5秒かけて実行 (拡大)
        2. zoomOutFade: 1.5秒待機し、1秒かけて実行 (縮小・フェードアウト)
     */
-    animation: zoomIn 1.5s ease-out forwards, 
-               zoomOutFade 1s ease-in 1.5s forwards;
+    animation: zoomIn 1s ease-out forwards, 
+               zoomOutFade 1s ease-in 1s forwards;
 
     /* アニメーション開始前の初期状態 (zoomIn の 0% と一致させる) */
     transform: scale(0);
@@ -742,7 +742,7 @@ input.cmn-toggle-round-flat {
 /* 1. ロゴ拡大 (0s -> 1.5s) */
 @keyframes zoomIn {
     0% {
-        transform: scale(0.5);
+        transform: scale(0.7);
         opacity: 0;
     }
     100% {
