@@ -699,7 +699,7 @@ input.cmn-toggle-round-flat {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: splashFadeIn 0.8s ease forwards;
+  animation: splashFadeIn 1.5s ease forwards;
   transition: opacity 1.5s ease, transform 1.5s ease, visibility 1.5s ease;
   z-index: 9999;
 }
