@@ -50,7 +50,7 @@ def generate_text():
                 furigana_text += word["surface"]
     except Exception as e:
         print(f"エラー: {e}")
-        return jsonify(message=message, furigana="", usage=usage, error=str(e))
+        return jsonify(message=message, furigana="", error=str(e))
     """
     except requests.exceptions.RequestException as e:
         print(f"APIリクエストエラー: {e}")
@@ -61,5 +61,9 @@ def generate_text():
     """
 
     
-    return  jsonify(kanji=message, yomi=furigana_text, usage=usage)
+    return jsonify(
+        kanji=message,
+        yomi=furigana_text
+    )
+
     
