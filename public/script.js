@@ -582,6 +582,11 @@ function updateRendaTime() {
     if (addedTime > 0) {
         nokorijikan += addedTime;
         remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
+        const jikan_plus = document.getElementById('jikan-plus');
+        jikan_plus.textContent = `+${addedTime}`;
+        jikan_plus.classList.remove('fade');
+        void jikan_plus.offsetWidth; // 再描画トリガー
+        jikan_plus.classList.add('fade');
     }
 }
 
