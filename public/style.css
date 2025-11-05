@@ -686,8 +686,6 @@ input.cmn-toggle-round-flat {
 
 
 
-
-/* ページ全体を覆うローディング画面 */
 #splash {
   position: fixed;
   top: 0;
@@ -698,28 +696,28 @@ input.cmn-toggle-round-flat {
   display: flex;
   align-items: center;
   justify-content: center;
-　animation: splashFadeIn 0.8s ease forwards; /* 出現アニメ */
-　transition: opacity 0.8s ease, transform 0.8s ease, visibility 0.8s ease;
+  animation: splashFadeIn 0.8s ease forwards;
+  transition: opacity 1.5s ease, transform 1.5s ease, visibility 1.5s ease;
   z-index: 9999;
 }
 
-/* フェードアウト時のスタイル */
 #splash.hide {
   opacity: 0;
-　transform: scale(0.95);
+  transform: scale(0.95);
   visibility: hidden;
 }
 
+
 /* ロゴ画像 */
 .logo {
-  width: 50%;
+    width: 50%;
     animation: logoPop 1s ease forwards;
 }
 
 /* メインは最初は見えない */
 #main {
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 1.2s ease;
 }
 
 /* スプラッシュが消えたら表示 */
