@@ -33,7 +33,7 @@ prompt = "変な面白おかしい文章を書いて 「わかりました」と
 @app.route('/api/generate', methods=['GET'])
 def generate_text():
     response = client.chat.completions.create(
-        model="gpt-5-mini",  # 高速・安価
+        model="gpt-4o-mini",  # 高速・安価
         messages=[{
             "role": "user",
             "content": prompt

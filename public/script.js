@@ -300,7 +300,7 @@ async function startCourse(config) {
         currentCourseConfig = "ai_mode"; 
 
         try {
-            const response = await fetch('/api/generate');
+            const response = await fetch('/api/generate2');
             const data = await response.json();
 
             // (2) fetch完了後、まだAIモードが選択されているかチェック
