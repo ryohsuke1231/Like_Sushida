@@ -38,6 +38,7 @@ const defaultAmountMap = {
 const courses = {
     otegaru: {
         name: "お手軽 3,000円コース",
+        id: "otegaru",
         keys: [2, 3, 4, 5, 6, 7], // 使用する文字数
         flow: [2, 3, 4, 5, 6, 7, 6, 5, 4, 3], // 単語取得の順番
         time: 60,
@@ -46,6 +47,7 @@ const courses = {
     },
     osusume: {
         name: "お勧め 5,000円コース",
+        id: "osusume",
         keys: [5, 6, 7, 8, 9, 10], // (仮)
         flow: [5, 6, 7, 8, 9, 10, 9, 8, 7, 6], // (仮)
         time: 90,
@@ -54,6 +56,7 @@ const courses = {
     },
     koukyuu: {
         name: "高級 10,000円コース",
+        id: "koukyuu",
         keys: [9, 10, 11, 12, 13, 14], // (仮) ※14文字以上も含むべき
         flow: [9, 10, 11, 12, 13, 14, 13, 12, 11, 10], // (仮)
         time: 120,
@@ -296,8 +299,15 @@ function resetGameState() {
  */
 async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
-    if (config === "ai_mode") {
-        currentCourseConfig = "ai_mode"; 
+    if (config.id === "ai_mode") {
+        currentCourseConfig = {
+            name: "AIモード",
+            id: "ai_mode",
+            time: null,
+            price: null,
+            amountMap: defaultAmountMap
+        };
+        
 
         try {
             const response = await fetch('/api/generate2');
@@ -305,7 +315,7 @@ async function startCourse(config) {
 
             // (2) fetch完了後、まだAIモードが選択されているかチェック
             // （ユーザーが「戻る」を押したり、別コースを選んだりしたら currentCourseConfig が変わっているはず）
-            if (currentCourseConfig !== "ai_mode") {
+            if (currentCourseConfig.id !== "ai_mode") {
                 console.log("AI data fetched, but user navigated away. Discarding data.");
                 return; // yomi/kanji を上書きしない
             }
@@ -488,16 +498,18 @@ function prepareWords(relevantKeys, flow) {
  */
 function startGame() {
     if (start === true) return; // 既に開始している場合は何もしない
+    judge = new TypingJudge(yomi[0]);
     document.getElementById('start-box-button').disabled = true;
     document.getElementById('start-text').textContent = 'スタート！';
     start = 1;
     // 1秒待ってからゲーム画面へ
     const odai_box = document.getElementById('odai-box');
-    if (currentCourseConfig === "ai_mode") {
-        odai_box.querySelectorAll('*').style.whiteSpace = 'nowrap';
-    } else {
-        odai_box.querySelectorAll('*').style.whiteSpace = 'normal';
-    }
+
+    const items = odai_box.querySelectorAll('*');
+    items.forEach(el => {
+        el.style.whiteSpace = (currentCourseConfig.id === "ai_mode") ? 'nowrap' : 'normal';
+    });
+
     setTimeout(() => {
         resultBox.style.display = 'none';
         centerBox.style.display = 'flex';
@@ -508,14 +520,13 @@ function startGame() {
         start_time = Date.now();
 
         // 最初の単語 (yomi[0]) で Judge を初期化
-        judge = new TypingJudge(yomi[0]);
 
         // 最初の単語をセット
         i = 0;
         setNextWord(true); // true = 最初の単語としてセット (iをインクリメントしない)
 
         // タイマースタート
-        if (currentCourseConfig !== "ai_mode") {
+        if (currentCourseConfig.id !== "ai_mode") {
             startTimer();
         }
         document.getElementById('start-box-button').disabled = false;
@@ -576,6 +587,9 @@ function handleKeyDown(event) {
         }
         return; // ゲーム開始前はタイピング処理をしない
     }
+    if (!judge) {
+        return; 
+    }
 
     // 2. ゲーム中の処理
     const isSingleCharacter = event.key.length === 1;
@@ -597,7 +611,7 @@ function handleKeyDown(event) {
 
             // スコア計算 (i++ する前に行う)
             // 完了した単語 (yomi[i]) の文字数から金額を取得
-            if (currentCourseConfig !== "ai_mode") {
+            if (currentCourseConfig.id !== "ai_mode") {
                 let _amount = currentCourseConfig.amountMap[yomi[i].length];
     
                 console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
@@ -609,7 +623,7 @@ function handleKeyDown(event) {
                         countEl.textContent = parseInt(countEl.textContent) + 1;
                     }
                 }
-                if (currentCourseConfig !== "ai_mode") {
+                if (currentCourseConfig.id !== "ai_mode") {
                     // 合計皿数
                     document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
                     //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
@@ -690,7 +704,7 @@ function updateRendaTime() {
         jikan_plus.classList.remove('fade');
         void jikan_plus.offsetWidth; // 再描画トリガー
         jikan_plus.classList.add('fade');
-        if (currentCourseConfig === "ai_mode") {
+        if (currentCourseConfig.id === "ai_mode") {
             document.getElementById('total_got_odai').textContent = `連打メーター：${renda_ends}周`;
         }
     }
