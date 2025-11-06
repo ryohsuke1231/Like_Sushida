@@ -508,7 +508,7 @@ function startGame() {
 
     const items = odai_box.querySelectorAll('*');
     items.forEach(el => {
-        el.style.whiteSpace = (currentCourseConfig.id === "ai_mode") ? 'nowrap' : 'normal';
+        el.style.whiteSpace = (currentCourseConfig.id === "ai_mode") ? 'normal' : 'nowrap';
     });
 
     setTimeout(() => {
