@@ -67,6 +67,7 @@ body {
     padding-right: 3rem;
     height: 30%;
     min-width: 64%;
+    max-width: 90%;
     background-color: #daa520; /* 背景は茶色 */
     border-radius: 12px; /* 角を少し丸める */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);

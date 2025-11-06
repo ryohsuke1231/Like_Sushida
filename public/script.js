@@ -18,6 +18,8 @@ let secondsTimer = null; // タイマーのID
 let ippatsu = false;
 const ippatsu_color = '#a0522d';
 const normal_color = '#b8860b';
+const ai_mode = false;
+let renda_ends = 0;
 
 // DOM要素 (initGame で取得)
 let textBox, yomiBox, renda, remainingTime, startBox, resultBox, centerBox, selectBox, start_text, jikan, possible_text;
@@ -258,6 +260,7 @@ function resetGameState() {
     start_time = 0;
     end_time = 0;
     buffer = "";
+    renda_ends = 0;
     start = false;
     yomi = [];
     kanji = [];
@@ -312,14 +315,21 @@ async function startCourse(config) {
             kanji = splitWithContext(data.kanji);
             console.log(yomi);
             console.log(kanji);
-            return;
+            nokorijikan = null;
+            remainingTime.textContent = ` `;
+            remainingTime.style.display = 'none';
+            
+            document.getElementById('haratta').textContent = ``;
+            
+
+            //return;
         } catch (error) {
             console.error("AIモードのデータ取得に失敗:", error);
             // エラー時も、ユーザーが待機し続けないようコース選択に戻す
             showCourseSelection(); 
             return;
         }
-    }
+    } else {
     currentCourseConfig = config;
 
     // 1. ゲーム状態をリセット
@@ -340,14 +350,15 @@ async function startCourse(config) {
     remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
     jikan.setAttribute('max', config.time); // 時間経過progressのmax
     jikan.value = 0;
+    document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
+
+    }
     let plus = "";
     if (ippatsu === true) {
         plus = "　一発勝負";
     }
-    document.getElementById('course').textContent = config.name + plus;
-    document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
     start_text.textContent = 'スペースかEnterキーを押すとスタートします';
-
+    document.getElementById('course').textContent = config.name + plus;
     // 4. 画面切り替え (スタート待機画面)
     selectBox.style.display = 'none';
     startBox.style.display = 'flex';
@@ -481,6 +492,12 @@ function startGame() {
     document.getElementById('start-text').textContent = 'スタート！';
     start = 1;
     // 1秒待ってからゲーム画面へ
+    const odai_box = document.getElementById('odai-box');
+    if (currentCourseConfig === "ai_mode") {
+        odai_box.querySelectorAll('*').style.whiteSpace = 'nowrap';
+    } else {
+        odai_box.querySelectorAll('*').style.whiteSpace = 'normal';
+    }
     setTimeout(() => {
         resultBox.style.display = 'none';
         centerBox.style.display = 'flex';
@@ -498,7 +515,9 @@ function startGame() {
         setNextWord(true); // true = 最初の単語としてセット (iをインクリメントしない)
 
         // タイマースタート
-        startTimer();
+        if (currentCourseConfig !== "ai_mode") {
+            startTimer();
+        }
         document.getElementById('start-box-button').disabled = false;
 
     }, 1000);
@@ -578,22 +597,26 @@ function handleKeyDown(event) {
 
             // スコア計算 (i++ する前に行う)
             // 完了した単語 (yomi[i]) の文字数から金額を取得
-            let _amount = currentCourseConfig.amountMap[yomi[i].length];
-
-            console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
-
-            // HTMLの皿カウントID (100, 180, ...)
-            if (_amount && amounts.includes(_amount)) {
-                const countEl = document.getElementById(`${_amount}_count`);
-                if (countEl) {
-                    countEl.textContent = parseInt(countEl.textContent) + 1;
+            if (currentCourseConfig !== "ai_mode") {
+                let _amount = currentCourseConfig.amountMap[yomi[i].length];
+    
+                console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
+    
+                // HTMLの皿カウントID (100, 180, ...)
+                if (_amount && amounts.includes(_amount)) {
+                    const countEl = document.getElementById(`${_amount}_count`);
+                    if (countEl) {
+                        countEl.textContent = parseInt(countEl.textContent) + 1;
+                    }
                 }
+                if (currentCourseConfig !== "ai_mode") {
+                    // 合計皿数
+                    document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
+                    //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
+                }
+            } else {
+                
             }
-
-            // 合計皿数
-            document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
-            //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
-
             // 次の単語へ
             setNextWord();
 
@@ -656,6 +679,7 @@ function updateRendaTime() {
         addedTime = 3;
         renda_count = 0; // リセット
         renda.value = renda_count;
+        renda_ends += 1;
     }
 
     if (addedTime > 0) {
@@ -666,6 +690,9 @@ function updateRendaTime() {
         jikan_plus.classList.remove('fade');
         void jikan_plus.offsetWidth; // 再描画トリガー
         jikan_plus.classList.add('fade');
+        if (currentCourseConfig === "ai_mode") {
+            document.getElementById('total_got_odai').textContent = `連打メーター：${renda_ends}周`;
+        }
     }
 }
 
@@ -681,19 +708,23 @@ function setNextWord(isFirstWord = false) {
 
     if (i >= yomi.length) {
         // ★ 完走した場合
-        console.log("すべての単語をタイプしました！");
-        textBox.textContent = "おわり";
-        yomiBox.textContent = ""; 
-        possible_text.innerHTML = "";
-
         if (secondsTimer) clearInterval(secondsTimer);
         secondsTimer = null;
-        start = false;
 
-        end_time = Date.now();
+        start = false; // ゲーム終了
 
-        // 完走した場合も結果表示
-        endGame(); 
+        // 終了表示
+        startBox.style.display = 'none';
+        resultBox.style.display = 'none';
+        centerBox.style.display = 'none';
+        endBox.style.display = 'flex';
+        start_text.textContent = '終了！';
+        textBox.textContent = "終了！";
+        yomiBox.textContent = "";
+        possible_text.innerHTML = "";
+
+        // 結果表示ロジックへ
+        endGame();
 
         return; 
     }

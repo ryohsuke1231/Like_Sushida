@@ -27,13 +27,13 @@ def kata_to_hira(s):
     return "".join(result)
 
 
-prompt = "変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　200文字を目安に"
+prompt = "変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　300文字を目安に"
 
 
 @app.route('/api/generate', methods=['GET'])
 def generate_text():
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  # 高速・安価
+        model="gpt-5-mini",  # 高速・安価
         messages=[{
             "role": "user",
             "content": prompt

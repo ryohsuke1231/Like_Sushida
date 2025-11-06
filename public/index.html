@@ -39,7 +39,6 @@
                 // 認証成功 (200) 
                 // -> 非表示にしていた body を表示する
                 document.body.style.visibility = 'visible';
-
             } catch (error) {
                 // APIリクエスト自体が失敗した場合もリダイレクト
                 console.error('Auth check failed:', error);
@@ -51,6 +50,8 @@
       window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
  
 </head>
 <body>
