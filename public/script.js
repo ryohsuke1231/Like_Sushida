@@ -499,7 +499,7 @@ function prepareWords(relevantKeys, flow) {
  */
 function startGame() {
     if (start === true) return; // 既に開始している場合は何もしない
-    judge = new TypingJudge(yomi[0]);
+    judge = new TypingJudge2(yomi[0]);
     document.getElementById('start-box-button').disabled = true;
     document.getElementById('start-text').textContent = 'スタート！';
     start = 1;
@@ -639,14 +639,21 @@ function handleKeyDown(event) {
             correct_keys_count += 1;
             renda_count += 1;
             renda.value = renda_count;
-            buffer += event.key;
+            buffer += event.key; // buffer は script.js 側で管理
 
+            // ★★★ 修正 ★★★
             // 入力中テキスト表示 (入力済みを暗く、残りを明るく)
+            // possible_text.innerHTML = `
+            //    <span style="color: #444;">${buffer}</span>
+            //    <span style="color: #eee;">${String(judge.getBestMatch(buffer)).substring(buffer.length)}</span>
+            // `;
+
+            const remaining = judge.getBestMatch(); // 引数なしで「残り」だけを取得
             possible_text.innerHTML = `
                 <span style="color: #444;">${buffer}</span>
-                <span style="color: #eee;">${String(judge.getBestMatch(buffer)).substring(buffer.length)}</span>
+                <span style="color: #eee;">${remaining}</span>
             `;
-            //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
+            // ★★★ 修正ここまで ★★★
             updateRendaTime();
 
         } else { // false は「間違い」
@@ -745,13 +752,20 @@ function setNextWord(isFirstWord = false) {
     }
 
     // 次の単語をセット
-    buffer = "";
+    // 次の単語をセット
+    buffer = ""; // ★ この行は script.js 側にも必要です
     judge.setProblem(yomi[i]);
     textBox.textContent = kanji[i];
     yomiBox.textContent = yomi[i];
+
+    // ★★★ 修正 ★★★
+    // possible_text.innerHTML = `
+    //    <span style="color: #eee;">${String(judge.getBestMatch(buffer))}</span>
+    // `;
     possible_text.innerHTML = `
-        <span style="color: #eee;">${String(judge.getBestMatch(buffer))}</span>
+        <span style="color: #eee;">${judge.getBestMatch()}</span>
     `;
+    // ★★★ 修正ここまで ★★★
 }
 
 /**
@@ -1265,6 +1279,374 @@ class TypingJudge {
         matches.sort((a, b) => TypingJudge._comparePriority(a.priority, b.priority));
 
         return matches[0].romaji;
+    }
+}
+/**
+ * TypingJudge クラス (Trie木ベースに全面改修)
+ * * setProblem時にローマ字変換のTrie(オートマトン)を構築し、
+ * checkメソッドでそのTrieをたどる方式に変更。
+ * これにより、長い文章でもデカルト積の爆発を防ぎ、フリーズしなくなります。
+ */
+class TypingJudge2 {
+
+    // クラスの静的プロパティとしてローマ字テーブルを定義 (変更なし)
+    static romanTable = {
+        // 清音
+        "あ": ["a"], "い": ["i"], "う": ["u"], "え": ["e"], "お": ["o"],
+        "か": ["ka"], "き": ["ki"], "く": ["ku"], "け": ["ke"], "こ": ["ko"],
+        "さ": ["sa"], "し": ["si", "shi", "ci"], "す": ["su"], "せ": ["se"], "そ": ["so"],
+        "た": ["ta"], "ち": ["ti", "chi"], "つ": ["tu", "tsu"], "て": ["te"], "と": ["to"],
+        "な": ["na"], "に": ["ni"], "ぬ": ["nu"], "ね": ["ne"], "の": ["no"],
+        "は": ["ha"], "ひ": ["hi"], "ふ": ["fu", "hu"], "へ": ["he"], "ほ": ["ho"],
+        "ま": ["ma"], "み": ["mi"], "む": ["mu"], "め": ["me"], "も": ["mo"],
+        "や": ["ya"], "ゆ": ["yu"], "よ": ["yo"],
+        "ら": ["ra"], "り": ["ri"], "る": ["ru"], "れ": ["re"], "ろ": ["ro"],
+        "わ": ["wa"], "を": ["wo"], "ん": ["n", "nn"], // 'ん' は _buildTrie で特別処理
+
+        // 濁音
+        "が": ["ga"], "ぎ": ["gi"], "ぐ": ["gu"], "げ": ["ge"], "ご": ["go"],
+        "ざ": ["za"], "じ": ["ji", "zi"], "ず": ["zu"], "ぜ": ["ze"], "ぞ": ["zo"],
+        "だ": ["da"], "ぢ": ["di"], "づ": ["du"], "で": ["de"], "ど": ["do"],
+        "ば": ["ba"], "び": ["bi"], "ぶ": ["bu"], "べ": ["be"], "ぼ": ["bo"],
+
+        // 半濁音
+        "ぱ": ["pa"], "ぴ": ["pi"], "ぷ": ["pu"], "ぺ": ["pe"], "ぽ": ["po"],
+
+        // 拗音 (きゃ行など)
+        "きゃ": ["kya", "kixya"], "きゅ": ["kyu", "kixyu"], "きぇ": ["kye", "kixye"], "きょ": ["kyo", "kixyo"],
+        "ぎゃ": ["gya", "gixya"], "ぎゅ": ["gyu", "gixyu"], "ぎぇ": ["gye", "gixye"], "ぎょ": ["gyo", "gixyo"],
+        "しゃ": ["sha", "sya", "sixya"], "しゅ": ["shu", "syu", "sixyu"], "しぇ": ["she", "sye", "sixye"], "しょ": ["sho", "syo", "sixyo"],
+        "じゃ": ["ja", "zya", "jixya"], "じゅ": ["ju", "zyu", "jixyu"], "じぇ": ["je", "zye", "jixye"], "じょ": ["jo", "zyo", "jixyo"],
+        "ちゃ": ["tya", "cha", "chixya"], "ちゅ": ["tyu", "chu", "chixyu"], "ちぇ": ["tye", "che", "chixye"], "ちょ": ["tyo", "cho", "chixyo"],
+        "ぢゃ": ["dya"], "ぢゅ": ["dyu"], "ぢぇ": ["dye"], "ぢょ": ["dyo"],
+        "にゃ": ["nya", "nixya"], "にゅ": ["nyu", "nixyu"], "にょ": ["nyo", "nixyo"],
+        "ひゃ": ["hya", "hixya"], "ひゅ": ["hyu", "hixyu"], "ひょ": ["hyo", "hixyo"],
+        "びゃ": ["bya", "bixya"], "びゅ": ["byu", "bixyu"], "びょ": ["byo", "bixyo"],
+        "ぴゃ": ["pya", "pixya"], "ぴゅ": ["pyu", "pixyu"], "ぴょ": ["pyo", "pixyo"],
+        "みゃ": ["mya", "mixya"], "みゅ": ["myu", "mixyu"], "みょ": ["myo", "mixyo"],
+        "りゃ": ["rya", "rixya"], "りゅ": ["ryu", "rixyu"], "りょ": ["ryo", "rixyo"],
+
+        // 小さい ぁ ぃ ぅ ぇ ぉ (ふぁ など)
+        "ふぁ": ["fa", "fuxa"], "ふぃ": ["fi", "fuxi"], "ふぇ": ["fe", "fuxe"], "ふぉ": ["fo", "fuxo"],
+        "うぁ": ["wha"], "うぃ": ["wi"], "うぇ": ["we"], "うぉ": ["who"],
+        "ゔぁ": ["va"], "ゔぃ": ["vi"], "ゔ": ["vu"], "ゔぇ": ["ve"], "ゔぉ": ["vo"],
+        "てぃ": ["thi"], "でぃ": ["dhi"], "とぅ": ["twu"], "どぅ": ["dwu"],
+
+        // 記号など
+        "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "　": [" "], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
+
+        // 小文字単体 (x/l 始まり)
+        "ぁ": ["xa", "la"], "ぃ": ["xi", "li"], "ぅ": ["xu", "lu"], "ぇ": ["xe", "le"], "ぉ": ["xo", "lo"],
+        "ゃ": ["xya", "lya"], "ゅ": ["xyu", "lyu"], "ょ": ["xyo", "lyo"],
+        "っ": ["xtu", "ltu", "xtsu"], // 促音単体
+    };
+
+    /**
+     * インスタンスを初期化し、最初の問題を設定する
+     * @param {string} hiraganaStr - 最初の問題（ひらがな文字列）
+     */
+    constructor(hiraganaStr) {
+        this.nowStr = "";           // 現在のお題（ひらがな）
+        this.hiraganaBlocks = [];   // お題を分割した配列 (例: ["か", "っ", "た"])
+
+        // Trie (オートマトン) のための状態
+        this.rootNode = null;       // Trie のルートノード
+        this.currentNodes = [];     // 現在アクティブなノードのリスト
+
+        this.setProblem(hiraganaStr);
+    }
+
+    /**
+     * 新しい問題文字列を設定し、Trieを構築し、状態をリセットする
+     * @param {string} newStr - 新しい問題（ひらがな文字列）
+     */
+    setProblem(newStr) {
+        this.nowStr = newStr;
+        this.hiraganaBlocks = TypingJudge._splitHiragana(this.nowStr);
+
+        // Trie を構築する
+        this.rootNode = { children: {}, bestChildKey: null, isEnd: false };
+        this._buildTrie(this.rootNode, 0);
+
+        // 現在の状態をリセット
+        this.currentNodes = [this.rootNode];
+    }
+
+    /**
+     * ひらがな文字列をローマ字テーブルに基づいて分割する (変更なし)
+     * @param {string} s - ひらがな文字列
+     * @returns {string[]} 分割された文字列の配列
+     * @private
+     * @static
+     */
+    static _splitHiragana(s) {
+        let i = 0;
+        const result = [];
+        const table = this.romanTable; // 高速化のため参照
+        while (i < s.length) {
+            // 2文字がテーブルにあるか (例: "きゃ")
+            if (i + 1 < s.length && (table.hasOwnProperty(s.substring(i, i + 2)))) {
+                result.push(s.substring(i, i + 2));
+                i += 2;
+            }
+            // 1文字がテーブルにあるか
+            else if (table.hasOwnProperty(s[i])) {
+                result.push(s[i]);
+                i += 1;
+            }
+            // テーブルにない文字 (漢字、カタカナ、記号など)
+            else {
+                result.push(s[i]); // そのまま追加
+                i += 1;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * ローマ字表記の最初の子音を返す (変更なし)
+     * @param {string} romaji - ローマ字表記
+     * @returns {string} 最初の子音（見つからなければ空文字）
+     * @private
+     * @static
+     */
+    static _firstConsonant(romaji) {
+        const match = romaji.match(/[bcdfghjklmnpqrstvwxyz]/);
+        return match ? match[0] : "";
+    }
+
+    /**
+     * [新設] Trie (オートマトン) を構築する再帰関数
+     * @param {object} node - 現在のTrieノード
+     * @param {number} hIndex - hiraganaBlocks のインデックス
+     * @private
+     */
+    _buildTrie(node, hIndex) {
+        // 終了条件: すべてのひらがなブロックを処理した
+        if (hIndex >= this.hiraganaBlocks.length) {
+            node.isEnd = true; // このノードは文末
+            return;
+        }
+
+        const ch = this.hiraganaBlocks[hIndex];
+        const table = TypingJudge.romanTable;
+        let isBestChildSet = false; // このノードのベストな次打鍵を設定したか
+
+        // 1. 促音 ("っ") の処理
+        if (ch === "っ" && hIndex + 1 < this.hiraganaBlocks.length) {
+            const nextCh = this.hiraganaBlocks[hIndex + 1];
+            const nextRomajiList = table[nextCh] || [];
+            const nextIsConsonant = nextRomajiList.length > 0 && !"aiueo".includes(nextRomajiList[0][0]) && nextCh !== "ん";
+
+            // A. 次が子音の場合 (例: "った")
+            if (nextIsConsonant) {
+                // パターン 1: 子音重ね (tta, ttsu, tcha, ccha など)
+                for (const nr of nextRomajiList) {
+                    let firstCon = "";
+                    if (nr.startsWith("ch")) {
+                        firstCon = "t"; // tcha
+                    } else {
+                        firstCon = TypingJudge._firstConsonant(nr); // tta
+                    }
+
+                    if (firstCon) {
+                        // "t" (tta の最初のt)
+                        let nextNode = node.children[firstCon];
+                        if (!nextNode) {
+                            nextNode = { children: {}, bestChildKey: null, isEnd: false };
+                            node.children[firstCon] = nextNode;
+                            // ★ 優先 1: これをベストな次打鍵とする
+                            if (!isBestChildSet) {
+                                node.bestChildKey = firstCon;
+                                isBestChildSet = true;
+                            }
+                        }
+
+                        // "ta" (tta の残りの ta)
+                        // この時点で hIndex+2 (次の次) のTrieを構築
+                        this._addRomajiPath(nextNode, nr, hIndex + 2);
+                    }
+                     // ccha のパターン (c + cha)
+                    if (nr.startsWith("ch")) {
+                        let nextNode = node.children["c"];
+                        if (!nextNode) {
+                            nextNode = { children: {}, bestChildKey: null, isEnd: false };
+                            node.children["c"] = nextNode;
+                            if (!isBestChildSet) {
+                                node.bestChildKey = "c";
+                                isBestChildSet = true;
+                            }
+                        }
+                        this._addRomajiPath(nextNode, nr, hIndex + 2);
+                    }
+                }
+            }
+
+            // B. パターン 2: 単体「っ」 (xtu, ltu) + 次の文字 (xtuta)
+            // (次が子音でも母音でも、このパターンは有効)
+            const sokuonSingle = table["っ"] || ["xtu", "ltu"];
+            for (const r of sokuonSingle) {
+                // "xtu" のパスを追加し、その終端ノードから hIndex+1 ("た") のTrieを構築
+                this._addRomajiPath(node, r, hIndex + 1, !isBestChildSet);
+                if (!isBestChildSet) isBestChildSet = true; // ★ 優先 2
+            }
+
+            return; // 促音処理はここで終わり
+        }
+
+        // 2. "ん" の処理
+        else if (ch === "ん") {
+            let nextCh = (hIndex + 1 < this.hiraganaBlocks.length) ? this.hiraganaBlocks[hIndex + 1] : null;
+            let nextRomajiList = nextCh ? (table[nextCh] || []) : [];
+
+            const isVowel = nextCh && ["あ", "い", "う", "え", "お", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ"].includes(nextCh);
+            const isY = nextCh && ["や", "ゆ", "よ", "ゃ", "ゅ", "ょ"].includes(nextCh);
+            let isN = false;
+            if (nextRomajiList.length > 0) {
+                for (const nr of nextRomajiList) {
+                    if (nr.startsWith("n")) isN = true;
+                }
+            }
+
+            // "nn" (優先されるべきパターン: んあ, んや, んな, 文末)
+            if (isVowel || isY || isN || !nextCh) {
+                this._addRomajiPath(node, "nn", hIndex + 1, !isBestChildSet);
+                if (!isBestChildSet) isBestChildSet = true; // ★ 優先 1
+            }
+
+            // "n" (優先されるべきパターン: その他子音, 記号)
+            if (!isVowel) { // "んあ" (na) はダメ
+                this._addRomajiPath(node, "n", hIndex + 1, !isBestChildSet);
+                if (!isBestChildSet) isBestChildSet = true; // ★ 優先 1 or 2
+            }
+
+            return; // "ん" 処理はここで終わり
+        }
+
+        // 3. その他の文字 (または単体の "っ")
+        const options = table[ch] || [ch];
+        for (const r of options) {
+            this._addRomajiPath(node, r, hIndex + 1, !isBestChildSet);
+            if (!isBestChildSet) isBestChildSet = true;
+        }
+    }
+
+    /**
+     * [新設] Trieにローマ字のパスを追加するヘルパー関数
+     * @param {object} startNode - 開始ノード
+     * @param {string} romaji - 追加するローマ字 (例: "kya")
+     * @param {number} nextHIndex - このパスが完了した後の次の hiraganaBlocks インデックス
+     * @param {boolean} [isBest=false] - このパスを bestChildKey として設定するか
+     * @private
+     */
+    _addRomajiPath(startNode, romaji, nextHIndex, isBest = false) {
+        let currentNode = startNode;
+
+        for (let k = 0; k < romaji.length; k++) {
+            const char = romaji[k];
+
+            let nextNode = currentNode.children[char];
+            if (!nextNode) {
+                nextNode = { children: {}, bestChildKey: null, isEnd: false };
+                currentNode.children[char] = nextNode;
+
+                // この分岐の最初の文字を bestChildKey とする
+                if (k === 0 && isBest && !currentNode.bestChildKey) {
+                    currentNode.bestChildKey = char;
+                }
+            }
+            currentNode = nextNode;
+        }
+
+        // このパスの終端ノードから、次のひらがなブロックのTrieを構築
+        this._buildTrie(currentNode, nextHIndex);
+    }
+
+    /**
+     * [ロジック変更]
+     * 入力文字 (s) をバッファに追加し、判定を行う。
+     * @param {string} s - 入力された1文字
+     * @returns {boolean | null}
+     * true: 入力は正しいが、まだ途中
+     * false: 入力は間違い
+     * null: 入力は正しく、完了した
+     */
+    check(s) {
+        const newActiveNodes = [];
+        let isEnd = false;
+
+        for (const node of this.currentNodes) {
+            const nextNode = node.children[s];
+            if (nextNode) {
+                // 文末ノードに到達したか (お題全体の終わり)
+                if (nextNode.isEnd) {
+                    isEnd = true;
+                }
+                newActiveNodes.push(nextNode);
+            }
+        }
+
+        // どのノードからも先に進めない = ミスタイプ
+        if (newActiveNodes.length === 0) {
+            return false;
+        }
+
+        // 状態を更新
+        this.currentNodes = newActiveNodes;
+
+        // 文末に到達した = 完了
+        if (isEnd) {
+            return null;
+        }
+
+        // 途中
+        return true;
+    }
+
+
+    /**
+     * [ロジック変更]
+     * 現在の入力状態から、最も優先度の高い「残りの」ローマ字表記を返す。
+     * (引数 str は不要)
+     *
+     * @returns {string}
+     * 最も優先度の高い残りのローマ字表記(文字列)。
+     */
+    getBestMatch() {
+        if (!this.currentNodes || this.currentNodes.length === 0) {
+            return "";
+        }
+
+        // 現在アクティブなノードの中で、
+        // 優先パス (bestChildKey) が設定されているノードを最優先で選ぶ
+        let bestNode = this.currentNodes[0];
+        for (const node of this.currentNodes) {
+            if (node.bestChildKey) {
+                bestNode = node;
+                break;
+            }
+        }
+
+        // bestNode から bestChildKey をたどって残りの文字列を生成
+        let remaining = "";
+        let currentNode = bestNode;
+
+        // 念のため無限ループ防止 (Trieが深すぎる場合など)
+        for (let i = 0; i < 100; i++) { 
+            const bestKey = currentNode.bestChildKey;
+            if (!bestKey || !currentNode.children[bestKey]) {
+                break; // この先がない
+            }
+
+            remaining += bestKey;
+            currentNode = currentNode.children[bestKey];
+
+            if (currentNode.isEnd) {
+                break; // 文末に達した
+            }
+        }
+
+        return remaining;
     }
 }
 /**
