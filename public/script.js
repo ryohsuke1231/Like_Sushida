@@ -62,6 +62,13 @@ const courses = {
         time: 120,
         price: 10000,
         amountMap: defaultAmountMap // (仮)
+    },
+    ai_mode: {
+        name: "AIモード",
+        id: "ai_mode",
+        time: null,
+        price: null,
+        amountMap: defaultAmountMap
     }
 };
 
@@ -204,7 +211,7 @@ function setupEventListeners() {
     document.getElementById('otegaru').addEventListener('click', () => startCourse(courses.otegaru));
     document.getElementById('osusume').addEventListener('click', () => startCourse(courses.osusume));
     document.getElementById('koukyuu').addEventListener('click', () => startCourse(courses.koukyuu));
-    document.getElementById('ai-mode').addEventListener('click', () => startCourse("ai_mode"));
+    document.getElementById('ai-mode').addEventListener('click', () => startCourse(courses.ai_mode));
 
     // 結果画面ボタン
     const retryButtons = document.querySelectorAll('.retry');
@@ -300,13 +307,7 @@ function resetGameState() {
 async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
     if (config.id === "ai_mode") {
-        currentCourseConfig = {
-            name: "AIモード",
-            id: "ai_mode",
-            time: null,
-            price: null,
-            amountMap: defaultAmountMap
-        };
+        currentCourseConfig = config;
         
 
         try {
