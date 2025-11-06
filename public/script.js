@@ -294,14 +294,31 @@ function resetGameState() {
 async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
     if (config === "ai_mode") {
-        /*ここで実装*/
-        const response = await fetch('/api/generate');
-        const data = await response.json();
-        yomi = splitWithContext(data.yomi);
-        kanji = splitWithContext(data.kanji);
-        console.log(yomi);
-        console.log(kanji);
-        return;
+        currentCourseConfig = "ai_mode"; 
+
+        try {
+            const response = await fetch('/api/generate');
+            const data = await response.json();
+
+            // (2) fetch完了後、まだAIモードが選択されているかチェック
+            // （ユーザーが「戻る」を押したり、別コースを選んだりしたら currentCourseConfig が変わっているはず）
+            if (currentCourseConfig !== "ai_mode") {
+                console.log("AI data fetched, but user navigated away. Discarding data.");
+                return; // yomi/kanji を上書きしない
+            }
+
+            // (3) AIモードの単語をセット
+            yomi = splitWithContext(data.yomi);
+            kanji = splitWithContext(data.kanji);
+            console.log(yomi);
+            console.log(kanji);
+            return;
+        } catch (error) {
+            console.error("AIモードのデータ取得に失敗:", error);
+            // エラー時も、ユーザーが待機し続けないようコース選択に戻す
+            showCourseSelection(); 
+            return;
+        }
     }
     currentCourseConfig = config;
 
