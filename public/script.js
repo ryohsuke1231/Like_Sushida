@@ -1029,7 +1029,7 @@ class TypingJudge2 {
         const table = TypingJudge2.romanTable;
         let isBestChildSet = false;
 
-        // 1. 促音 ("っ") の処理
+        // 1. 促音 ("っ") の処理 (変更なし)
         if (ch === "っ" && hIndex + 1 < this.hiraganaBlocks.length) {
             const nextCh = this.hiraganaBlocks[hIndex + 1];
             const nextRomajiList = table[nextCh] || [];
@@ -1056,7 +1056,7 @@ class TypingJudge2 {
             }
             const sokuonSingle = table["っ"] || ["xtu", "ltu"];
             for (const r of sokuonSingle) {
-                this._addPath(node, r, hIndex + 1, !isBestChildSet); 
+                this._addPath(node, r, hIndex + 1, !isBestChildSet);
                 if (!isBestChildSet) isBestChildSet = true;
             }
         }
@@ -1068,9 +1068,9 @@ class TypingJudge2 {
 
             const isVowel = nextCh && ["あ", "い", "う", "え", "お", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ"].includes(nextCh);
             const isY = nextCh && ["や", "ゆ", "よ", "ゃ", "ゅ", "ょ"].includes(nextCh);
-            // ★★★ ここから修正 ★★★
+
+            // "な行" かどうかの判定 (ユーザーのコードを流用)
             let isN = false;
-            // 次の文字が存在し、かつ「ん」ではなく、ローマ字が "n" で始まる場合
             if (nextCh && nextCh !== "ん" && nextRomajiList.length > 0) {
                 for (const nr of nextRomajiList) {
                     if (nr.startsWith("n")) {
@@ -1079,58 +1079,100 @@ class TypingJudge2 {
                     }
                 }
             }
-                        // ★★★ 修正ここまで ★★★
 
-            let allowN = false;
-            let allowNN = false;
-            let nnIsBest = false;
+            // ★★★ ここからが修正 ★★★
 
-            if (isVowel) { // んあ (例: かんい)
-                allowNN = true;
-                allowN = false; // 'n' を許可しない
-                nnIsBest = true; // kanni のみ
-            } else if (isY) { // んや (例: はんよう)
-                allowNN = true;
-                allowN = false; // ★ 修正: 'n' を許可しない
-                nnIsBest = true; // hannyou のみ
-            } else if (isN) { // んな (例: そんな)
-                allowNN = true;
-                allowN = true; // 'n' 'nn' 両方許可
-                nnIsBest = false; // nna (sonna) を優先
-            } else if (!nextCh) { // 文末
-                allowNN = true;
-                allowN = false; // 'n' を許可しない
-                nnIsBest = true; // nn のみ
-            } else { // その他 (例: かんと)
-                allowN = true;
-                allowNN = true; // 'n' 'nn' 両方許可
-                nnIsBest = false; // n (kanto) を優先
-            }
+            if (isN) { // んな (例: そんな)
+                // 自己ループバグを回避するため、_addPath を使わずに手動で構築する
 
-            if (nnIsBest) {
-                if (allowNN) {
-                    this._addPath(node, "nn", hIndex + 1, true); // 優先
-                    isBestChildSet = true;
+                // 1. "n" のパス (n, kanto 優先) を構築
+                const n_node = { children: {}, bestChildKey: null, isEnd: false };
+                node.children['n'] = n_node;
+                if (!isBestChildSet) {
+                    node.bestChildKey = 'n';
+                    isBestChildSet = true; // "n" を優先パスに設定
                 }
-                if (allowN) {
-                    this._addPath(node, "n", hIndex + 1, false); // 非優先
+
+                // 2. "nn" のパス (nn) を構築
+                let nn_node;
+                // "n" の子ノードとして "n" が既に存在するか確認
+                if (!node.children['n'].children['n']) {
+                     node.children['n'].children['n'] = { children: {}, bestChildKey: null, isEnd: false };
                 }
+                nn_node = node.children['n'].children['n']; // "nn" の終端ノード
+
+                // 3. subTrie (「な」のTrie) を一度だけ取得
+                const subTrie = this._buildTrie(hIndex + 1);
+
+                // 4. n_node ("n"終端) に subTrie をマージ
+                // (※ _addPath のマージ処理を模倣)
+                for (const key in subTrie.children) {
+                    if (!n_node.children[key]) { // 衝突回避
+                        n_node.children[key] = subTrie.children[key];
+                    }
+                }
+                if (!n_node.bestChildKey) {
+                    n_node.bestChildKey = subTrie.bestChildKey;
+                }
+                n_node.isEnd = subTrie.isEnd;
+
+                // 5. nn_node ("nn"終端) に subTrie をマージ
+                // (※ _addPath のマージ処理を模倣)
+                for (const key in subTrie.children) {
+                    if (!nn_node.children[key]) { // 衝突回避
+                        nn_node.children[key] = subTrie.children[key];
+                    }
+                }
+                if (!nn_node.bestChildKey) {
+                    nn_node.bestChildKey = subTrie.bestChildKey;
+                }
+                nn_node.isEnd = subTrie.isEnd;
+
             } else {
-                if (allowN) {
-                    this._addPath(node, "n", hIndex + 1, true); // 優先
-                    isBestChildSet = true;
+                // "ん" だが "な行" ではない場合 (元のロジックをそのまま使用)
+
+                let allowN = false;
+                let allowNN = false;
+                let nnIsBest = false;
+
+                if (isVowel) { // んあ (例: かんい)
+                    allowNN = true; allowN = false; nnIsBest = true;
+                } else if (isY) { // んや (例: はんよう)
+                    allowNN = true; allowN = false; nnIsBest = true; // ★ 修正
+                } else if (!nextCh) { // 文末
+                    allowNN = true; allowN = false; nnIsBest = true;
+                } else { // その他 (例: かんと)
+                    allowN = true; allowNN = true; nnIsBest = false;
                 }
-                if (allowNN) {
-                    this._addPath(node, "nn", hIndex + 1, false); // 非優先
+
+                if (nnIsBest) {
+                    if (allowNN) {
+                        this._addPath(node, "nn", hIndex + 1, true); // 優先
+                        isBestChildSet = true;
+                    }
+                    if (allowN) { // (通らないはず)
+                        this._addPath(node, "n", hIndex + 1, false);
+                    }
+                } else {
+                    if (allowN) {
+                        this._addPath(node, "n", hIndex + 1, true); // 優先
+                        isBestChildSet = true;
+                    }
+                    if (allowNN) {
+                        this._addPath(node, "nn", hIndex + 1, false); // 非優先
+                    }
                 }
             }
+
+            // ★★★ 修正ここまで ★★★
+
         }
 
-        // 3. その他の文字 (または単体の "っ")
+        // 3. その他の文字 (または単体の "っ") (変更なし)
         else {
             const options = table[ch] || [ch];
             for (const r of options) {
-                this._addPath(node, r, hIndex + 1, !isBestChildSet); 
+                this._addPath(node, r, hIndex + 1, !isBestChildSet);
                 if (!isBestChildSet) isBestChildSet = true;
             }
         }
