@@ -375,12 +375,12 @@ progress::-moz-progress-bar {
     justify-content: flex-start; /* 上寄せに変更 */
     width: 80%; /* 幅を調整 */
     /*max-width: 700px; /* PCでも見やすいように最大幅を指定 */
-    height: auto;
+    height: 80%;
     background-color: #b8860b; /* 背景色（木目調の代わり） */
     border-radius: 5rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     padding: 3rem;
-    overflow-y: visible;
+    overflow-y: scroll;
     margin: 2rem auto; /* ページ中央に配置 */
     transition: background-color 0.7s ease;
 }
@@ -400,7 +400,7 @@ progress::-moz-progress-bar {
 
 
 /* 最後のコースの下マージンを削除 */
-#ai-mode-text {
+#wiki-mode-text {
     margin-bottom: 0;
 }
 
@@ -430,10 +430,7 @@ progress::-moz-progress-bar {
 /* --- テキストスタイルの調整 --- */
 
 /* コース名（お手軽、お勧め、高級） */
-#otegaru-text,
-#osusume-text,
-#ai-mode-text,
-#koukyuu-text {
+.course-name {
     font-size: 1.8rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
@@ -479,6 +476,9 @@ progress::-moz-progress-bar {
 }
 #ai-mode-text {
     color: #556b2f; /* 緑系 */
+}
+#wiki-mode-text {
+    color: #252525; /* 灰色系 */
 }
 
 /* コース価格 */
