@@ -1287,6 +1287,17 @@ class TypingJudge {
  * checkメソッドでそのTrieをたどる方式に変更。
  * これにより、長い文章でもデカルト積の爆発を防ぎ、フリーズしなくなります。
  */
+/**
+ * TypingJudge クラス (Trie木ベース / 改善版)
+ *
+ * 改善点:
+ * 1. `getBestMatch`: 優先パス(bestChildKey)がなくても、
+ * 辞書順で最初のパスをたどることで、必ず「残り」の文字列を
+ * 最後まで返すように修正。
+ * 2. `_buildTrie`: 「ん」の処理を、元のクラスの仕様
+ * （「んあ」「文末」は "nn" のみ、「その他」は "n" 優先など）に
+ * 厳密に準拠するように修正。
+ */
 class TypingJudge2 {
 
     // クラスの静的プロパティとしてローマ字テーブルを定義 (変更なし)
@@ -1301,7 +1312,7 @@ class TypingJudge2 {
         "ま": ["ma"], "み": ["mi"], "む": ["mu"], "め": ["me"], "も": ["mo"],
         "や": ["ya"], "ゆ": ["yu"], "よ": ["yo"],
         "ら": ["ra"], "り": ["ri"], "る": ["ru"], "れ": ["re"], "ろ": ["ro"],
-        "わ": ["wa"], "を": ["wo"], "ん": ["n", "nn"], // 'ん' は _buildTrie で特別処理
+        "わ": ["wa"], "を": ["wo"], "ん": ["n", "nn"],
 
         // 濁音
         "が": ["ga"], "ぎ": ["gi"], "ぐ": ["gu"], "げ": ["ge"], "ご": ["go"],
@@ -1333,7 +1344,7 @@ class TypingJudge2 {
         "てぃ": ["thi"], "でぃ": ["dhi"], "とぅ": ["twu"], "どぅ": ["dwu"],
 
         // 記号など
-        "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "　": [" "], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
+        "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "S": [" "], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
 
         // 小文字単体 (x/l 始まり)
         "ぁ": ["xa", "la"], "ぃ": ["xi", "li"], "ぅ": ["xu", "lu"], "ぇ": ["xe", "le"], "ぉ": ["xo", "lo"],
@@ -1416,7 +1427,7 @@ class TypingJudge2 {
     }
 
     /**
-     * [新設] Trie (オートマトン) を構築する再帰関数
+     * Trie (オートマトン) を構築する再帰関数
      * @param {object} node - 現在のTrieノード
      * @param {number} hIndex - hiraganaBlocks のインデックス
      * @private
@@ -1487,14 +1498,15 @@ class TypingJudge2 {
             const sokuonSingle = table["っ"] || ["xtu", "ltu"];
             for (const r of sokuonSingle) {
                 // "xtu" のパスを追加し、その終端ノードから hIndex+1 ("た") のTrieを構築
-                this._addRomajiPath(node, r, hIndex + 1, !isBestChildSet);
+                // isBestChildSet がまだ false なら、これを優先パスとして設定
+                this._addRomajiPath(node, r, hIndex + 1, !isBestChildSet); 
                 if (!isBestChildSet) isBestChildSet = true; // ★ 優先 2
             }
 
             return; // 促音処理はここで終わり
         }
 
-        // 2. "ん" の処理
+        // 2. "ん" の処理 (★★★ ロジック修正 ★★★)
         else if (ch === "ん") {
             let nextCh = (hIndex + 1 < this.hiraganaBlocks.length) ? this.hiraganaBlocks[hIndex + 1] : null;
             let nextRomajiList = nextCh ? (table[nextCh] || []) : [];
@@ -1508,16 +1520,52 @@ class TypingJudge2 {
                 }
             }
 
-            // "nn" (優先されるべきパターン: んあ, んや, んな, 文末)
-            if (isVowel || isY || isN || !nextCh) {
-                this._addRomajiPath(node, "nn", hIndex + 1, !isBestChildSet);
-                if (!isBestChildSet) isBestChildSet = true; // ★ 優先 1
+            let allowN = false;
+            let allowNN = false;
+            let nnIsBest = false; // "nn" を優先パス(bestChildKey)にするか
+
+            if (isVowel) { // んあ (例: かんい)
+                allowNN = true;
+                nnIsBest = true;
+                // allowN = false (nni は許可, ni はダメ)
+            } else if (isY) { // んや (例: こんや)
+                allowNN = true;
+                allowN = true;
+                nnIsBest = true; // nnya を優先
+            } else if (isN) { // んな (例: そんな)
+                allowNN = true;
+                allowN = true;
+                nnIsBest = true; // nnna を優先
+            } else if (!nextCh) { // 文末
+                allowNN = true;
+                nnIsBest = true;
+                // allowN = false (文末の n は許可しない)
+            } else { // その他 (例: かんと)
+                allowN = true;
+                allowNN = true;
+                nnIsBest = false; // n を優先 (kanto)
             }
 
-            // "n" (優先されるべきパターン: その他子音, 記号)
-            if (!isVowel) { // "んあ" (na) はダメ
-                this._addRomajiPath(node, "n", hIndex + 1, !isBestChildSet);
-                if (!isBestChildSet) isBestChildSet = true; // ★ 優先 1 or 2
+            if (nnIsBest) {
+                // nn を優先パスとして構築
+                if (allowNN) {
+                    this._addRomajiPath(node, "nn", hIndex + 1, true); // 優先
+                    isBestChildSet = true;
+                }
+                // n が許可されていれば、非優先パスとして構築
+                if (allowN) {
+                    this._addRomajiPath(node, "n", hIndex + 1, false); // 非優先
+                }
+            } else {
+                // n を優先パスとして構築
+                if (allowN) {
+                    this._addRomajiPath(node, "n", hIndex + 1, true); // 優先
+                    isBestChildSet = true;
+                }
+                // nn が許可されていれば、非優先パスとして構築
+                if (allowNN) {
+                    this._addRomajiPath(node, "nn", hIndex + 1, false); // 非優先
+                }
             }
 
             return; // "ん" 処理はここで終わり
@@ -1526,13 +1574,15 @@ class TypingJudge2 {
         // 3. その他の文字 (または単体の "っ")
         const options = table[ch] || [ch];
         for (const r of options) {
-            this._addRomajiPath(node, r, hIndex + 1, !isBestChildSet);
+            // isBestChildSet がまだ false なら、
+            // 最初の選択肢 (例: "si") を優先パスとして設定
+            this._addRomajiPath(node, r, hIndex + 1, !isBestChildSet); 
             if (!isBestChildSet) isBestChildSet = true;
         }
     }
 
     /**
-     * [新設] Trieにローマ字のパスを追加するヘルパー関数
+     * Trieにローマ字のパスを追加するヘルパー関数
      * @param {object} startNode - 開始ノード
      * @param {string} romaji - 追加するローマ字 (例: "kya")
      * @param {number} nextHIndex - このパスが完了した後の次の hiraganaBlocks インデックス
@@ -1550,7 +1600,8 @@ class TypingJudge2 {
                 nextNode = { children: {}, bestChildKey: null, isEnd: false };
                 currentNode.children[char] = nextNode;
 
-                // この分岐の最初の文字を bestChildKey とする
+                // この分岐の最初の文字を bestChildKey として設定する
+                // (currentNode.bestChildKey がまだ設定されていない場合のみ)
                 if (k === 0 && isBest && !currentNode.bestChildKey) {
                     currentNode.bestChildKey = char;
                 }
@@ -1559,11 +1610,21 @@ class TypingJudge2 {
         }
 
         // このパスの終端ノードから、次のひらがなブロックのTrieを構築
+        // (既に構築済みのノードを上書きしないよう、再帰呼び出しの重複を避ける)
+        // ※
+        //   厳密には this._buildTrie(currentNode, nextHIndex); を呼ぶべきだが、
+        //   同じ hIndex に対する _buildTrie が何度も呼ばれると処理が重くなる。
+        //   今回のロジックでは、romaji の終端ノードが次の hIndex の処理を開始する、
+        //   という流れが保証されていればよいので、
+        //   終端ノード (currentNode) に nextHIndex の情報を
+        //   持たせるだけでも良い。
+        //   ...が、現状の実装 (hIndex >= length で isEnd を設定) を
+        //   維持するため、ここでは再帰呼び出しを行う。
+        //   (パフォーマンスが問題になる場合、メモ化やDPが必要)
         this._buildTrie(currentNode, nextHIndex);
     }
 
     /**
-     * [ロジック変更]
      * 入力文字 (s) をバッファに追加し、判定を行う。
      * @param {string} s - 入力された1文字
      * @returns {boolean | null}
@@ -1575,6 +1636,8 @@ class TypingJudge2 {
         const newActiveNodes = [];
         let isEnd = false;
 
+        // 現在アクティブな全ノード (通常は1つ) から、
+        // 次の文字 s で遷移できるノードを探す
         for (const node of this.currentNodes) {
             const nextNode = node.children[s];
             if (nextNode) {
@@ -1605,9 +1668,9 @@ class TypingJudge2 {
 
 
     /**
-     * [ロジック変更]
-     * 現在の入力状態から、最も優先度の高い「残りの」ローマ字表記を返す。
-     * (引数 str は不要)
+     * (★★★ ロジック修正 ★★★)
+     * 現在の入力状態から、最も優先度の高い「残りの」ローマ字表記を
+     * 最後までたどって返す。
      *
      * @returns {string}
      * 最も優先度の高い残りのローマ字表記(文字列)。
@@ -1631,18 +1694,31 @@ class TypingJudge2 {
         let remaining = "";
         let currentNode = bestNode;
 
-        // 念のため無限ループ防止 (Trieが深すぎる場合など)
-        for (let i = 0; i < 100; i++) { 
-            const bestKey = currentNode.bestChildKey;
-            if (!bestKey || !currentNode.children[bestKey]) {
-                break; // この先がない
+        // 無限ループ防止 (Trieが深すぎる場合など)
+        for (let i = 0; i < 500; i++) { // 念のため最大500文字
+
+            // 優先キー (bestChildKey) があればそれを使う
+            let nextKey = currentNode.bestChildKey;
+
+            // ★ 改善点: 優先キーがない場合、
+            // フォールバックとして辞書順で最初のキーを使う
+            if (!nextKey || !currentNode.children[nextKey]) {
+                const keys = Object.keys(currentNode.children);
+                if (keys.length > 0) {
+                    nextKey = keys[0]; // 辞書順で最初
+                } else {
+                    break; // この先に子ノードがない
+                }
             }
 
-            remaining += bestKey;
-            currentNode = currentNode.children[bestKey];
+            remaining += nextKey;
+            currentNode = currentNode.children[nextKey];
 
             if (currentNode.isEnd) {
                 break; // 文末に達した
+            }
+            if (!currentNode) {
+                break; // 念のため
             }
         }
 
