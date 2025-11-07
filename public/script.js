@@ -43,7 +43,8 @@ const courses = {
         flow: [2, 3, 4, 5, 6, 7, 6, 5, 4, 3], // 単語取得の順番
         time: 60,
         price: 3000,
-        amountMap: defaultAmountMap
+        amountMap: defaultAmountMap,
+        special: false
     },
     osusume: {
         name: "お勧め 5,000円コース",
@@ -52,7 +53,8 @@ const courses = {
         flow: [5, 6, 7, 8, 9, 10, 9, 8, 7, 6], // (仮)
         time: 90,
         price: 5000,
-        amountMap: defaultAmountMap // (仮)
+        amountMap: defaultAmountMap, // (仮)
+        special: false
     },
     koukyuu: {
         name: "高級 10,000円コース",
@@ -61,14 +63,24 @@ const courses = {
         flow: [9, 10, 11, 12, 13, 14, 13, 12, 11, 10], // (仮)
         time: 120,
         price: 10000,
-        amountMap: defaultAmountMap // (仮)
+        amountMap: defaultAmountMap, // (仮)
+        special: false
     },
     ai_mode: {
         name: "AIモード",
         id: "ai_mode",
         time: null,
         price: null,
-        amountMap: defaultAmountMap
+        amountMap: defaultAmountMap,
+        special: true
+    },
+    wiki_mode: {
+        name: "Wikiモード",
+        id: "wiki_mode",
+        time: null,
+        price: null,
+        amountMap: defaultAmountMap,
+        special: true
     }
 };
 
@@ -399,7 +411,9 @@ function splitWithContext(text) {
         }
 
         // 分割判定
-        if (char === '。' || char === '？' || char === '」' || char === '！') {
+        const splitChars = ['。', '？', '」', '！', '?', '!'];
+        //if (char === '。' || char === '？' || char === '」' || char === '！') {
+        if (splitChars.includes(char)) {
             // カッコの *外* にある「。」の場合のみ分割
             if (inKakko === 0 && inKagikakko === 0) {
                 // startIndexから「。」の位置までを切り出す
@@ -628,7 +642,6 @@ function handleKeyDown(event) {
         const result = judge.check(event.key);
         let now_time = Date.now();
         let elapsed_time = now_time - start_time;
-        document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
         if (result === null) { // null は「完了」
             // ★修正: 完了キーも「正解」としてカウント
             correct_keys_count += 1; 
@@ -711,6 +724,9 @@ function handleKeyDown(event) {
             renda.value = renda_count;
             //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
         }
+        let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
+        document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒, 正確率 ${correct_keys_persent}%`;
+        
     }
 }
 
