@@ -399,7 +399,7 @@ function splitWithContext(text) {
         }
 
         // 分割判定
-        if (char === '。' || char === '？') {
+        if (char === '。' || char === '？' || char === '」' || char === '！') {
             // カッコの *外* にある「。」の場合のみ分割
             if (inKakko === 0 && inKagikakko === 0) {
                 // startIndexから「。」の位置までを切り出す
@@ -1068,12 +1068,18 @@ class TypingJudge2 {
 
             const isVowel = nextCh && ["あ", "い", "う", "え", "お", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ"].includes(nextCh);
             const isY = nextCh && ["や", "ゆ", "よ", "ゃ", "ゅ", "ょ"].includes(nextCh);
+            // ★★★ ここから修正 ★★★
             let isN = false;
-            if (nextRomajiList.length > 0) {
+            // 次の文字が存在し、かつ「ん」ではなく、ローマ字が "n" で始まる場合
+            if (nextCh && nextCh !== "ん" && nextRomajiList.length > 0) {
                 for (const nr of nextRomajiList) {
-                    if (nr.startsWith("n")) isN = true;
+                    if (nr.startsWith("n")) {
+                        isN = true;
+                        break; // 1つでも見つかれば判定終了
+                    }
                 }
             }
+                        // ★★★ 修正ここまで ★★★
 
             let allowN = false;
             let allowNN = false;
