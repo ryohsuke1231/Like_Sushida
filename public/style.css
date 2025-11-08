@@ -741,10 +741,10 @@ input.cmn-toggle-round-flat {
 }
 #wait-text {
     font-size: 1.7rem;
-    font-weight: 600;
+    font-weight: 400;
     text-align: center;
     color: #000;
-    margin-bottom: 1.5rem; /* コースとの間隔 */
+    margin-bottom: 1.5rem;
 }
 #wait-box img {
     width: 50%;
