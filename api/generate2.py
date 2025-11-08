@@ -7,6 +7,11 @@ import unicodedata
 import random
 import logging
 from threading import Thread
+import time
+
+LAST_GENERATE_TIME = 0
+MIN_INTERVAL = 8  # 8秒空ける（1分に約7回 → 上限10回以下）
+
 
 app = Flask(__name__)
 
@@ -41,6 +46,18 @@ MAX_CACHE_SIZE = 50 # キャッシュが膨らみすぎないように
 generation_thread = None # 補充スレッドが重複しないように
 
 # --- ヘルパー関数 (Helper Functions) ---
+def safe_generate():
+    global LAST_GENERATE_TIME
+    if not model:
+        logging.error("Gemini model is not initialized. Cannot generate text.")
+        return None
+    now = time.time()
+    wait = MIN_INTERVAL - (now - LAST_GENERATE_TIME)
+    if wait > 0:
+        time.sleep(wait)
+    LAST_GENERATE_TIME = time.time()
+
+    return model.generate_content(prompt)
 
 def kata_to_hira(s):
     """カタカナをひらがなに変換する"""
@@ -159,7 +176,7 @@ def generate_new_text_with_furigana():
 
     try:
         # 1. Geminiで文章生成
-        response = model.generate_content(prompt)
+        response = model.safe_generate()
         message = response.text
 
         # 2. Yahoo APIでふりがな取得

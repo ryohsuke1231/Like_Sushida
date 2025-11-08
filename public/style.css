@@ -728,6 +728,35 @@ input.cmn-toggle-round-flat {
     color: #ff4500;
     padding: none;
 }
+
+#wait-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f0f2f5;
+    color: #333;
+    width: 100vw;
+}
+#wait-text {
+    font-size: 1.7rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+    margin-bottom: 1.5rem; /* コースとの間隔 */
+}
+#wait-box img {
+    width: 50%;
+    z-index: 1000;
+    height: auto;
+    border-radius: 50%;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    animation: rotate 2s linear infinite;
+}
+
+
 .fade {
   animation: fadeInOut 1s ease forwards;
 }

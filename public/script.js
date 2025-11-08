@@ -326,6 +326,7 @@ async function startCourse(config) {
         currentCourseConfig = config;
 
         try {
+            document.getElementById('wait-box').style.display = 'flex';
             const response = await fetch(config.endpoint);
             const data = await response.json();
 
@@ -346,6 +347,7 @@ async function startCourse(config) {
             remainingTime.style.display = 'none';
             
             document.getElementById('haratta').textContent = ``;
+            document.getElementById('wait-box').style.display = 'none';
             
 
             //return;
