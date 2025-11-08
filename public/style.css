@@ -747,7 +747,7 @@ input.cmn-toggle-round-flat {
     margin-bottom: 1.5rem;
 }
 #wait-box img {
-    width: 50%;
+    height: 70%;
     z-index: 1000;
     height: auto;
     border-radius: 50%;
