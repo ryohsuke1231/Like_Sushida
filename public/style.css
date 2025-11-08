@@ -375,7 +375,7 @@ progress::-moz-progress-bar {
     justify-content: flex-start; /* 上寄せに変更 */
     width: 80%; /* 幅を調整 */
     /*max-width: 700px; /* PCでも見やすいように最大幅を指定 */
-    height: 80%;
+    height: 80vh;
     background-color: #b8860b; /* 背景色（木目調の代わり） */
     border-radius: 5rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);

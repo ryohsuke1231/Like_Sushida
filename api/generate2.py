@@ -55,7 +55,7 @@ def kata_to_hira(s):
     return "".join(result)
 
 def get_furigana(message):
-    """Yahoo APIを呼び出してふりがなを取得する"""
+    """Yahoo APIを呼び出してふりがなを取得する (タイピングゲーム用に調整)"""
     if not APP_ID:
         logging.error("YAHOO_APP_ID not set. Cannot get furigana.")
         return None
@@ -66,8 +66,8 @@ def get_furigana(message):
         "jsonrpc": "2.0",
         "method": "jlp.furiganaservice.furigana",
         "params": {
-            "q": message,
-            "grade": 1
+            "q": message
+            # "grade": 1 を削除。これにより「一」にもふりがなが振られる
         }
     }
 
@@ -76,7 +76,7 @@ def get_furigana(message):
                                  headers=headers,
                                  data=json.dumps(payload),
                                  params={"appid": APP_ID},
-                                 timeout=10) # タイムアウト設定
+                                 timeout=10)
         response.raise_for_status()
         data = response.json()
 
@@ -88,13 +88,56 @@ def get_furigana(message):
              logging.error(f"Yahoo API unexpected response: {data}")
              return None
 
+        # --- ★★★ ここからが記号処理ロジック ★★★ ---
+
+        # 1. タイピング用に変換する文字マップ
+        # (必要に応じてここに追加・変更してください)
+        conversion_map = {
+            '『': '「', '』': '」', '（': '(', '）': ')', '［': '[', '］': ']',
+            '｛': '{', '｝': '}', '＜': '<', '＞': '>', '？': '?', '！': '!',
+            '　': ' '  # 全角スペースを半角スペースに
+        }
+
+        # 2. タイピング対象としてそのまま残す記号
+        # (ひらがな・カタカナ・長音記号以外)
+        keep_symbols = {
+            '、', '。', '・', '「', '」', '(', ')', '[', ']', '{', '}', 
+            '<', '>', '?', '!', ' ', ',', '.'
+        }
+
         furigana_text = ""
         for word in data["result"]["word"]:
             if "furigana" in word:
+                # 3. 漢字の読み (「一」は "いち" としてここに来る)
                 furigana_text += word["furigana"]
-            elif "surface" in word:
-                furigana_text += word["surface"]
 
+            elif "surface" in word:
+                # 4. 読みがない場合 (ひらがな、カタカナ、記号など)
+                surface = word["surface"]
+
+                for char in surface:
+                    # 4a. 変換マップにある文字は変換して追加
+                    if char in conversion_map:
+                        furigana_text += conversion_map[char]
+                        continue
+
+                    # 4b. ひらがな(ぁ-ん)・カタカナ(ァ-ヶ)・長音記号(ー)かチェック
+                    code = ord(char)
+                    if (0x3041 <= code <= 0x309F) or \
+                       (0x30A1 <= code <= 0x30F6) or \
+                       (code == 0x30FC): # 長音記号 'ー'
+                        furigana_text += char
+                        continue
+
+                    # 4c. 「、」「。」など、そのまま残す記号かチェック
+                    if char in keep_symbols:
+                        furigana_text += char
+                        continue
+
+                    # 4d. それ以外 (改行コードや絵文字など) は無視
+                    # logging.info(f"Ignoring char: {char}") # デバッグ用
+
+        # 最後にカタカナをひらがなに統一
         return kata_to_hira(furigana_text)
 
     except requests.exceptions.RequestException as e:

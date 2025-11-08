@@ -20,6 +20,7 @@ const ippatsu_color = '#a0522d';
 const normal_color = '#b8860b';
 const ai_mode = false;
 let renda_ends = 0;
+let now_selected_course = null;
 
 // DOM要素 (initGame で取得)
 let textBox, yomiBox, renda, remainingTime, startBox, resultBox, centerBox, selectBox, start_text, jikan, possible_text;
@@ -69,6 +70,7 @@ const courses = {
     ai_mode: {
         name: "AIモード",
         id: "ai_mode",
+        endpoint: "/api/generate2",
         time: null,
         price: null,
         amountMap: defaultAmountMap,
@@ -77,6 +79,7 @@ const courses = {
     wiki_mode: {
         name: "Wikiモード",
         id: "wiki_mode",
+        endpoint: "/api/wiki",
         time: null,
         price: null,
         amountMap: defaultAmountMap,
@@ -224,6 +227,7 @@ function setupEventListeners() {
     document.getElementById('osusume').addEventListener('click', () => startCourse(courses.osusume));
     document.getElementById('koukyuu').addEventListener('click', () => startCourse(courses.koukyuu));
     document.getElementById('ai-mode').addEventListener('click', () => startCourse(courses.ai_mode));
+    document.getElementById('wiki-mode').addEventListener('click', () => startCourse(courses.wiki_mode));
 
     // 結果画面ボタン
     const retryButtons = document.querySelectorAll('.retry');
@@ -318,18 +322,17 @@ function resetGameState() {
  */
 async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
-    if (config.id === "ai_mode") {
+    if (config.special === true) {
         currentCourseConfig = config;
-        
 
         try {
-            const response = await fetch('/api/generate2');
+            const response = await fetch(config.endpoint);
             const data = await response.json();
 
             // (2) fetch完了後、まだAIモードが選択されているかチェック
             // （ユーザーが「戻る」を押したり、別コースを選んだりしたら currentCourseConfig が変わっているはず）
-            if (currentCourseConfig.id !== "ai_mode") {
-                console.log("AI data fetched, but user navigated away. Discarding data.");
+            if (currentCourseConfig.id !== config) {
+                console.log("Special mode data fetched, but user navigated away. Discarding data.");
                 return; // yomi/kanji を上書きしない
             }
 
@@ -527,7 +530,7 @@ function startGame() {
 
     const items = odai_box.querySelectorAll('*');
     items.forEach(el => {
-        el.style.whiteSpace = (currentCourseConfig.id === "ai_mode") ? 'normal' : 'nowrap';
+        el.style.whiteSpace = (currentCourseConfig.special === true) ? 'normal' : 'nowrap';
     });
 
     setTimeout(() => {
@@ -569,7 +572,7 @@ function startGame() {
         // ↑↑↑ 修正ここまで
 
         // タイマースタート
-        if (currentCourseConfig.id !== "ai_mode") {
+        if (currentCourseConfig.special === true) {
             startTimer();
         }
         document.getElementById('start-box-button').disabled = false;
@@ -653,7 +656,7 @@ function handleKeyDown(event) {
 
             // スコア計算 (i++ する前に行う)
             // 完了した単語 (yomi[i]) の文字数から金額を取得
-            if (currentCourseConfig.id !== "ai_mode") {
+            if (currentCourseConfig.special !== true) {
                 let _amount = currentCourseConfig.amountMap[yomi[i].length];
     
                 console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
@@ -665,7 +668,7 @@ function handleKeyDown(event) {
                         countEl.textContent = parseInt(countEl.textContent) + 1;
                     }
                 }
-                if (currentCourseConfig.id !== "ai_mode") {
+                if (currentCourseConfig.special !== true) {
                     // 合計皿数
                     document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
                     //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
@@ -756,7 +759,7 @@ function updateRendaTime() {
         jikan_plus.classList.remove('fade');
         void jikan_plus.offsetWidth; // 再描画トリガー
         jikan_plus.classList.add('fade');
-        if (currentCourseConfig.id === "ai_mode") {
+        if (currentCourseConfig.special === true) {
             document.getElementById('total_got_odai').textContent = `連打メーター：${renda_ends}周`;
         }
     }
