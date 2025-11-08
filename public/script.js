@@ -331,7 +331,7 @@ async function startCourse(config) {
 
             // (2) fetch完了後、まだAIモードが選択されているかチェック
             // （ユーザーが「戻る」を押したり、別コースを選んだりしたら currentCourseConfig が変わっているはず）
-            if (currentCourseConfig.id !== config) {
+            if (currentCourseConfig.id !== config.id) {
                 console.log("Special mode data fetched, but user navigated away. Discarding data.");
                 return; // yomi/kanji を上書きしない
             }
