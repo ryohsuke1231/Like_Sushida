@@ -380,11 +380,41 @@ progress::-moz-progress-bar {
     border-radius: 5rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     padding: 3rem;
-    overflow-y: scroll;
+    overflow-y: auto;
     margin: 2rem auto; /* ページ中央に配置 */
     transition: background-color 0.7s ease;
 }
+/* スクロールバー1 */
+.scroll-a::-webkit-scrollbar {
+  width: 12px; /* 横幅設定 */
+}
 
+.scroll-a::-webkit-scrollbar-thumb {
+  background: #276976; /* ハンドルの色 */
+}
+
+.scroll-a::-webkit-scrollbar-track {
+  background: #daefef; /* 背景色 */
+}
+
+/* スクロールバー2 */
+.scroll-b::-webkit-scrollbar {
+  width: 16px;
+}
+
+.scroll-b::-webkit-scrollbar-thumb {
+  background: #276976;
+  border-radius: 8px;
+  border-right: 4px solid transparent; /* 透明なボーダーをつける */
+  border-left: 4px solid transparent; /* 透明なボーダーをつける */
+  background-clip: padding-box; /* 背景を切り取る */
+}
+
+.scroll-b::-webkit-scrollbar-track {
+  /* 上下に余白を付ける */
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
 
 
 #select-text {
