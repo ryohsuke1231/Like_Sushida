@@ -327,6 +327,7 @@ async function startCourse(config) {
 
         try {
             document.getElementById('wait-box').style.display = 'flex';
+            selectBox.style.display = 'none';
             const response = await fetch(config.endpoint);
             const data = await response.json();
 
@@ -348,6 +349,7 @@ async function startCourse(config) {
             
             document.getElementById('haratta').textContent = ``;
             document.getElementById('wait-box').style.display = 'none';
+            selectBox.style.display = 'none';
             
 
             //return;

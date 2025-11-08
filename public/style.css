@@ -730,7 +730,7 @@ input.cmn-toggle-round-flat {
 }
 
 #wait-box {
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
