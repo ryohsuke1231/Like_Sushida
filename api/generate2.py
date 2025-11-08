@@ -176,7 +176,7 @@ def generate_new_text_with_furigana():
 
     try:
         # 1. Geminiで文章生成
-        response = model.safe_generate()
+        response = safe_generate()
         message = response.text
 
         # 2. Yahoo APIでふりがな取得
