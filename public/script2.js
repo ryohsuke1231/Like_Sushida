@@ -226,7 +226,7 @@ function setupEventListeners() {
 document.getElementById('otegaru').addEventListener('click', () => startCourse(courses.otegaru));
 document.getElementById('osusume').addEventListener('click', () => startCourse(courses.osusume));
 document.getElementById('koukyuu').addEventListener('click', () => startCourse(courses.koukyuu));
-_   document.getElementById('ai-mode').addEventListener('click', () => startCourse(courses.ai_mode));
+document.getElementById('ai-mode').addEventListener('click', () => startCourse(courses.ai_mode));
 document.getElementById('wiki-mode').addEventListener('click', () => startCourse(courses.wiki_mode));
 
 // 結果画面ボタン
