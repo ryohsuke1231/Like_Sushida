@@ -295,7 +295,7 @@ function resetGameState() {
     // UIリセット
     renda.value = 0;
     document.getElementById('total_got_odai').textContent = '0 皿';
-    document.getElementById('keys-per-second').textContent = '0.0 キー/秒';
+    document.getElementById('keys-per-second').textContent = '0.0 キー/秒,　正確率 0.0%';
     remainingTime.textContent = `残り時間: ...秒`;
 
     // 皿カウントリセット
