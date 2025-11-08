@@ -7,6 +7,7 @@ import logging
 import os
 import unicodedata
 from threading import Thread
+
 app = Flask(__name__)
 
 # --- 設定 (Configuration) ---
@@ -17,24 +18,25 @@ logging.basicConfig(level=logging.INFO)
 # Yahoo APIキー
 APP_ID = os.environ.get("YAHOO_APP_ID")
 API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
+
+
 def has_unsupported_chars(text):
     for ch in text:
         code = ord(ch)
-        if (
-            0x0000 <= code <= 0x007F or
-            0x3040 <= code <= 0x309F or
-            0x30A0 <= code <= 0x30FF or
-            0x4E00 <= code <= 0x9FFF or
-            0x3000 <= code <= 0x303F or
-            0xFF00 <= code <= 0xFFEF
-        ):
+        if (0x0000 <= code <= 0x007F or 0x3040 <= code <= 0x309F
+                or 0x30A0 <= code <= 0x30FF or 0x4E00 <= code <= 0x9FFF
+                or 0x3000 <= code <= 0x303F or 0xFF00 <= code <= 0xFFEF):
             continue
         return True
     return False
 
+
 my_headers = {
-    "User-Agent": "sushida-dev (contact: unker1231@gmail.com) - For a typing game"
+    "User-Agent":
+    "sushida-dev (contact: unker1231@gmail.com) - For a typing game"
 }
+
+
 def kata_to_hira(s):
     """カタカナをひらがなに変換する"""
     s = unicodedata.normalize('NFKC', s)
@@ -46,6 +48,7 @@ def kata_to_hira(s):
         else:
             result.append(ch)
     return "".join(result)
+
 
 def get_furigana(message):
     """Yahoo APIを呼び出してふりがなを取得する (タイピングゲーム用に調整)"""
@@ -74,28 +77,38 @@ def get_furigana(message):
         data = response.json()
 
         if "error" in data:
-             logging.error(f"Yahoo API Error: {data['error']['message']}")
-             return None
+            logging.error(f"Yahoo API Error: {data['error']['message']}")
+            return None
 
         if "result" not in data or "word" not in data["result"]:
-             logging.error(f"Yahoo API unexpected response: {data}")
-             return None
+            logging.error(f"Yahoo API unexpected response: {data}")
+            return None
 
         # --- ★★★ ここからが記号処理ロジック ★★★ ---
 
         # 1. タイピング用に変換する文字マップ
         # (必要に応じてここに追加・変更してください)
         conversion_map = {
-            '『': '「', '』': '」', '（': '(', '）': ')', '［': '[', '］': ']',
-            '｛': '{', '｝': '}', '＜': '<', '＞': '>', '？': '?', '！': '!',
+            '『': '「',
+            '』': '」',
+            '（': '(',
+            '）': ')',
+            '［': '[',
+            '］': ']',
+            '｛': '{',
+            '｝': '}',
+            '＜': '<',
+            '＞': '>',
+            '？': '?',
+            '！': '!',
             '　': ' '  # 全角スペースを半角スペースに
         }
 
         # 2. タイピング対象としてそのまま残す記号
         # (ひらがな・カタカナ・長音記号以外)
         keep_symbols = {
-            '、', '。', '・', '「', '」', '(', ')', '[', ']', '{', '}', 
-            '<', '>', '?', '!', ' ', ',', '.'
+            '、', '。', '・', '「', '」', '(', ')', '[', ']', '{', '}', '<', '>',
+            '?', '!', ' ', ',', '.'
         }
 
         furigana_text = ""
@@ -142,6 +155,8 @@ def get_furigana(message):
     except Exception as e:
         logging.error(f"Yahoo API Unknown Error: {e}")
         return None
+
+
 def get_wiki_summary(title):
     url = "https://ja.wikipedia.org/w/api.php"
     params = {
@@ -161,13 +176,12 @@ def get_wiki_summary(title):
     except:
         return ""
 
+
 def get_random_title_from_search():
     url = "https://ja.wikipedia.org/w/api.php"
     categories = [
-        "動物", "植物", "科学", "技術", "歴史", "地理",
-        "数学", "物理学", "化学", "生物学", "天文学",
-        "哲学", "経済学", "法律", "芸術", "スポーツ",
-        "料理", "気象", "言語学"
+        "動物", "植物", "科学", "技術", "歴史", "地理", "数学", "物理学", "化学", "生物学", "天文学",
+        "哲学", "経済学", "法律", "芸術", "スポーツ", "料理", "気象", "言語学"
     ]
     cat = random.choice(categories)
     params = {
@@ -189,6 +203,7 @@ def get_random_title_from_search():
     except:
         return None
 
+
 @app.route("/api/wiki", methods=["GET"])
 def api_get_wiki():
     for _ in range(15):  # 最大15回まで試す
@@ -208,6 +223,7 @@ def api_get_wiki():
         return response
 
     return jsonify({"error": "記事が見つかりませんでした"}), 500
+
 # --- サーバー起動（開発用） ---
 if __name__ == '__main__':
     # (本番環境ではGunicornなどを使うため、これは実行されない想定)
