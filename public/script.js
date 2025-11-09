@@ -585,9 +585,9 @@ function startGame() {
         // ↓↓↓ setNextWord(true) の中身を展開 (setProblem以外)
         buffer = ""; 
         // judge.setProblem(yomi[i]); // ← 呼ばない (既に yomi[0] で初期化済み)
-        // ★★★ 修正 (textContent を使用) ★★★
-        textBox.textContent = kanji[i]; // i=0
-        yomiBox.textContent = yomi[i]; // i=0
+        // ★ 修正: textContent ではなく innerHTML で初期化
+        textBox.innerHTML = `<span style="color: #fff;">${kanji[i]}</span>`; // i=0
+        yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`; // i=0
 
         // ★★★ 修正 (スクロール位置をリセット) ★★★
         textBox.scrollLeft = 0;
@@ -738,7 +738,7 @@ function handleKeyDown(event) {
 
             // yomiBox を「入力済み」「未入力」の2つの <span> で構成
             yomiBox.innerHTML = `
-            <span style="color: #aaa;">${completedYomi}</span>
+            <span>${completedYomi}</span>
             <span>${remainingYomi}</span>
             `;
             const typedYomiSpan = yomiBox.children[0]; // 入力済みひらがなスパン
@@ -762,7 +762,7 @@ function handleKeyDown(event) {
 
             // textBox も同様に2つの <span> で構成
             textBox.innerHTML = `
-            <span style="color: #aaa;">${completedKanji}</span>
+            <span>${completedKanji}</span>
             <span>${remainingKanji}</span>
             `;
             const typedKanjiSpan = textBox.children[0]; // 入力済み（とみなした）漢字スパン
@@ -875,9 +875,9 @@ function setNextWord(isFirstWord = false) {
     buffer = ""; // ★ この行は script.js 側にも必要です
     judge.setProblem(yomi[i]);
 
-        // ★★★ 修正 (innerHTML ではなく textContent に設定) ★★★
-    textBox.textContent = kanji[i];
-    yomiBox.textContent = yomi[i];
+    // ★ 修正: textContent ではなく innerHTML で初期化
+    textBox.innerHTML = `<span style="color: #fff;">${kanji[i]}</span>`; // i=0
+    yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`; // i=0
 
     // ★★★ 修正 (possible_text の更新) ★★★
     possible_text.innerHTML = `

@@ -73,7 +73,7 @@ body {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     /* 上側の余白を設定 */
     margin-top: 1rem;
-    
+    overflow-x: auto;
 }
 #renda {
     width: 100%;
@@ -99,7 +99,7 @@ body {
     text-align: center;
     color: #000;
     white-space: nowrap;
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 #yomi-text {
     font-size: 1.5rem; /* 文字サイズ */
@@ -107,7 +107,7 @@ body {
     text-align: center;
     color: #333;
     white-space: nowrap;
-    overflow-x: auto;
+    overflow-x: hidden;
 }
 #center-box table {
     /* ★ 要望: 親(#center-box)の幅の80%にする */
@@ -312,12 +312,41 @@ progress::-moz-progress-bar {
     font-weight: 400;
     */
     font-size: 0;
-    overflow-x: auto;
+    overflow-x: hidden;
     display: flex;
+    white-space: nowrap;
 }
 #possible span {
     font-size: 1.5rem;
     white-space: nowrap;
+}
+/* * #odai-box 内のテキスト表示要素
+ * (実際のセレクタが異なる場合は適宜読み替えてください)
+ */
+#yomi-text,
+#box-text,
+#possible {
+
+    /* * 1. 【必須】折り返しを禁止する 
+     * これがないとテキストが折り返してしまい、
+     * scrollLeft が機能しません。
+     */
+    white-space: nowrap; 
+
+    /* * 2. 【必須】はみ出した部分を隠す
+     * (JSでスクロール位置を制御するため)
+     * マウスでスクロールさせたい場合は 'auto' や 'scroll' ですが、
+     * JS制御が目的なら 'hidden' で問題ありません。
+     */
+    overflow-x: hidden;
+
+    /* * 3. (推奨) 要素の幅を親に合わせる 
+     * これがないと、はみ出す前に親要素自体が伸びてしまう可能性があります。
+     */
+    width: 100%;
+
+    /* 4. (オプション) スムーズなスクロール */
+    scroll-behavior: smooth; 
 }
 .target-marker {
   position: absolute;
