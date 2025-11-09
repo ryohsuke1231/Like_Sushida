@@ -297,6 +297,7 @@ function resetGameState() {
     document.getElementById('total_got_odai').textContent = '0 皿';
     document.getElementById('keys-per-second').textContent = '0.0 キー/秒,　正確率 0.0%';
     remainingTime.textContent = `残り時間: ...秒`;
+    remainingTime.style.display = '';
 
     // 皿カウントリセット
     amounts.forEach(amount => {
@@ -317,27 +318,35 @@ function resetGameState() {
 }
 
 /**
- * 選択されたコースを開始準備する
- * @param {object} config - courses オブジェクト (例: courses.otegaru)
- */
+* 選択されたコースを開始準備する
+* @param {object} config - courses オブジェクト (例: courses.otegaru)
+*/
 async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
     if (config.special === true) {
         currentCourseConfig = config;
-
+        
+        // ★ 修正: リトライ時に備え、他の主要ボックスを非表示にする
+        selectBox.style.display = 'none';
+        startBox.style.display = 'none';
+        centerBox.style.display = 'none';
+        resultBox.style.display = 'none';
+        endBox.style.display = 'none';
+        document.getElementById('wait-box').style.display = 'none'; // wait-boxも一旦非表示
+        
         try {
-            document.getElementById('wait-box').style.display = 'flex';
-            selectBox.style.display = 'none';
+            document.getElementById('wait-box').style.display = 'flex'; // ここでwait-boxを表示
+            //selectBox.style.display = 'none'; // (上で実施済み)
             const response = await fetch(config.endpoint);
             const data = await response.json();
-
+            
             // (2) fetch完了後、まだAIモードが選択されているかチェック
             // （ユーザーが「戻る」を押したり、別コースを選んだりしたら currentCourseConfig が変わっているはず）
             if (currentCourseConfig.id !== config.id) {
                 console.log("Special mode data fetched, but user navigated away. Discarding data.");
                 return; // yomi/kanji を上書きしない
             }
-
+            
             // (3) AIモードの単語をセット
             yomi = splitWithContext(data.yomi);
             kanji = splitWithContext(data.kanji);
@@ -349,39 +358,40 @@ async function startCourse(config) {
             
             document.getElementById('haratta').textContent = ``;
             document.getElementById('wait-box').style.display = 'none';
-            selectBox.style.display = 'none';
-            
-
-            //return;
+            //selectBox.style.display = 'none'; // (上で実施済み)
+    
+    
+        //return; // ← 共通処理（startBox表示）に行くために return しない
         } catch (error) {
             console.error("AIモードのデータ取得に失敗:", error);
             // エラー時も、ユーザーが待機し続けないようコース選択に戻す
-            showCourseSelection(); 
-            return;
+            showCourseSelection(); 
+            return; // ★ 共通処理には行かない
         }
-    } else {
-    currentCourseConfig = config;
+    } else { // special === false の場合
+        currentCourseConfig = config;
 
-    // 1. ゲーム状態をリセット
+        // 1. ゲーム状態をリセット (済)
+        
+        // 2. このコース用の単語を準備
+        try {
+            // allWords (グローバル) から単語リスト (yomi, kanji) を生成
+            prepareWords(config.keys, config.flow);
+        } catch (error) {
+            console.error(error.message);
+            alert(error.message); // ユーザーにエラーを通知
+            showCourseSelection(); // エラーならコース選択に戻る
+            return; // ★ 共通処理には行かない
+        }
 
-    // 2. このコース用の単語を準備
-    try {
-        // allWords (グローバル) から単語リスト (yomi, kanji) を生成
-        prepareWords(config.keys, config.flow);
-    } catch (error) {
-        console.error(error.message);
-        alert(error.message); // ユーザーにエラーを通知
-        showCourseSelection(); // エラーならコース選択に戻る
-        return;
-    }
-
-    // 3. UI設定
-    nokorijikan = config.time;
-    remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
-    jikan.setAttribute('max', config.time); // 時間経過progressのmax
-    jikan.value = 0;
-    document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
-
+        // 3. UI設定
+        nokorijikan = config.time;
+        remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
+            // remainingTime.style.display = ''; // ★ resetGameState に移動済み
+        jikan.setAttribute('max', config.time); // 時間経過progressのmax
+        jikan.value = 0;
+        document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
+    
     }
     let plus = "";
     if (ippatsu === true) {
@@ -389,12 +399,17 @@ async function startCourse(config) {
     }
     start_text.textContent = 'スペースかEnterキーを押すとスタートします';
     document.getElementById('course').textContent = config.name + plus;
+    
     // 4. 画面切り替え (スタート待機画面)
+    // (special モードの try 成功後、または
+    //  special false モードの単語準備成功後にここに来る)
     selectBox.style.display = 'none';
     startBox.style.display = 'flex';
     centerBox.style.display = 'none';
     resultBox.style.display = 'none';
-
+    endBox.style.display = 'none'; // ★ 追加: 念のため非表示
+    document.getElementById('wait-box').style.display = 'none'; // ★ 追加: 念のため非表示
+    
     // start フラグは false のまま (handleKeyDown が Enter/Space を待つ)
 }
 function splitWithContext(text) {
@@ -532,12 +547,14 @@ function startGame() {
     // 1秒待ってからゲーム画面へ
     const odai_box = document.getElementById('odai-box');
 
-    const items = odai_box.querySelectorAll('*');
-    items.forEach(el => {
-        el.style.whiteSpace = (currentCourseConfig.special === true) ? 'normal' : 'nowrap';
-    });
 
     setTimeout(() => {
+        /*
+        const items = odai_box.querySelectorAll('#');
+        items.forEach(el => {
+            el.style.whiteSpace = (currentCourseConfig.special === true) ? 'normal' : 'nowrap';
+        });
+        */
         resultBox.style.display = 'none';
         centerBox.style.display = 'flex';
         startBox.style.display = 'none';
@@ -568,15 +585,23 @@ function startGame() {
         // ↓↓↓ setNextWord(true) の中身を展開 (setProblem以外)
         buffer = ""; 
         // judge.setProblem(yomi[i]); // ← 呼ばない (既に yomi[0] で初期化済み)
+        // ★★★ 修正 (textContent を使用) ★★★
         textBox.textContent = kanji[i]; // i=0
         yomiBox.textContent = yomi[i]; // i=0
+
+        // ★★★ 修正 (スクロール位置をリセット) ★★★
+        textBox.scrollLeft = 0;
+        yomiBox.scrollLeft = 0;
+        // ★★★ 修正ここまで ★★★
         possible_text.innerHTML = `
             <span style="color: #eee;">${judge.getBestMatch()}</span>
         `;
         // ↑↑↑ 修正ここまで
-
+        // ★★★ 修正 (スクロール位置をリセット) ★★★
+        possible_text.scrollLeft = 0;
+        // ★★★ 修正ここまで ★★★
         // タイマースタート
-        if (currentCourseConfig.special === true) {
+        if (currentCourseConfig.special !== true) {
             startTimer();
         }
         document.getElementById('start-box-button').disabled = false;
@@ -683,25 +708,69 @@ function handleKeyDown(event) {
             // 次の単語へ
             setNextWord();
 
-        } else if (result === true) { // true は「途中」
+            } else if (result === true) { // true は「途中」
             correct_keys_count += 1;
             renda_count += 1;
             renda.value = renda_count;
             buffer += event.key; // buffer は script.js 側で管理
 
-            // ★★★ 修正 ★★★
-            // 入力中テキスト表示 (入力済みを暗く、残りを明るく)
-            // possible_text.innerHTML = `
-            //    <span style="color: #444;">${buffer}</span>
-            //    <span style="color: #eee;">${String(judge.getBestMatch(buffer)).substring(buffer.length)}</span>
-            // `;
+            // ★★★ ここから大幅に修正 ★★★
 
-            const remaining = judge.getBestMatch(); // 引数なしで「残り」だけを取得
+            // (1) possible_text (ローマ字) の計算 (従来通り)
+            const remaining = judge.getBestMatch(); 
             possible_text.innerHTML = `
-                <span style="color: #444;">${buffer}</span>
-                <span style="color: #eee;">${remaining}</span>
+            <span style="color: #444;">${buffer}</span>
+            <span style="color: #eee;">${remaining}</span>
             `;
+            // 最初の <span style="color: #444;">...</span> (入力済みローマ字)
+            const typedRomaSpan = possible_text.children[0]; 
+            // 入力済みローマ字の表示幅 (ピクセル数)
+            const typedRomaWidth = typedRomaSpan.offsetWidth; 
+            // 入力済み幅 - (表示領域の半分) だけスクロール
+            possible_text.scrollLeft = typedRomaWidth - (possible_text.clientWidth / 2);
+
+            // (2) yomi-text (ひらがな) の計算
+            // judge から「完了したひらがなの文字数」を取得
+            const completedHiraganaLength = judge.getCompletedHiraganaLength();
+            const fullYomi = yomi[i]; // 現在の単語のひらがな全体
+            const completedYomi = fullYomi.substring(0, completedHiraganaLength);
+            const remainingYomi = fullYomi.substring(completedHiraganaLength);
+
+            // yomiBox を「入力済み」「未入力」の2つの <span> で構成
+            yomiBox.innerHTML = `
+            <span style="color: #aaa;">${completedYomi}</span>
+            <span>${remainingYomi}</span>
+            `;
+            const typedYomiSpan = yomiBox.children[0]; // 入力済みひらがなスパン
+            const typedYomiWidth = typedYomiSpan.offsetWidth; // 入力済みひらがなの幅
+            yomiBox.scrollLeft = typedYomiWidth - (yomiBox.clientWidth / 2);
+
+            // (3) box-text (漢字) の計算 (ひらがなの進捗率ベース)
+            const fullKanji = kanji[i]; // 現在の単語の漢字全体
+
+            // ひらがなの入力進捗率 (例: 0.5 = 50%)
+            let yomiProgressRate = 0;
+            if (fullYomi.length > 0) {
+            yomiProgressRate = completedHiraganaLength / fullYomi.length;
+            }
+
+            // 漢字の文字列長に進捗率をかけ、分割位置を決定 (四捨五入)
+            let kanjiSplitIndex = Math.round(fullKanji.length * yomiProgressRate);
+
+            const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
+            const remainingKanji = fullKanji.substring(kanjiSplitIndex);
+
+            // textBox も同様に2つの <span> で構成
+            textBox.innerHTML = `
+            <span style="color: #aaa;">${completedKanji}</span>
+            <span>${remainingKanji}</span>
+            `;
+            const typedKanjiSpan = textBox.children[0]; // 入力済み（とみなした）漢字スパン
+            const typedKanjiWidth = typedKanjiSpan.offsetWidth; // その幅
+            textBox.scrollLeft = typedKanjiWidth - (textBox.clientWidth / 2);
+
             // ★★★ 修正ここまで ★★★
+
             updateRendaTime();
 
         } else { // false は「間違い」
@@ -803,19 +872,22 @@ function setNextWord(isFirstWord = false) {
     }
 
     // 次の単語をセット
-    // 次の単語をセット
     buffer = ""; // ★ この行は script.js 側にも必要です
     judge.setProblem(yomi[i]);
+
+        // ★★★ 修正 (innerHTML ではなく textContent に設定) ★★★
     textBox.textContent = kanji[i];
     yomiBox.textContent = yomi[i];
 
-    // ★★★ 修正 ★★★
-    // possible_text.innerHTML = `
-    //    <span style="color: #eee;">${String(judge.getBestMatch(buffer))}</span>
-    // `;
+    // ★★★ 修正 (possible_text の更新) ★★★
     possible_text.innerHTML = `
         <span style="color: #eee;">${judge.getBestMatch()}</span>
     `;
+
+        // ★★★ 修正 (スクロール位置をリセット) ★★★
+    possible_text.scrollLeft = 0;
+    yomiBox.scrollLeft = 0;
+    textBox.scrollLeft = 0;
     // ★★★ 修正ここまで ★★★
 }
 
@@ -916,49 +988,51 @@ function endGame() {
  * 2. `_buildTrie`: 「ん」の処理を、元のクラスの仕様
  * （「んあ」「文末」は "nn" のみ、「その他」は "n" 優先など）に
  * 厳密に準拠するように修正。
+ * 3. (★★★ スクロール対応 ★★★)
+ * ノードに hIndex (ひらがなブロックインデックス) を持たせ、
+ * 入力済みのひらがな文字数を計算する `getCompletedHiraganaLength` を追加。
  */
 class TypingJudge2 {
 
     // クラスの静的プロパティとしてローマ字テーブルを定義 (変更なし)
     static romanTable = {
-        // ... (内容は変更なし) ...
-    "あ": ["a"], "い": ["i"], "う": ["u"], "え": ["e"], "お": ["o"],
-    "か": ["ka"], "き": ["ki"], "く": ["ku"], "け": ["ke"], "こ": ["ko"],
-    "さ": ["sa"], "し": ["si", "shi", "ci"], "す": ["su"], "せ": ["se"], "そ": ["so"],
-    "た": ["ta"], "ち": ["ti", "chi"], "つ": ["tu", "tsu"], "て": ["te"], "と": ["to"],
-    "な": ["na"], "に": ["ni"], "ぬ": ["nu"], "ね": ["ne"], "の": ["no"],
-    "は": ["ha"], "ひ": ["hi"], "ふ": ["fu", "hu"], "へ": ["he"], "ほ": ["ho"],
-    "ま": ["ma"], "み": ["mi"], "む": ["mu"], "め": ["me"], "も": ["mo"],
-    "や": ["ya"], "ゆ": ["yu"], "よ": ["yo"],
-    "ら": ["ra"], "り": ["ri"], "る": ["ru"], "れ": ["re"], "ろ": ["ro"],
-    "わ": ["wa"], "を": ["wo"], "ん": ["n", "nn"],
-    "が": ["ga"], "ぎ": ["gi"], "ぐ": ["gu"], "げ": ["ge"], "ご": ["go"],
-    "ざ": ["za"], "じ": ["ji", "zi"], "ず": ["zu"], "ぜ": ["ze"], "ぞ": ["zo"],
-    "だ": ["da"], "ぢ": ["di"], "づ": ["du"], "で": ["de"], "ど": ["do"],
-    "ば": ["ba"], "び": ["bi"], "ぶ": ["bu"], "べ": ["be"], "ぼ": ["bo"],
-    "ぱ": ["pa"], "ぴ": ["pi"], "ぷ": ["pu"], "ぺ": ["pe"], "ぽ": ["po"],
-    "きゃ": ["kya", "kixya"], "きゅ": ["kyu", "kixyu"], "きぇ": ["kye", "kixye"], "きょ": ["kyo", "kixyo"],
-    "ぎゃ": ["gya", "gixya"], "ぎゅ": ["gyu", "gixyu"], "ぎぇ": ["gye", "gixye"], "ぎょ": ["gyo", "gixyo"],
-    "しゃ": ["sha", "sya", "sixya"], "しゅ": ["shu", "syu", "sixyu"], "しぇ": ["she", "sye", "sixye"], "しょ": ["sho", "syo", "sixyo"],
-    "じゃ": ["ja", "zya", "jixya"], "じゅ": ["ju", "zyu", "jixyu"], "じぇ": ["je", "zye", "jixye"], "じょ": ["jo", "zyo", "jixyo"],
-    "ちゃ": ["tya", "cha", "chixya"], "ちゅ": ["tyu", "chu", "chixyu"], "ちぇ": ["tye", "che", "chixye"], "ちょ": ["tyo", "cho", "chixyo"],
-    "ぢゃ": ["dya"], "ぢゅ": ["dyu"], "ぢぇ": ["dye"], "ぢょ": ["dyo"],
-    "にゃ": ["nya", "nixya"], "にゅ": ["nyu", "nixyu"], "にょ": ["nyo", "nixyo"],
-    "ひゃ": ["hya", "hixya"], "ひゅ": ["hyu", "hixyu"], "ひょ": ["hyo", "hixyo"],
-    "びゃ": ["bya", "bixya"], "びゅ": ["byu", "bixyu"], "びょ": ["byo", "bixyo"],
-    "ぴゃ": ["pya", "pixya"], "ぴゅ": ["pyu", "pixyu"], "ぴょ": ["pyo", "pixyo"],
-    "みゃ": ["mya", "mixya"], "みゅ": ["myu", "mixyu"], "みょ": ["myo", "mixyo"],
-    "りゃ": ["rya", "rixya"], "りゅ": ["ryu", "rixyu"], "りょ": ["ryo", "rixyo"],
-    "ふぁ": ["fa", "fuxa"], "ふぃ": ["fi", "fuxi"], "ふぇ": ["fe", "fuxe"], "ふぉ": ["fo", "fuxo"],
-    "うぁ": ["wha"], "うぃ": ["wi"], "うぇ": ["we"], "うぉ": ["who"],
-    "ゔぁ": ["va"], "ゔぃ": ["vi"], "ゔ": ["vu"], "ゔぇ": ["ve"], "ゔぉ": ["vo"],
-    "てぃ": ["thi"], "でぃ": ["dhi"], "とぅ": ["twu"], "どぅ": ["dwu"],
-    "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "S": [" "], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
-    
-    // 小文字単体 (x/l 始まり)
-    "ぁ": ["xa", "la"], "ぃ": ["xi", "li"], "ぅ": ["xu", "lu"], "ぇ": ["xe", "le"], "ぉ": ["xo", "lo"],
-    "ゃ": ["xya", "lya"], "ゅ": ["xyu", "lyu"], "ょ": ["xyo", "lyo"],
-    "っ": ["xtu", "ltu", "xtsu"], // 促音単体
+        "あ": ["a"], "い": ["i"], "う": ["u"], "え": ["e"], "お": ["o"],
+        "か": ["ka"], "き": ["ki"], "く": ["ku"], "け": ["ke"], "こ": ["ko"],
+        "さ": ["sa"], "し": ["si", "shi", "ci"], "す": ["su"], "せ": ["se"], "そ": ["so"],
+        "た": ["ta"], "ち": ["ti", "chi"], "つ": ["tu", "tsu"], "て": ["te"], "と": ["to"],
+        "な": ["na"], "に": ["ni"], "ぬ": ["nu"], "ね": ["ne"], "の": ["no"],
+        "は": ["ha"], "ひ": ["hi"], "ふ": ["fu", "hu"], "へ": ["he"], "ほ": ["ho"],
+        "ま": ["ma"], "み": ["mi"], "む": ["mu"], "め": ["me"], "も": ["mo"],
+        "や": ["ya"], "ゆ": ["yu"], "よ": ["yo"],
+        "ら": ["ra"], "り": ["ri"], "る": ["ru"], "れ": ["re"], "ろ": ["ro"],
+        "わ": ["wa"], "を": ["wo"], "ん": ["n", "nn"],
+        "が": ["ga"], "ぎ": ["gi"], "ぐ": ["gu"], "げ": ["ge"], "ご": ["go"],
+        "ざ": ["za"], "じ": ["ji", "zi"], "ず": ["zu"], "ぜ": ["ze"], "ぞ": ["zo"],
+        "だ": ["da"], "ぢ": ["di"], "づ": ["du"], "で": ["de"], "ど": ["do"],
+        "ば": ["ba"], "び": ["bi"], "ぶ": ["bu"], "べ": ["be"], "ぼ": ["bo"],
+        "ぱ": ["pa"], "ぴ": ["pi"], "ぷ": ["pu"], "ぺ": ["pe"], "ぽ": ["po"],
+        "きゃ": ["kya", "kixya"], "きゅ": ["kyu", "kixyu"], "きぇ": ["kye", "kixye"], "きょ": ["kyo", "kixyo"],
+        "ぎゃ": ["gya", "gixya"], "ぎゅ": ["gyu", "gixyu"], "ぎぇ": ["gye", "gixye"], "ぎょ": ["gyo", "gixyo"],
+        "しゃ": ["sha", "sya", "sixya"], "しゅ": ["shu", "syu", "sixyu"], "しぇ": ["she", "sye", "sixye"], "しょ": ["sho", "syo", "sixyo"],
+        "じゃ": ["ja", "zya", "jixya"], "じゅ": ["ju", "zyu", "jixyu"], "じぇ": ["je", "zye", "jixye"], "じょ": ["jo", "zyo", "jixyo"],
+        "ちゃ": ["tya", "cha", "chixya"], "ちゅ": ["tyu", "chu", "chixyu"], "ちぇ": ["tye", "che", "chixye"], "ちょ": ["tyo", "cho", "chixyo"],
+        "ぢゃ": ["dya"], "ぢゅ": ["dyu"], "ぢぇ": ["dye"], "ぢょ": ["dyo"],
+        "にゃ": ["nya", "nixya"], "にゅ": ["nyu", "nixyu"], "にょ": ["nyo", "nixyo"],
+        "ひゃ": ["hya", "hixya"], "ひゅ": ["hyu", "hixyu"], "ひょ": ["hyo", "hixyo"],
+        "びゃ": ["bya", "bixya"], "びゅ": ["byu", "bixyu"], "びょ": ["byo", "bixyo"],
+        "ぴゃ": ["pya", "pixya"], "ぴゅ": ["pyu", "pixyu"], "ぴょ": ["pyo", "pixyo"],
+        "みゃ": ["mya", "mixya"], "みゅ": ["myu", "mixyu"], "みょ": ["myo", "mixyo"],
+        "りゃ": ["rya", "rixya"], "りゅ": ["ryu", "rixyu"], "りょ": ["ryo", "rixyo"],
+        "ふぁ": ["fa", "fuxa"], "ふぃ": ["fi", "fuxi"], "ふぇ": ["fe", "fuxe"], "ふぉ": ["fo", "fuxo"],
+        "うぁ": ["wha"], "うぃ": ["wi"], "うぇ": ["we"], "うぉ": ["who"],
+        "ゔぁ": ["va"], "ゔぃ": ["vi"], "ゔ": ["vu"], "ゔぇ": ["ve"], "ゔぉ": ["vo"],
+        "てぃ": ["thi"], "でぃ": ["dhi"], "とぅ": ["twu"], "どぅ": ["dwu"],
+        "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "S": [" "], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
+
+        // 小文字単体 (x/l 始まり)
+        "ぁ": ["xa", "la"], "ぃ": ["xi", "li"], "ぅ": ["xu", "lu"], "ぇ": ["xe", "le"], "ぉ": ["xo", "lo"],
+        "ゃ": ["xya", "lya"], "ゅ": ["xyu", "lyu"], "ょ": ["xyo", "lyo"],
+        "っ": ["xtu", "ltu", "xtsu"], // 促音単体
     };
 
     /**
@@ -1023,6 +1097,7 @@ class TypingJudge2 {
 
     /**
      * (★★★ 「ん」のロジック修正 ★★★)
+     * (★★★ hIndex の記録を追加 ★★★)
      * Trie (オートマトン) を構築する再帰関数
      * hIndex に対応するTrieのノードを構築し、それを返す（メモ化対応）
      * @param {number} hIndex - hiraganaBlocks のインデックス
@@ -1036,7 +1111,8 @@ class TypingJudge2 {
         }
 
         // 2. この hIndex 用の新しいノードを作成
-        const node = { children: {}, bestChildKey: null, isEnd: false };
+        // ★★★ 修正: hIndex プロパティを追加 ★★★
+        const node = { children: {}, bestChildKey: null, isEnd: false, hIndex: hIndex };
 
         // 3. 循環参照を防ぐため、処理 *前* にキャッシュに登録
         this.trieCache.set(hIndex, node);
@@ -1044,6 +1120,7 @@ class TypingJudge2 {
         // 4. 終了条件: すべてのひらがなブロックを処理した
         if (hIndex >= this.hiraganaBlocks.length) {
             node.isEnd = true; // このノードは文末
+            // node.hIndex は hIndex (ブロック数) のまま
             return node;
         }
 
@@ -1109,7 +1186,8 @@ class TypingJudge2 {
                 // 自己ループバグを回避するため、_addPath を使わずに手動で構築する
 
                 // 1. "n" のパス (n, kanto 優先) を構築
-                const n_node = { children: {}, bestChildKey: null, isEnd: false };
+                // ★★★ 修正: hIndex を設定 ★★★
+                const n_node = { children: {}, bestChildKey: null, isEnd: false, hIndex: hIndex };
                 node.children['n'] = n_node;
                 if (!isBestChildSet) {
                     node.bestChildKey = 'n';
@@ -1120,7 +1198,8 @@ class TypingJudge2 {
                 let nn_node;
                 // "n" の子ノードとして "n" が既に存在するか確認
                 if (!node.children['n'].children['n']) {
-                     node.children['n'].children['n'] = { children: {}, bestChildKey: null, isEnd: false };
+                    // ★★★ 修正: hIndex を設定 ★★★
+                    node.children['n'].children['n'] = { children: {}, bestChildKey: null, isEnd: false, hIndex: hIndex };
                 }
                 nn_node = node.children['n'].children['n']; // "nn" の終端ノード
 
@@ -1138,6 +1217,7 @@ class TypingJudge2 {
                     n_node.bestChildKey = subTrie.bestChildKey;
                 }
                 n_node.isEnd = subTrie.isEnd;
+                // ★★★ 修正: hIndex は n_node 自身の hIndex (hIndex) のまま
 
                 // 5. nn_node ("nn"終端) に subTrie をマージ
                 // (※ _addPath のマージ処理を模倣)
@@ -1150,6 +1230,7 @@ class TypingJudge2 {
                     nn_node.bestChildKey = subTrie.bestChildKey;
                 }
                 nn_node.isEnd = subTrie.isEnd;
+                // ★★★ 修正: hIndex は nn_node 自身の hIndex (hIndex) のまま
 
             } else {
                 // "ん" だが "な行" ではない場合 (元のロジックをそのまま使用)
@@ -1206,10 +1287,12 @@ class TypingJudge2 {
 
     /**
      * Trieにローマ字のパスを追加し、その終端を次Trie(メモ化)にリンクする
-     * (変更なし)
+     * (★★★ hIndex の引き継ぎ修正 ★★★)
      */
     _addPath(startNode, romaji, nextHIndex, isBest = false) {
         let currentNode = startNode;
+        // ★★★ 追加: 現在の hIndex を取得 ★★★
+        const currentHIndex = startNode.hIndex;
 
         // 1. romaji 文字列のパスをTrieに追加する
         for (let k = 0; k < romaji.length; k++) {
@@ -1217,7 +1300,8 @@ class TypingJudge2 {
 
             let nextNode = currentNode.children[char];
             if (!nextNode) {
-                nextNode = { children: {}, bestChildKey: null, isEnd: false };
+                // ★★★ 修正: 新しいノードに現在の hIndex を設定 ★★★
+                nextNode = { children: {}, bestChildKey: null, isEnd: false, hIndex: currentHIndex };
                 currentNode.children[char] = nextNode;
 
                 if (k === 0 && isBest && !currentNode.bestChildKey) {
@@ -1227,7 +1311,7 @@ class TypingJudge2 {
 
             // 既存ノードでも、bestChildKey が未設定なら設定する
             if (k === 0 && isBest && !currentNode.bestChildKey) {
-                 currentNode.bestChildKey = char;
+                currentNode.bestChildKey = char;
             }
 
             currentNode = nextNode;
@@ -1239,9 +1323,11 @@ class TypingJudge2 {
         const nextTrieRoot = this._buildTrie(nextHIndex);
 
         // 3. リンク (プロパティのコピー)
+        // ★★★ 修正: hIndex 以外をコピーする ★★★
         currentNode.children = nextTrieRoot.children;
         currentNode.bestChildKey = nextTrieRoot.bestChildKey;
         currentNode.isEnd = nextTrieRoot.isEnd;
+        // currentNode.hIndex は currentHIndex のまま (変更しない)
     }
 
     /**
@@ -1302,7 +1388,7 @@ class TypingJudge2 {
                 if (keys.length > 0) {
                     nextKey = keys[0]; // フォールバック
                 } else {
-                    break; 
+                    break;
                 }
             }
 
@@ -1310,7 +1396,7 @@ class TypingJudge2 {
             currentNode = currentNode.children[nextKey];
 
             if (currentNode.isEnd) {
-                break; 
+                break;
             }
             if (!currentNode) {
                 break;
@@ -1319,6 +1405,45 @@ class TypingJudge2 {
 
         return remaining;
     }
+
+    // ★★★ ここから新規追加 ★★★
+
+    /**
+     * 現在の入力状態で、完了しているひらがなブロックの文字数を返す
+     * @returns {number} 完了したひらがな部分の文字列長
+     */
+    getCompletedHiraganaLength() {
+        if (!this.currentNodes || this.currentNodes.length === 0) {
+            return 0;
+        }
+
+        // 現在アクティブなノード（入力途中）が指している
+        // hiraganaBlocks のインデックス (hIndex) の *最小値* を見つける。
+        // これが「まだ入力が完了していない、最初のブロック」のインデックスとなる。
+        let minHIndex = Infinity;
+        for (const node of this.currentNodes) {
+            if (node.hIndex < minHIndex) {
+                minHIndex = node.hIndex;
+            }
+        }
+
+        if (minHIndex === Infinity) {
+            // ノードはあるが hIndex がない (※ 起こらないはずだが念のため)
+            return 0; 
+        }
+
+        // minHIndex が 3 なら、ブロック 0, 1, 2 は完了している
+        // (完了したブロックのインデックスは minHIndex - 1)
+        let completedLength = 0;
+        for (let i = 0; i < minHIndex; i++) {
+            if (this.hiraganaBlocks[i]) {
+                completedLength += this.hiraganaBlocks[i].length;
+            }
+        }
+
+        return completedLength;
+    }
+    // ★★★ 新規追加ここまで ★★★
 }
 /**
  * [注意] ブラウザのJSはローカルファイルにアクセスできません。

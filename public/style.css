@@ -99,6 +99,7 @@ body {
     text-align: center;
     color: #000;
     white-space: nowrap;
+    overflow-x: auto;
 }
 #yomi-text {
     font-size: 1.5rem; /* 文字サイズ */
@@ -106,6 +107,7 @@ body {
     text-align: center;
     color: #333;
     white-space: nowrap;
+    overflow-x: auto;
 }
 #center-box table {
     /* ★ 要望: 親(#center-box)の幅の80%にする */
@@ -310,6 +312,8 @@ progress::-moz-progress-bar {
     font-weight: 400;
     */
     font-size: 0;
+    overflow-x: auto;
+    display: flex;
 }
 #possible span {
     font-size: 1.5rem;
