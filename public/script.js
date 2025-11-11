@@ -3,6 +3,7 @@ let yomi = []; // 現在のゲームで使用する読み配列
 let kanji = []; // 現在のゲームで使用する漢字配列
 let judge; // TypingJudgeのインスタンス
 let currentCourseConfig = {}; // 現在選択中のコース設定
+let mapping = [];
 
 // ゲーム状態
 let i = 0; // 現在の単語インデックス
@@ -350,6 +351,7 @@ async function startCourse(config) {
             // (3) AIモードの単語をセット
             yomi = splitWithContext(data.yomi);
             kanji = splitWithContext(data.kanji);
+            mapping = data.mapping;
             console.log(yomi);
             console.log(kanji);
             nokorijikan = null;
