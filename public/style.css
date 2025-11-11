@@ -136,6 +136,7 @@ body {
     border: 2px solid rgb(140 140 140);
     letter-spacing: 1px;
     display: none !important;
+    margin: 0 auto;
 }
 
 /* ★ 修正点: 
@@ -350,7 +351,7 @@ progress::-moz-progress-bar {
     scroll-behavior: smooth;
     font-size: 0;
     display: flex;
-    justify-content: center;
+    /*justify-content: center;*/
 }
 #yomi-text span,
 #box-text span,
