@@ -105,6 +105,22 @@ def get_furigana(message):
                     mapping_list.extend([furigana[0]] * len_f)
 
             elif "surface" in word:
+                # ★ 追加: 漢字だが furigana が無い場合 → reading を使う
+                if "reading" in word and any(0x4E00 <= ord(c) <= 0x9FFF for c in word["surface"]):
+                    surface = word["surface"]
+                    reading = kata_to_hira(word["reading"])  # 読みをひらがなに統一
+                    furigana_text += reading
+
+                    # マッピング（surface と reading の長さを比率で対応）
+                    len_f = len(reading)
+                    len_s = len(surface)
+                    ratio = len_f / len_s
+                    for i in range(1, len_f + 1):
+                        s_idx = math.ceil(i / ratio) - 1
+                        s_idx = min(max(0, s_idx), len_s - 1)
+                        mapping_list.append(surface[s_idx])
+                    continue
+
                 # 4. 読みがない場合 (ひらがな、カタカナ、記号、アルファベットなど)
                 surface = word["surface"]
 
