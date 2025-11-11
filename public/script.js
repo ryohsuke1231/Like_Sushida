@@ -585,9 +585,19 @@ function startGame() {
         // ↓↓↓ setNextWord(true) の中身を展開 (setProblem以外)
         buffer = ""; 
         // judge.setProblem(yomi[i]); // ← 呼ばない (既に yomi[0] で初期化済み)
-        // ★ 修正: textContent ではなく innerHTML で初期化
-        textBox.innerHTML = `<span style="color: #fff;">${kanji[i]}</span>`; // i=0
-        yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`; // i=0
+        // ★★★ 修正 (textContent を使用) ★★★
+        /*
+        textBox.textContent = kanji[i]; // i=0
+        yomiBox.textContent = yomi[i]; // i=0
+        */
+        textBox.innerHTML = `
+            <span>${kanji[i]}</span>
+            <span></span>
+        `;
+        yomiBox.innerHTML = `
+            <span>${yomi[i]}</span>
+            <span></span>
+        `;
 
         // ★★★ 修正 (スクロール位置をリセット) ★★★
         textBox.scrollLeft = 0;
@@ -640,7 +650,7 @@ function startTimer() {
             endBox.style.display = 'flex';
             start_text.textContent = '終了！';
             textBox.textContent = "終了！";
-            yomiBox.textContent = "";
+            yomiBox.innerHTML = "";
             possible_text.innerHTML = "";
 
             // 結果表示ロジックへ
@@ -745,29 +755,48 @@ function handleKeyDown(event) {
             const typedYomiWidth = typedYomiSpan.offsetWidth; // 入力済みひらがなの幅
             yomiBox.scrollLeft = typedYomiWidth - (yomiBox.clientWidth / 2);
 
-            // (3) box-text (漢字) の計算 (ひらがなの進捗率ベース)
-            const fullKanji = kanji[i]; // 現在の単語の漢字全体
+            // (3) box-text (漢字) の計算 (mapping ベースに修正)
+              const fullKanji = kanji[i]; // 現在の単語の漢字全体 (例: "日本")
+              const currentMapping = mapping[i]; // 対応するマッピング配列 (例: ["日", "日", "本", "本"])
 
-            // ひらがなの入力進捗率 (例: 0.5 = 50%)
-            let yomiProgressRate = 0;
-            if (fullYomi.length > 0) {
-            yomiProgressRate = completedHiraganaLength / fullYomi.length;
-            }
+              let kanjiSplitIndex = 0; // 漢字の分割位置 (0 = 全部未入力)
 
-            // 漢字の文字列長に進捗率をかけ、分割位置を決定 (四捨五入)
-            let kanjiSplitIndex = Math.round(fullKanji.length * yomiProgressRate);
+              // completedHiraganaLength は (2) で計算済み (例: 3)
+              if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
 
-            const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
-            const remainingKanji = fullKanji.substring(kanjiSplitIndex);
+                  // 1. 入力完了したひらがなに対応する、最後の kanji 文字を取得
+                  // (配列インデックスは 0 からなので、length - 1)
+                  // (例: len=3 -> mapping[2] -> "本")
+                  // (例: len=2 -> mapping[1] -> "日")
+                  const lastMappedChar = currentMapping[completedHiraganaLength - 1];
 
-            // textBox も同様に2つの <span> で構成
-            textBox.innerHTML = `
-            <span>${completedKanji}</span>
-            <span>${remainingKanji}</span>
-            `;
-            const typedKanjiSpan = textBox.children[0]; // 入力済み（とみなした）漢字スパン
-            const typedKanjiWidth = typedKanjiSpan.offsetWidth; // その幅
-            textBox.scrollLeft = typedKanjiWidth - (textBox.clientWidth / 2);
+                  // 2. その文字が fullKanji の中で最後に出現するインデックスを探す
+                  // (注: 'indexOf' では "東京都" の "と" -> "東" (index 0) となってしまうため、
+                  //   "とうきょう" -> "京" (index 1) を正しく扱うため 'lastIndexOf' を使う方が安全)
+                  // (例: "本" は "日本" の index 1)
+                  // (例: "日" は "日本" の index 0)
+                  const lastCharIndexInKanji = fullKanji.lastIndexOf(lastMappedChar);
+
+                  if (lastCharIndexInKanji !== -1) {
+                      // 3. 分割位置は (見つかったインデックス + 1)
+                      // (例: index 1 -> split 2)
+                      // (例: index 0 -> split 1)
+                      kanjiSplitIndex = lastCharIndexInKanji + 1;
+                  }
+              }
+
+              const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
+              const remainingKanji = fullKanji.substring(kanjiSplitIndex);
+
+              // textBox も同様に2つの <span> で構成
+              textBox.innerHTML = `
+              <span>${completedKanji}</span>
+              <span>${remainingKanji}</span>
+              `;
+
+              const typedKanjiSpan = textBox.children[0]; // 入力済み（とみなした）漢字スパン
+              const typedKanjiWidth = typedKanjiSpan.offsetWidth; // その幅
+              textBox.scrollLeft = typedKanjiWidth - (textBox.clientWidth / 2);
 
             // ★★★ 修正ここまで ★★★
 
@@ -875,9 +904,19 @@ function setNextWord(isFirstWord = false) {
     buffer = ""; // ★ この行は script.js 側にも必要です
     judge.setProblem(yomi[i]);
 
-    // ★ 修正: textContent ではなく innerHTML で初期化
-    textBox.innerHTML = `<span style="color: #fff;">${kanji[i]}</span>`; // i=0
-    yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`; // i=0
+    // ★★★ 修正 (innerHTML ではなく textContent に設定) ★★★
+    /*
+    textBox.textContent = kanji[i];
+    yomiBox.textContent = yomi[i];
+    */
+    textBox.innerHTML = `
+        <span>${kanji[i]}</span>
+        <span></span>
+    `;
+    yomiBox.innerHTML = `
+        <span>${yomi[i]}</span>
+        <span></span>
+    `;
 
     // ★★★ 修正 (possible_text の更新) ★★★
     possible_text.innerHTML = `

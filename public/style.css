@@ -346,7 +346,8 @@ progress::-moz-progress-bar {
     width: 100%;
 
     /* 4. (オプション) スムーズなスクロール */
-    scroll-behavior: smooth; 
+    scroll-behavior: smooth;
+    font-size: 0;
 }
 .target-marker {
   position: absolute;

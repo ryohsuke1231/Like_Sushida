@@ -5,8 +5,11 @@ import json
 from flask import Flask, request, jsonify, make_response
 import logging
 import os
-import unicodedata
+import unicodedata # ★ 削除 (furigana.pyへ移動)
 from threading import Thread
+
+# ★ 新規: furigana.py からインポート
+from furigana import get_furigana
 
 app = Flask(__name__)
 
@@ -14,13 +17,14 @@ app = Flask(__name__)
 
 # ロギング設定
 logging.basicConfig(level=logging.INFO)
-#bp = Blueprint("wiki", __name__, url_prefix="/api/wiki")
-# Yahoo APIキー
-APP_ID = os.environ.get("YAHOO_APP_ID")
-API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
+
+# ★ 削除 (furigana.pyへ移動)
+# APP_ID = os.environ.get("YAHOO_APP_ID")
+# API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
 
 def has_unsupported_chars(text):
+    """(この関数はWikipediaのサマリーチェック用なので、ここに残します)"""
     for ch in text:
         code = ord(ch)
         if (0x0000 <= code <= 0x007F or 0x3040 <= code <= 0x309F
@@ -36,126 +40,13 @@ my_headers = {
     "sushida-dev (contact: unker1231@gmail.com) - For a typing game"
 }
 
+# ★ 削除 (furigana.pyへ移動)
+# def kata_to_hira(s):
+#     ...
 
-def kata_to_hira(s):
-    """カタカナをひらがなに変換する"""
-    s = unicodedata.normalize('NFKC', s)
-    result = []
-    for ch in s:
-        code = ord(ch)
-        if 0x30A1 <= code <= 0x30F6:
-            result.append(chr(code - 0x60))
-        else:
-            result.append(ch)
-    return "".join(result)
-
-
-def get_furigana(message):
-    """Yahoo APIを呼び出してふりがなを取得する (タイピングゲーム用に調整)"""
-    if not APP_ID:
-        logging.error("YAHOO_APP_ID not set. Cannot get furigana.")
-        return None
-
-    headers = {"Content-Type": "application/json"}
-    payload = {
-        "id": "1234-1",
-        "jsonrpc": "2.0",
-        "method": "jlp.furiganaservice.furigana",
-        "params": {
-            "q": message
-            # "grade": 1 を削除。これにより「一」にもふりがなが振られる
-        }
-    }
-
-    try:
-        response = requests.post(API_URL,
-                                 headers=headers,
-                                 data=json.dumps(payload),
-                                 params={"appid": APP_ID},
-                                 timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        if "error" in data:
-            logging.error(f"Yahoo API Error: {data['error']['message']}")
-            return None
-
-        if "result" not in data or "word" not in data["result"]:
-            logging.error(f"Yahoo API unexpected response: {data}")
-            return None
-
-        # --- ★★★ ここからが記号処理ロジック ★★★ ---
-
-        # 1. タイピング用に変換する文字マップ
-        # (必要に応じてここに追加・変更してください)
-        conversion_map = {
-            '『': '「',
-            '』': '」',
-            '（': '(',
-            '）': ')',
-            '［': '[',
-            '］': ']',
-            '｛': '{',
-            '｝': '}',
-            '＜': '<',
-            '＞': '>',
-            '？': '?',
-            '！': '!',
-            '・': '/',
-            '　': ' '  # 全角スペースを半角スペースに
-        }
-
-        # 2. タイピング対象としてそのまま残す記号
-        # (ひらがな・カタカナ・長音記号以外)
-        keep_symbols = {
-            '、', '。', '・', '「', '」', '(', ')', '[', ']', '{', '}', '<', '>',
-            '?', '!', ' ', ',', '.'
-        }
-
-        furigana_text = ""
-        for word in data["result"]["word"]:
-            if "furigana" in word:
-                # 3. 漢字の読み (「一」は "いち" としてここに来る)
-                furigana_text += word["furigana"]
-
-            elif "surface" in word:
-                # 4. 読みがない場合 (ひらがな、カタカナ、記号など)
-                surface = word["surface"]
-
-                for char in surface:
-                    # 4a. 変換マップにある文字は変換して追加
-                    if char in conversion_map:
-                        furigana_text += conversion_map[char]
-                        continue
-
-                    # 4b. ひらがな(ぁ-ん)・カタカナ(ァ-ヶ)・長音記号(ー)かチェック
-                    code = ord(char)
-                    if (0x3041 <= code <= 0x309F) or \
-                       (0x30A1 <= code <= 0x30F6) or \
-                       (code == 0x30FC): # 長音記号 'ー'
-                        furigana_text += char
-                        continue
-
-                    # 4c. 「、」「。」など、そのまま残す記号かチェック
-                    if char in keep_symbols:
-                        furigana_text += char
-                        continue
-
-                    # 4d. それ以外 (改行コードや絵文字など) は無視
-                    # logging.info(f"Ignoring char: {char}") # デバッグ用
-
-        # 最後にカタカナをひらがなに統一
-        return kata_to_hira(furigana_text)
-
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Yahoo API Request Error: {e}")
-        return None
-    except json.JSONDecodeError:
-        logging.error(f"Yahoo API JSON Decode Error: {response.text}")
-        return None
-    except Exception as e:
-        logging.error(f"Yahoo API Unknown Error: {e}")
-        return None
+# ★ 削除 (furigana.pyへ移動)
+# def get_furigana(message):
+#     ...
 
 
 def get_wiki_summary(title):
@@ -219,9 +110,17 @@ def api_get_wiki():
         if has_unsupported_chars(summary):
             continue
 
-        response_data = jsonify(kanji=summary, yomi=get_furigana(summary))
-        response = make_response(response_data)
-        return response
+        # ★★★ 修正: get_furigana の戻り値がタプル (yomi, mapping) に
+        furigana_result = get_furigana(summary)
+
+        if furigana_result:
+            yomi, mapping = furigana_result
+            response_data = jsonify(kanji=summary, yomi=yomi, mapping=mapping) # ★ mapping を追加
+            response = make_response(response_data)
+            return response
+        else:
+            # ふりがな取得に失敗した場合は次のループへ
+            continue
 
     return jsonify({"error": "記事が見つかりませんでした"}), 500
 
