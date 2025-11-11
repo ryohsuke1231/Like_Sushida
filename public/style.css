@@ -349,6 +349,13 @@ progress::-moz-progress-bar {
     scroll-behavior: smooth;
     font-size: 0;
 }
+#yomi-text span,
+#box-text span,
+#possible span {
+    font-size: 1.5rem;
+    white-space: nowrap;
+}
+
 .target-marker {
   position: absolute;
   top: 0;           /* ← バーの上端にぴったり重ねる */
