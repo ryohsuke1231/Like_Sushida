@@ -160,3 +160,12 @@ def get_furigana(message):
     except Exception as e:
         logging.error(f"Yahoo API Unknown Error: {e}")
         return None
+
+if  __name__ == "__main__":
+     # 単体テスト用
+     test_text = "これはテストです。なんか草生えるわw"
+     result = get_furigana(test_text)
+     if result:
+         yomi, mapping = result
+         print(f"Yomi: {yomi}")
+         print(f"Mapping: {mapping}")

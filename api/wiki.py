@@ -9,7 +9,7 @@ import unicodedata # ★ 削除 (furigana.pyへ移動)
 from threading import Thread
 
 # ★ 新規: furigana.py からインポート
-from furigana import get_furigana
+from lib.furigana import get_furigana
 
 app = Flask(__name__)
 

@@ -315,6 +315,7 @@ progress::-moz-progress-bar {
     overflow-x: hidden;
     display: flex;
     white-space: nowrap;
+    /*真ん中に配置*/
 }
 #possible span {
     font-size: 1.5rem;
@@ -348,6 +349,8 @@ progress::-moz-progress-bar {
     /* 4. (オプション) スムーズなスクロール */
     scroll-behavior: smooth;
     font-size: 0;
+    display: flex;
+    justify-content: center;
 }
 #yomi-text span,
 #box-text span,
