@@ -4,7 +4,6 @@ import requests
 from flask import Flask, request, jsonify, make_response
 import os
 import json
-import unicodedata # ★ 削除 (furigana.pyへ移動)
 import random
 import logging
 from threading import Thread
@@ -33,14 +32,10 @@ if not gemini_api_key:
 else:
     try:
         genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash-lite') # モデル名を更新 (1.5-flash または 1.0-pro)
+        model = genai.GenerativeModel('gemini-1.5-flash') # モデル名を更新
     except Exception as e:
         logging.error(f"Failed to configure Gemini: {e}")
         model = None
-
-# ★ 削除 (furigana.pyへ移動)
-# APP_ID = os.environ.get("YAHOO_APP_ID")
-# API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
 # プロンプト
 prompt = "変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　300文字を目安に"
@@ -64,14 +59,6 @@ def safe_generate():
     LAST_GENERATE_TIME = time.time()
 
     return model.generate_content(prompt)
-
-# ★ 削除 (furigana.pyへ移動)
-# def kata_to_hira(s):
-#     ...
-
-# ★ 削除 (furigana.pyへ移動)
-# def get_furigana(message):
-#     ...
 
 
 def generate_new_text_with_furigana():
@@ -181,9 +168,39 @@ def generate_text():
             if len(used_indices) >= len(TEXT_CACHE):
                 used_indices = {new_index}  # 今回使ったものだけにする
 
-            # ★★★ 修正: mapping をレスポンスに追加
-            kanji_split = split_with_context(new_data[0])
-            yomi_split = split_with_context(new_data[1])
+            # ★★★ 修正: mapping を利用して分割 ★★★
+            kanji_text = new_data[0] # (未使用だが分かりやすさのため)
+            yomi_text = new_data[1]
+            mapping_list = new_data[2]
+
+            # 1. yomi を分割 (インデックス付き)
+            yomi_segments_data = split_with_context(yomi_text)
+
+            yomi_split = []
+            kanji_split = []
+
+            for data in yomi_segments_data:
+                yomi_split.append(data['segment']) # 空白除去済みの yomi
+
+                start, end = data['start'], data['end'] # 空白除去前の yomi インデックス
+
+                # yomi_text や mapping_list が空の場合のケア
+                if start >= len(mapping_list):
+                    continue
+                end = min(end, len(mapping_list))
+
+                mapping_slice = mapping_list[start:end]
+                yomi_slice_raw = yomi_text[start:end]
+
+                kanji_segment_cleaned_chars = []
+                for i in range(len(yomi_slice_raw)):
+                    yomi_char = yomi_slice_raw[i]
+                    if not yomi_char.isspace(): # yomi が空白でないなら
+                        kanji_segment_cleaned_chars.append(mapping_slice[i])
+
+                kanji_split.append("".join(kanji_segment_cleaned_chars))
+            # ★★★ 修正ここまで ★★★
+
             response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=new_data[2])
             response = make_response(response_data)
             response.set_cookie('used_indices',
@@ -209,10 +226,40 @@ def generate_text():
         logging.info("All cache items used by this client. Resetting cookie.")
         used_indices = {selected_index}  # 今回のものだけ保持
 
-    # ★★★ 修正: mapping をレスポンスに追加
-    kanji = split_with_context(selected_data[0])
-    yomi = split_with_context(selected_data[1])
-    response_data = jsonify(kanji=kanji, yomi=yomi, mapping=selected_data[2])
+    # ★★★ 修正: mapping を利用して分割 (キャッシュからの取得) ★★★
+    kanji_text = selected_data[0] # (未使用だが分かりやすさのため)
+    yomi_text = selected_data[1]
+    mapping_list = selected_data[2]
+
+    # 1. yomi を分割 (インデックス付き)
+    yomi_segments_data = split_with_context(yomi_text)
+
+    yomi_split = []
+    kanji_split = []
+
+    for data in yomi_segments_data:
+        yomi_split.append(data['segment']) # 空白除去済みの yomi
+
+        start, end = data['start'], data['end'] # 空白除去前の yomi インデックス
+
+        # yomi_text や mapping_list が空の場合のケア
+        if start >= len(mapping_list):
+            continue
+        end = min(end, len(mapping_list))
+
+        mapping_slice = mapping_list[start:end]
+        yomi_slice_raw = yomi_text[start:end]
+
+        kanji_segment_cleaned_chars = []
+        for i in range(len(yomi_slice_raw)):
+            yomi_char = yomi_slice_raw[i]
+            if not yomi_char.isspace(): # yomi が空白でないなら
+                kanji_segment_cleaned_chars.append(mapping_slice[i])
+
+        kanji_split.append("".join(kanji_segment_cleaned_chars))
+    # ★★★ 修正ここまで ★★★
+
+    response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=selected_data[2])
     response = make_response(response_data)
     # httponly=True, samesite='Lax' を推奨
     response.set_cookie('used_indices',

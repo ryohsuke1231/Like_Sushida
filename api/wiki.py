@@ -5,7 +5,6 @@ import json
 from flask import Flask, request, jsonify, make_response
 import logging
 import os
-import unicodedata # ★ 削除 (furigana.pyへ移動)
 from threading import Thread
 
 # ★ 新規: furigana.py からインポート
@@ -20,11 +19,6 @@ app = Flask(__name__)
 # ロギング設定
 logging.basicConfig(level=logging.INFO)
 GOAL_LENGTH = 300
-
-# ★ 削除 (furigana.pyへ移動)
-# APP_ID = os.environ.get("YAHOO_APP_ID")
-# API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
-
 
 def has_unsupported_chars(text):
     """(この関数はWikipediaのサマリーチェック用なので、ここに残します)"""
@@ -42,15 +36,6 @@ my_headers = {
     "User-Agent":
     "sushida-dev (contact: unker1231@gmail.com) - For a typing game"
 }
-
-# ★ 削除 (furigana.pyへ移動)
-# def kata_to_hira(s):
-#     ...
-
-# ★ 削除 (furigana.pyへ移動)
-# def get_furigana(message):
-#     ...
-
 
 def get_wiki_summary(title):
     url = "https://ja.wikipedia.org/w/api.php"
@@ -98,58 +83,15 @@ def get_random_title_from_search():
     except:
         return None
 
-"""
-@app.route("/api/wiki", methods=["GET"])
-def api_get_wiki():
-    res_yomi = []
-    res_kanji = []
-    total_length = 0
-    #前回のtotal_lengthとの差
-    diff = 0
-    for _ in range(15):  # 最大15回まで試す
-        title = get_random_title_from_search()
-        if not title:
-            continue
+# ★ 削除: 古いコメントアウトされた実装
+# """
+# @app.route("/api/wiki", methods=["GET"])
+# ...
+# """
 
-        summary = get_wiki_summary(title)
-        if not summary:
-            continue
-
-        if has_unsupported_chars(summary):
-            continue
-
-        # ★★★ 修正: get_furigana の戻り値がタプル (yomi, mapping) に
-        furigana_result = get_furigana(summary)
-        title_furigana = get_furigana(title)
-        if furigana_result and title_furigana:
-            yomi, mapping = furigana_result
-            res_yomi.append(title_furigana)
-            res_yomi.append(yomi)
-            res_kanji.append(title)
-            res_kanji.append(summary)
-            # 文字数チェック
-            yomi_total = 0
-            for i in yomi:
-                yomi_total += len(i)
-            now_diff = total_length - yomi_total
-            total_length += yomi_total
-            # 300文字以上になったら終了
-            if  total_length > GOAL_LENGTH:
-                response_data = jsonify(kanji=(split_with_context(summ) for summ in res_kanji), yomi=(split_with_context(yomi) for yomi in res_yomi), mapping=mapping) # ★ mapping を追加
-                response = make_response(response_data)
-                return response
-            else:
-                continue
-        else:
-            # ふりがな取得に失敗した場合は次のループへ
-            continue
-
-    return jsonify({"error": "記事が見つかりませんでした"}), 500
-"""
-# title_mapping / summary_mapping がリスト形式なら、対応辞書に変換する
-def list_to_dict(mapping_list, yomi_text):
-    # mapping_list（漢字など）と yomi_text（ひらがな）を対応させる
-    return dict(zip(mapping_list, yomi_text))
+# ★ 削除: list_to_dict (マッピングリストを直接使うため不要)
+# def list_to_dict(mapping_list, yomi_text):
+#     ...
 
 @app.route("/api/wiki", methods=["GET"])
 def api_get_wiki():
@@ -159,24 +101,22 @@ def api_get_wiki():
     漢字かな混じり文と読みをそれぞれ分割したリストを返す API。
     """
 
+    # ★★★ 修正: 蓄積データを (str, str, list) に変更 ★★★
     # ループ全体で GOAL_LENGTH に最も近かった時点のデータを保持する変数
-    best_yomi_segments = []   # 読み (ふりがな) のセグメント (str) のフラットなリスト
-    best_kanji_segments = []  # 漢字かな混じり文 (str) のフラットなリスト
-    best_mapping = {}         # 最後のふりがなマッピング
+    best_yomi_text = ""       # 読み (ふりがな) の結合済み文字列
+    best_kanji_text = ""      # 漢字かな混じり文 の結合済み文字列 (分割前の原文)
+    best_mapping_list = []    # 結合済みのマッピングリスト
     best_diff = sys.maxsize   # GOAL_LENGTH との最小の絶対差
-    # best_total_length = 0     # (デバッグ用) その時の合計長
+    # best_total_length = 0     # (デバッグ用)
 
     # 現在の試行で蓄積中のデータ
-    current_yomi_segments = []
-    current_kanji_segments = []
-    current_mapping = {}
+    current_yomi_text = ""
+    current_kanji_text = ""
+    current_mapping_list = []
     current_total_length = 0
+    current_diff = sys.maxsize
 
-    # 現在の GOAL_LENGTH との絶対差
-    # (sys.maxsize にしておくと、最初の記事は必ず「より近い」と判断される)
-    current_diff = sys.maxsize 
-
-    for _ in range(15):  # 最大15回まで試す
+    for _ in range(15):
         title = get_random_title_from_search()
         if not title:
             continue
@@ -193,52 +133,46 @@ def api_get_wiki():
         summary_furigana_result = get_furigana(summary)
 
         if title_furigana_result and summary_furigana_result:
-            title_yomi_list, title_mapping = title_furigana_result
-            summary_yomi_list, summary_mapping = summary_furigana_result
+            # ★★★ 修正: get_furigana の戻り値 (str, list) を正しく受け取る
+            title_yomi_str, title_mapping = title_furigana_result
+            summary_yomi_str, summary_mapping = summary_furigana_result
 
-            # 今回追加しようとする読みのリストと長さ
-            yomi_list_to_add = title_yomi_list + summary_yomi_list
-            length_to_add = sum(len(y) for y in yomi_list_to_add)
+            # 今回追加しようとする文字列とマッピング
+            yomi_str_to_add = title_yomi_str + summary_yomi_str
+            kanji_str_to_add = title + summary # ★ 原文も結合する
+            mapping_list_to_add = title_mapping + summary_mapping
+            length_to_add = len(yomi_str_to_add) # ★ str の長さ
+
+            # yomi と mapping の長さが一致しているか確認 (重要)
+            if len(yomi_str_to_add) != len(mapping_list_to_add):
+                logging.warning(f"Wiki: Mismatch yomi/mapping length for title/summary. Skipping.")
+                continue
 
             # 追加した場合の新しい合計長と GOAL との差
             new_total_length = current_total_length + length_to_add
             new_diff = abs(GOAL_LENGTH - new_total_length)
 
-            # ★★★ 要件1: GOAL_LENGTH により近づく場合のみ追加 ★★★
-            # (new_diff < current_diff)
-            # 注意: <= にすると、同じ差の場合は追加し続けることになる。
-            #       < の場合、GOAL_LENGTH から遠ざかった時点で追加が止まる。
-            #       ここでは「近づく限り」追加し続けるため < を採用。
+            # ★★★ GOAL_LENGTH により近づく場合のみ追加 ★★★
             if new_diff < current_diff:
-                # データを蓄積
-                current_yomi_segments.extend(yomi_list_to_add)
-                current_kanji_segments.append(title)
-                current_kanji_segments.append(summary)
-
-                if isinstance(title_mapping, list):
-                    title_mapping = list_to_dict(title_mapping, title_yomi_list)
-                if isinstance(summary_mapping, list):
-                    summary_mapping = list_to_dict(summary_mapping, summary_yomi_list)
-
-                current_mapping.update(title_mapping)
-                current_mapping.update(summary_mapping)
+                # データを蓄積 (文字列・リストを結合)
+                current_yomi_text += yomi_str_to_add
+                current_kanji_text += kanji_str_to_add
+                current_mapping_list.extend(mapping_list_to_add)
 
                 # 合計長と差を更新
                 current_total_length = new_total_length
                 current_diff = new_diff
 
                 # ★★★ 現時点での蓄積データが、過去のベストより優れているかチェック ★★★
-                # (GOAL_LENGTH を超えても、より近ければベストとして記録)
                 if current_diff < best_diff:
-                    best_yomi_segments = list(current_yomi_segments)   # コピーを保持
-                    best_kanji_segments = list(current_kanji_segments)  # コピーを保持
-                    best_mapping = dict(current_mapping)              # コピーを保持
+                    best_yomi_text = current_yomi_text
+                    best_kanji_text = current_kanji_text
+                    best_mapping_list = list(current_mapping_list) # コピーを保持
                     best_diff = current_diff
                     # best_total_length = current_total_length # (デバッグ用)
 
             else:
-                # 追加すると GOAL_LENGTH から遠ざかる、または変わらない
-                # (このループではこれ以上追加しないが、次のループで別の記事を試す)
+                # 遠ざかる場合は追加しない
                 continue
 
         else:
@@ -247,31 +181,46 @@ def api_get_wiki():
 
     # --- ループ終了後 (15回試行後) ---
 
-    # 最終的に、GOAL_LENGTH に最も近かった時点のデータを採用
-    if not best_kanji_segments:
-        # 一度も記事が追加されなかった場合 (ふりがな取得失敗が続いた等)
+    if not best_kanji_text: # (best_yomi_text や best_mapping_list でも可)
+        # 一度も記事が追加されなかった場合
         return jsonify({"error": "適切な記事が見つかりませんでした"}), 500
 
-    # ★★★ 要件2: split_with_context を適用し、フラットなリストを作成 ★★★
+    # ★★★ 要件2: mapping を利用して分割 (generate2.py と同じロジック) ★★★
 
-    # best_kanji_segments は [title1, summary1, title2, summary2, ...] という list[str]
-    final_kanji_list = []
-    for kanji_text_str in best_kanji_segments:
-        # split_with_context(str) は list[str] を返す
-        final_kanji_list.extend(split_with_context(kanji_text_str))
+    # 1. best_yomi_text (結合済み yomi) を分割
+    yomi_segments_data = split_with_context(best_yomi_text)
 
-    # best_yomi_segments は [yomi1, yomi2, yomi3, ...] という list[str]
     final_yomi_list = []
-    for yomi_text_str in best_yomi_segments:
-        # split_with_context(str) は list[str] を返す
-        final_yomi_list.extend(split_with_context(yomi_text_str))
+    final_kanji_list = []
+
+    for data in yomi_segments_data:
+        final_yomi_list.append(data['segment']) # 空白除去済みの yomi
+
+        start, end = data['start'], data['end'] # 空白除去前の yomi インデックス
+
+        # yomi_text や mapping_list が空の場合のケア
+        if start >= len(best_mapping_list):
+            continue
+
+        end = min(end, len(best_mapping_list))
+
+        mapping_slice = best_mapping_list[start:end]
+        yomi_slice_raw = best_yomi_text[start:end]
+
+        kanji_segment_cleaned_chars = []
+        for i in range(len(yomi_slice_raw)):
+            yomi_char = yomi_slice_raw[i]
+            if not yomi_char.isspace(): # yomi が空白でないなら
+                kanji_segment_cleaned_chars.append(mapping_slice[i])
+
+        final_kanji_list.append("".join(kanji_segment_cleaned_chars))
 
     # print(f"最終的な合計長: {best_total_length}, 最小差: {best_diff}") # (デバッグ用)
 
     response_data = jsonify(
-        kanji=final_kanji_list, 
-        yomi=final_yomi_list, 
-        mapping=best_mapping
+        kanji=final_kanji_list,  
+        yomi=final_yomi_list,  
+        mapping=best_mapping_list # ★ 結合済みのリストを返す
     )
     response = make_response(response_data)
     return response
