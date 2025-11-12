@@ -250,6 +250,7 @@ def generate_text():
     # ★★★ 修正ここまで ★★★
 
     response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=selected_data[2])
+    print(f"responce_data: {response_data}")
     response = make_response(response_data)
     response.set_cookie('used_indices',
                         json.dumps(list(used_indices)),

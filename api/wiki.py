@@ -212,6 +212,7 @@ def api_get_wiki():
         yomi=final_yomi_list,  
         mapping=final_mapping_list # ★ 結合済みのリストを返す
     )
+    print(f"responce_data: {response_data}")
     response = make_response(response_data)
     return response
 

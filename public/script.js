@@ -358,6 +358,7 @@ async function startCourse(config) {
             mapping = data.mapping;
             console.log(yomi);
             console.log(kanji);
+            console.log(mapping);
             nokorijikan = null;
             remainingTime.textContent = ` `;
             remainingTime.style.display = 'none';
@@ -749,7 +750,7 @@ function handleKeyDown(event) {
              const fullYomi = yomi[i]; 
              const completedYomi = fullYomi.substring(0, completedHiraganaLength);
              const remainingYomi = fullYomi.substring(completedHiraganaLength);
-
+             console.log(`completedHiraganaLength: ${completedHiraganaLength}, completedYomi: ${completedYomi}, remainingYomi: ${remainingYomi}`);
              yomiBox.innerHTML = `
              <span>${completedYomi}</span>
              <span>${remainingYomi}</span>
@@ -773,7 +774,7 @@ function handleKeyDown(event) {
                }
                const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
                const remainingKanji = fullKanji.substring(kanjiSplitIndex);
-
+               console.log(`completedKanji: ${completedKanji}, remainingKanji: ${remainingKanji}`);
                textBox.innerHTML = `
                <span>${completedKanji}</span>
                <span>${remainingKanji}</span>
