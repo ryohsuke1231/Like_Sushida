@@ -9,7 +9,8 @@ import math # マッピング計算用に追加
 # --- 設定 (Configuration) ---
 
 # Yahoo APIキー
-APP_ID = os.environ.get("YAHOO_APP_ID")
+#APP_ID = os.environ.get("YAHOO_APP_ID")
+APP_ID = "dj00aiZpPUtUc3hEUWRkc0VTdiZzPWNvbnN1bWVyc2VjcmV0Jng9OGY-"
 API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
 

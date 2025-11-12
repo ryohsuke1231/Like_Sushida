@@ -146,6 +146,11 @@ def api_get_wiki():
 
     return jsonify({"error": "記事が見つかりませんでした"}), 500
 """
+# title_mapping / summary_mapping がリスト形式なら、対応辞書に変換する
+def list_to_dict(mapping_list, yomi_text):
+    # mapping_list（漢字など）と yomi_text（ひらがな）を対応させる
+    return dict(zip(mapping_list, yomi_text))
+
 @app.route("/api/wiki", methods=["GET"])
 def api_get_wiki():
     """
@@ -210,7 +215,12 @@ def api_get_wiki():
                 current_kanji_segments.append(title)
                 current_kanji_segments.append(summary)
 
-                # マッピングはタイトルと要約をマージ (キーが重複した場合は要約側で上書き)
+                
+                if isinstance(title_mapping, list):
+                    title_mapping = list_to_dict(title_mapping, title_yomi)
+                if isinstance(summary_mapping, list):
+                    summary_mapping = list_to_dict(summary_mapping, summary_yomi)
+
                 current_mapping.update(title_mapping)
                 current_mapping.update(summary_mapping)
 
