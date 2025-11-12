@@ -215,11 +215,10 @@ def api_get_wiki():
                 current_kanji_segments.append(title)
                 current_kanji_segments.append(summary)
 
-                
                 if isinstance(title_mapping, list):
-                    title_mapping = list_to_dict(title_mapping, title_yomi)
+                    title_mapping = list_to_dict(title_mapping, title_yomi_list)
                 if isinstance(summary_mapping, list):
-                    summary_mapping = list_to_dict(summary_mapping, summary_yomi)
+                    summary_mapping = list_to_dict(summary_mapping, summary_yomi_list)
 
                 current_mapping.update(title_mapping)
                 current_mapping.update(summary_mapping)
