@@ -32,13 +32,13 @@ if not gemini_api_key:
 else:
     try:
         genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash') # モデル名を更新
+        model = genai.GenerativeModel('gemini-2.5-flash-lite') # モデル名を更新
     except Exception as e:
         logging.error(f"Failed to configure Gemini: {e}")
         model = None
 
 # プロンプト
-prompt = "変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　300文字を目安に"
+prompt = "オリジナルで変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　300文字を目安に"
 
 # キャッシュ設定
 TEXT_CACHE = []  # ★★★ [ [kanji, yomi, mapping], [kanji, yomi, mapping], ... ] ★★★
@@ -83,7 +83,7 @@ def generate_new_text_with_furigana():
             yomi, mapping = furigana_result
             # ★ furigana.py 修正により、yomi と mapping の長さは一致するはず
             if len(yomi) != len(mapping):
-                 logging.warning(f"Generate2: Mismatch yomi/mapping length AFTER get_furigana. Skipping.")
+                 logging.warning("Generate2: Mismatch yomi/mapping length AFTER get_furigana. Skipping.")
                  return None
             logging.info("Successfully generated new text and furigana.")
             return [message, yomi, mapping] # ★ mapping を追加
@@ -236,7 +236,7 @@ def generate_text():
 
         # ★ 念のため長さチェック
         if len(yomi_slice_raw) != len(mapping_slice):
-            logging.warning(f"Generate2 (Cache): Mismatch yomi_slice/mapping_slice length. Skipping segment.")
+            logging.warning("Generate2 (Cache): Mismatch yomi_slice/mapping_slice length. Skipping segment.")
             kanji_split.append("")
             continue
 
