@@ -313,8 +313,10 @@ function resetGameState() {
     document.getElementById('result-table').style.visibility = 'hidden';
 
     // テキストクリア
-    textBox.textContent = "";
-    yomiBox.textContent = "";
+    //textBox.textContent = "";
+    //yomiBox.textContent = "";
+    textBox.innerHTML = "";
+    yomiBox.innerHTML = "";
     possible_text.innerHTML = "";
 }
 
@@ -349,8 +351,10 @@ async function startCourse(config) {
             }
             
             // (3) AIモードの単語をセット
-            yomi = splitWithContext(data.yomi);
-            kanji = splitWithContext(data.kanji);
+            //yomi = splitWithContext(data.yomi);
+            //kanji = splitWithContext(data.kanji);
+            yomi = data.yomi;
+            kanji = data.kanji;
             mapping = data.mapping;
             console.log(yomi);
             console.log(kanji);
@@ -651,7 +655,7 @@ function startTimer() {
             centerBox.style.display = 'none';
             endBox.style.display = 'flex';
             start_text.textContent = '終了！';
-            textBox.textContent = "終了！";
+            //textBox.textContent = "終了！";
             yomiBox.innerHTML = "";
             possible_text.innerHTML = "";
 
@@ -819,9 +823,12 @@ function handleKeyDown(event) {
                 centerBox.style.display = 'none';
                 endBox.style.display = 'flex';
                 start_text.textContent = '終了！';
-                textBox.textContent = "終了！";
-                yomiBox.textContent = "";
+                //textBox.textContent = "終了！";
+                //yomiBox.textContent = "";
+                //possible_text.innerHTML = "";
+                yomiBox.innerHTML = "";
                 possible_text.innerHTML = "";
+                textBox.innerHTML = "";
 
                 // 結果表示ロジックへ
                 endGame();
@@ -892,8 +899,10 @@ function setNextWord(isFirstWord = false) {
         centerBox.style.display = 'none';
         endBox.style.display = 'flex';
         start_text.textContent = '終了！';
-        textBox.textContent = "終了！";
-        yomiBox.textContent = "";
+        //textBox.textContent = "終了！";
+        //yomiBox.textContent = "";
+        textBox.innerHTML = "";
+        yomiBox.innerHTML = "";
         possible_text.innerHTML = "";
 
         // 結果表示ロジックへ

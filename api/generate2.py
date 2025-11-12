@@ -11,7 +11,8 @@ from threading import Thread
 import time
 
 # ★ 新規: furigana.py からインポート
-from furigana import get_furigana
+from lib.furigana import get_furigana
+from lib.splitWithContext import split_with_context
 
 
 LAST_GENERATE_TIME = 0
@@ -32,7 +33,7 @@ if not gemini_api_key:
 else:
     try:
         genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash') # モデル名を更新 (1.5-flash または 1.0-pro)
+        model = genai.GenerativeModel('gemini-2.5-flash-lite') # モデル名を更新 (1.5-flash または 1.0-pro)
     except Exception as e:
         logging.error(f"Failed to configure Gemini: {e}")
         model = None
@@ -207,7 +208,9 @@ def generate_text():
         used_indices = {selected_index}  # 今回のものだけ保持
 
     # ★★★ 修正: mapping をレスポンスに追加
-    response_data = jsonify(kanji=selected_data[0], yomi=selected_data[1], mapping=selected_data[2])
+    kanji = split_with_context(selected_data[0])
+    yomi = split_with_context(selected_data[1])
+    response_data = jsonify(kanji=kanji, yomi=yomi, mapping=selected_data[2])
     response = make_response(response_data)
     # httponly=True, samesite='Lax' を推奨
     response.set_cookie('used_indices',
