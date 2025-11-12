@@ -182,7 +182,9 @@ def generate_text():
                 used_indices = {new_index}  # 今回使ったものだけにする
 
             # ★★★ 修正: mapping をレスポンスに追加
-            response_data = jsonify(kanji=new_data[0], yomi=new_data[1], mapping=new_data[2])
+            kanji_split = split_with_context(new_data[0])
+            yomi_split = split_with_context(new_data[1])
+            response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=new_data[2])
             response = make_response(response_data)
             response.set_cookie('used_indices',
                                 json.dumps(list(used_indices)),

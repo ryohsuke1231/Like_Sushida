@@ -137,6 +137,8 @@ body {
     letter-spacing: 1px;
     display: none !important;
     margin: 0 auto;
+    /*小要素を真ん中に配置*/
+    align-items: center;
 }
 
 /* ★ 修正点: 

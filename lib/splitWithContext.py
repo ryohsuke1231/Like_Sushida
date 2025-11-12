@@ -61,3 +61,9 @@ def split_with_context(text: str) -> list[str]:
     # 元のJSは空になったセグメントを除去していないため、Pythonでもそのまま返す
     # (例: "。 。" は ["。", "。"] になる)
     return cleaned_segments
+
+if __name__ == "__main__":
+     # 単体テスト用
+     test_text = "これはテストです。なんか彼は言った。「腹減った。なんか食べたい」と。"
+     result = split_with_context(test_text)
+     print(result)   
