@@ -670,180 +670,154 @@ function startTimer() {
  * @param {KeyboardEvent} event
  */
 function handleKeyDown(event) {
-    // 1. スタート待ち (Enter/Space)
-    if (start === false) {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault(); 
-            startGame();
-        }
-        return; // ゲーム開始前はタイピング処理をしない
-    }
-    if (!judge) {
-        return; 
-    }
+     // 1. スタート待ち (Enter/Space)
+     if (start === false) {
+         if (event.key === 'Enter' || event.key === ' ') {
+             event.preventDefault(); 
+             startGame();
+         }
+         return; // ゲーム開始前はタイピング処理をしない
+     }
+     if (!judge) {
+         return; 
+     }
 
-    // 2. ゲーム中の処理
-    const isSingleCharacter = event.key.length === 1;
+     // 2. ゲーム中の処理
+     const isSingleCharacter = event.key.length === 1;
 
-    if (isSingleCharacter) {
+     if (isSingleCharacter) {
 
-        const result = judge.check(event.key);
-        let now_time = Date.now();
-        let elapsed_time = now_time - start_time;
-        if (result === null) { // null は「完了」
-            // ★修正: 完了キーも「正解」としてカウント
-            correct_keys_count += 1; 
+         const result = judge.check(event.key);
+         let now_time = Date.now();
+         let elapsed_time = now_time - start_time;
+         if (result === null) { // null は「完了」
+             // ★修正: 完了キーも「正解」としてカウント
+             correct_keys_count += 1; 
 
-            renda_count += 1;
-            renda.value = renda_count;
+             renda_count += 1;
+             renda.value = renda_count;
 
-            updateRendaTime();
+             updateRendaTime();
 
-            // スコア計算 (i++ する前に行う)
-            // 完了した単語 (yomi[i]) の文字数から金額を取得
-            if (currentCourseConfig.special !== true) {
-                let _amount = currentCourseConfig.amountMap[yomi[i].length];
-    
-                console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
-    
-                // HTMLの皿カウントID (100, 180, ...)
-                if (_amount && amounts.includes(_amount)) {
-                    const countEl = document.getElementById(`${_amount}_count`);
-                    if (countEl) {
-                        countEl.textContent = parseInt(countEl.textContent) + 1;
-                    }
-                }
-                if (currentCourseConfig.special !== true) {
-                    // 合計皿数
-                    document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
-                    //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
-                }
-            } else {
-                
-            }
-            // 次の単語へ
-            setNextWord();
+             // スコア計算 (i++ する前に行う)
+             // 完了した単語 (yomi[i]) の文字数から金額を取得
+             if (currentCourseConfig.special !== true) {
+                 let _amount = currentCourseConfig.amountMap[yomi[i].length];
 
-            } else if (result === true) { // true は「途中」
-            correct_keys_count += 1;
-            renda_count += 1;
-            renda.value = renda_count;
-            buffer += event.key; // buffer は script.js 側で管理
+                 console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
 
-            // ★★★ ここから大幅に修正 ★★★
+                 // HTMLの皿カウントID (100, 180, ...)
+                 if (_amount && amounts.includes(_amount)) {
+                     const countEl = document.getElementById(`${_amount}_count`);
+                     if (countEl) {
+                         countEl.textContent = parseInt(countEl.textContent) + 1;
+                     }
+                 }
+                 if (currentCourseConfig.special !== true) {
+                     // 合計皿数
+                     document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
+                     //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
+                 }
+             } else {
 
-            // (1) possible_text (ローマ字) の計算 (従来通り)
-            const remaining = judge.getBestMatch(); 
-            possible_text.innerHTML = `
-            <span style="color: #444;">${buffer}</span>
-            <span style="color: #eee;">${remaining}</span>
-            `;
-            // 最初の <span style="color: #444;">...</span> (入力済みローマ字)
-            const typedRomaSpan = possible_text.children[0]; 
-            // 入力済みローマ字の表示幅 (ピクセル数)
-            const typedRomaWidth = typedRomaSpan.offsetWidth; 
-            // 入力済み幅 - (表示領域の半分) だけスクロール
-            possible_text.scrollLeft = typedRomaWidth - (possible_text.clientWidth / 2);
+             }
+             // 次の単語へ
+             setNextWord();
 
-            // (2) yomi-text (ひらがな) の計算
-            // judge から「完了したひらがなの文字数」を取得
-            const completedHiraganaLength = judge.getCompletedHiraganaLength();
-            const fullYomi = yomi[i]; // 現在の単語のひらがな全体
-            const completedYomi = fullYomi.substring(0, completedHiraganaLength);
-            const remainingYomi = fullYomi.substring(completedHiraganaLength);
+         } else if (result === true) { // true は「途中」
+             correct_keys_count += 1;
+             renda_count += 1;
+             renda.value = renda_count;
+             buffer += event.key; // buffer は script.js 側で管理
 
-            // yomiBox を「入力済み」「未入力」の2つの <span> で構成
-            yomiBox.innerHTML = `
-            <span>${completedYomi}</span>
-            <span>${remainingYomi}</span>
-            `;
-            const typedYomiSpan = yomiBox.children[0]; // 入力済みひらがなスパン
-            const typedYomiWidth = typedYomiSpan.offsetWidth; // 入力済みひらがなの幅
-            yomiBox.scrollLeft = typedYomiWidth - (yomiBox.clientWidth / 2);
+             // ★★★ スクロールロジックの修正 ★★★
 
-            // (3) box-text (漢字) の計算 (mapping ベースに修正)
-              const fullKanji = kanji[i]; // 現在の単語の漢字全体 (例: "日本")
-              const currentMapping = mapping[i]; // 対応するマッピング配列 (例: ["日", "日", "本", "本"])
+             // (1) possible_text (ローマ字) の計算
+             const remaining = judge.getBestMatch(); 
+             possible_text.innerHTML = `
+             <span style="color: #444;">${buffer}</span>
+             <span style="color: #eee;">${remaining}</span>
+             `;
+             const typedRomaSpan = possible_text.children[0]; 
+             const typedRomaWidth = typedRomaSpan.offsetWidth; 
+             // ★修正: scrollLeft がマイナスにならないように Math.max を追加
+             let scrollTargetRoma = typedRomaWidth - (possible_text.clientWidth / 2);
+             possible_text.scrollLeft = Math.max(0, scrollTargetRoma);
 
-              let kanjiSplitIndex = 0; // 漢字の分割位置 (0 = 全部未入力)
+             // (2) yomi-text (ひらがな) の計算
+             const completedHiraganaLength = judge.getCompletedHiraganaLength();
+             const fullYomi = yomi[i]; 
+             const completedYomi = fullYomi.substring(0, completedHiraganaLength);
+             const remainingYomi = fullYomi.substring(completedHiraganaLength);
 
-              // completedHiraganaLength は (2) で計算済み (例: 3)
-              if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
+             yomiBox.innerHTML = `
+             <span>${completedYomi}</span>
+             <span>${remainingYomi}</span>
+             `;
+             const typedYomiSpan = yomiBox.children[0]; 
+             const typedYomiWidth = typedYomiSpan.offsetWidth; 
+             // ★修正: scrollLeft がマイナスにならないように Math.max を追加
+             let scrollTargetYomi = typedYomiWidth - (yomiBox.clientWidth / 2);
+             yomiBox.scrollLeft = Math.max(0, scrollTargetYomi);
 
-                  // 1. 入力完了したひらがなに対応する、最後の kanji 文字を取得
-                  // (配列インデックスは 0 からなので、length - 1)
-                  // (例: len=3 -> mapping[2] -> "本")
-                  // (例: len=2 -> mapping[1] -> "日")
-                  const lastMappedChar = currentMapping[completedHiraganaLength - 1];
+             // (3) box-text (漢字) の計算
+               const fullKanji = kanji[i]; 
+               const currentMapping = mapping[i]; 
+               let kanjiSplitIndex = 0; 
+               if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
+                     const lastMappedChar = currentMapping[completedHiraganaLength - 1];
+                     const lastCharIndexInKanji = fullKanji.lastIndexOf(lastMappedChar);
+                     if (lastCharIndexInKanji !== -1) {
+                         kanjiSplitIndex = lastCharIndexInKanji + 1;
+                     }
+               }
+               const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
+               const remainingKanji = fullKanji.substring(kanjiSplitIndex);
 
-                  // 2. その文字が fullKanji の中で最後に出現するインデックスを探す
-                  // (注: 'indexOf' では "東京都" の "と" -> "東" (index 0) となってしまうため、
-                  //   "とうきょう" -> "京" (index 1) を正しく扱うため 'lastIndexOf' を使う方が安全)
-                  // (例: "本" は "日本" の index 1)
-                  // (例: "日" は "日本" の index 0)
-                  const lastCharIndexInKanji = fullKanji.lastIndexOf(lastMappedChar);
+               textBox.innerHTML = `
+               <span>${completedKanji}</span>
+               <span>${remainingKanji}</span>
+               `;
 
-                  if (lastCharIndexInKanji !== -1) {
-                      // 3. 分割位置は (見つかったインデックス + 1)
-                      // (例: index 1 -> split 2)
-                      // (例: index 0 -> split 1)
-                      kanjiSplitIndex = lastCharIndexInKanji + 1;
-                  }
-              }
+               const typedKanjiSpan = textBox.children[0]; 
+               const typedKanjiWidth = typedKanjiSpan.offsetWidth; 
+               // ★修正: scrollLeft がマイナスにならないように Math.max を追加
+               let scrollTargetKanji = typedKanjiWidth - (textBox.clientWidth / 2);
+               textBox.scrollLeft = Math.max(0, scrollTargetKanji);
 
-              const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
-              const remainingKanji = fullKanji.substring(kanjiSplitIndex);
+             // ★★★ 修正ここまで ★★★
 
-              // textBox も同様に2つの <span> で構成
-              textBox.innerHTML = `
-              <span>${completedKanji}</span>
-              <span>${remainingKanji}</span>
-              `;
+             updateRendaTime();
 
-              const typedKanjiSpan = textBox.children[0]; // 入力済み（とみなした）漢字スパン
-              const typedKanjiWidth = typedKanjiSpan.offsetWidth; // その幅
-              textBox.scrollLeft = typedKanjiWidth - (textBox.clientWidth / 2);
+         } else { // false は「間違い」
+             if (ippatsu === true) {
+                 end_time = Date.now(); 
+                 if (secondsTimer) clearInterval(secondsTimer);
+                 secondsTimer = null;
+                 start = false; // ゲーム終了
 
-            // ★★★ 修正ここまで ★★★
+                 // 終了表示
+                 startBox.style.display = 'none';
+                 resultBox.style.display = 'none';
+                 centerBox.style.display = 'none';
+                 endBox.style.display = 'flex';
+                 start_text.textContent = '終了！';
+                 yomiBox.innerHTML = "";
+                 possible_text.innerHTML = "";
+                 textBox.innerHTML = "";
 
-            updateRendaTime();
+                 // 結果表示ロジックへ
+                 endGame();
+             }
+             incorrect_keys_count += 1;
+             renda_count = 0;
+             renda.value = renda_count;
+         }
+         let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
+         document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒, 正確率 ${correct_keys_persent}%`;
 
-        } else { // false は「間違い」
-            if (ippatsu === true) {
-                end_time = Date.now(); 
-
-                if (secondsTimer) clearInterval(secondsTimer);
-                secondsTimer = null;
-
-                start = false; // ゲーム終了
-
-                // 終了表示
-                startBox.style.display = 'none';
-                resultBox.style.display = 'none';
-                centerBox.style.display = 'none';
-                endBox.style.display = 'flex';
-                start_text.textContent = '終了！';
-                //textBox.textContent = "終了！";
-                //yomiBox.textContent = "";
-                //possible_text.innerHTML = "";
-                yomiBox.innerHTML = "";
-                possible_text.innerHTML = "";
-                textBox.innerHTML = "";
-
-                // 結果表示ロジックへ
-                endGame();
-            }
-            incorrect_keys_count += 1;
-            renda_count = 0;
-            renda.value = renda_count;
-            //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
-        }
-        let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
-        document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒, 正確率 ${correct_keys_persent}%`;
-        
-    }
+     }
 }
-
 /**
  * 連打数に応じた時間ボーナス処理
  */

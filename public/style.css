@@ -60,7 +60,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /*justify-content: center;*/
     margin-bottom: 1rem;
     width: auto;
     padding-left: 3rem;
@@ -353,6 +353,7 @@ progress::-moz-progress-bar {
     scroll-behavior: smooth;
     font-size: 0;
     display: flex;
+    justify-content: center;
     /*justify-content: center;*/
 }
 #yomi-text span,
@@ -796,7 +797,6 @@ input.cmn-toggle-round-flat {
 #wait-box img {
     height: 70%;
     z-index: 1000;
-    height: auto;
     border-radius: 50%;
     margin-top: 1rem;
     margin-bottom: 1rem;

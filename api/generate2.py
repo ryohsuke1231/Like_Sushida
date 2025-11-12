@@ -77,11 +77,14 @@ def generate_new_text_with_furigana():
         message = response.text
 
         # 2. Yahoo APIでふりがな取得
-        # ★★★ 修正: 戻り値がタプル (yomi, mapping) に
         furigana_result = get_furigana(message)
 
         if furigana_result:
             yomi, mapping = furigana_result
+            # ★ furigana.py 修正により、yomi と mapping の長さは一致するはず
+            if len(yomi) != len(mapping):
+                 logging.warning(f"Generate2: Mismatch yomi/mapping length AFTER get_furigana. Skipping.")
+                 return None
             logging.info("Successfully generated new text and furigana.")
             return [message, yomi, mapping] # ★ mapping を追加
         else:
@@ -112,9 +115,6 @@ def refill_cache_task():
 def refill_cache_if_needed(available_indices_count):
     """キャッシュのストックが少なければ非同期で補充を開始する"""
     global generation_thread
-    # キャッシュが上限に達しておらず、
-    # 未使用が閾値を下回り、
-    # 既に補充スレッドが実行中でない場合
     if (len(TEXT_CACHE) < MAX_CACHE_SIZE and
             available_indices_count < MIN_CACHE_STOCK and
             (generation_thread is None or not generation_thread.is_alive())):
@@ -130,7 +130,6 @@ def generate_text():
     # 1. Cookieから使用済みindexを取得
     try:
         used_indices_json = request.cookies.get('used_indices', '[]')
-        # Cookieが空や不正な値の場合を考慮
         if not used_indices_json.startswith('[') or not used_indices_json.endswith(']'):
             raise json.JSONDecodeError("Invalid JSON format", used_indices_json, 0)
 
@@ -148,43 +147,31 @@ def generate_text():
     # 4. 利用可能な文章がない場合のフォールバック
     if not available_indices:
         logging.warning("No available text in cache. Attempting synchronous generation...")
-        # 強制的に新しいものを生成（同期処理なのでレスポンスが遅れる）
         new_data = generate_new_text_with_furigana() # [kanji, yomi, mapping]
 
         if new_data:
-            # キャッシュに追加
             if len(TEXT_CACHE) < MAX_CACHE_SIZE:
                 TEXT_CACHE.append(new_data)
                 new_index = len(TEXT_CACHE) - 1
             else:
-                # キャッシュが満杯なら古いものを上書き（例：0番目）
                 TEXT_CACHE[0] = new_data
                 new_index = 0
-
-            # new_indexを使用済みにする
             used_indices.add(new_index)
-
-            # Cookieの肥大化を防ぐため、キャッシュサイズを超えたらリセット
             if len(used_indices) >= len(TEXT_CACHE):
-                used_indices = {new_index}  # 今回使ったものだけにする
+                used_indices = {new_index}  
 
-            # ★★★ 修正: mapping を利用して分割 ★★★
-            kanji_text = new_data[0] # (未使用だが分かりやすさのため)
+            # ★★★ 修正: kanji 再構築ロジック (フォールバック) ★★★
             yomi_text = new_data[1]
             mapping_list = new_data[2]
 
-            # 1. yomi を分割 (インデックス付き)
             yomi_segments_data = split_with_context(yomi_text)
-
             yomi_split = []
             kanji_split = []
 
             for data in yomi_segments_data:
-                yomi_split.append(data['segment']) # 空白除去済みの yomi
+                yomi_split.append(data['segment'])
+                start, end = data['start'], data['end']
 
-                start, end = data['start'], data['end'] # 空白除去前の yomi インデックス
-
-                # yomi_text や mapping_list が空の場合のケア
                 if start >= len(mapping_list):
                     continue
                 end = min(end, len(mapping_list))
@@ -192,10 +179,16 @@ def generate_text():
                 mapping_slice = mapping_list[start:end]
                 yomi_slice_raw = yomi_text[start:end]
 
+                # ★ 念のため長さチェック (furigana.py 修正により不要なはずだが)
+                if len(yomi_slice_raw) != len(mapping_slice):
+                    logging.warning(f"Generate2 (Fallback): Mismatch yomi_slice/mapping_slice length. Skipping segment.")
+                    kanji_split.append("") # 空のセグメントを追加
+                    continue
+
                 kanji_segment_cleaned_chars = []
                 for i in range(len(yomi_slice_raw)):
                     yomi_char = yomi_slice_raw[i]
-                    if not yomi_char.isspace(): # yomi が空白でないなら
+                    if not yomi_char.isspace():
                         kanji_segment_cleaned_chars.append(mapping_slice[i])
 
                 kanji_split.append("".join(kanji_segment_cleaned_chars))
@@ -205,13 +198,11 @@ def generate_text():
             response = make_response(response_data)
             response.set_cookie('used_indices',
                                 json.dumps(list(used_indices)),
-                                max_age=3600*24*30,  # 30 days
+                                max_age=3600*24*30,
                                 httponly=True,
                                 samesite='Lax')
             return response
-
         else:
-            # 本当に何も返せない場合
             return jsonify(error="Failed to generate new text. API keys might be missing."), 500
 
     # 5. ランダムに選択
@@ -220,29 +211,22 @@ def generate_text():
 
     # 6. 使用済みindexを更新し、Cookieにセット
     used_indices.add(selected_index)
-
-    # Cookieの肥大化を防ぐ（もし使用済みがキャッシュ全体になったらリセット）
     if len(used_indices) >= len(TEXT_CACHE):
         logging.info("All cache items used by this client. Resetting cookie.")
-        used_indices = {selected_index}  # 今回のものだけ保持
+        used_indices = {selected_index}
 
-    # ★★★ 修正: mapping を利用して分割 (キャッシュからの取得) ★★★
-    kanji_text = selected_data[0] # (未使用だが分かりやすさのため)
+    # ★★★ 修正: kanji 再構築ロジック (キャッシュ) ★★★
     yomi_text = selected_data[1]
     mapping_list = selected_data[2]
 
-    # 1. yomi を分割 (インデックス付き)
     yomi_segments_data = split_with_context(yomi_text)
-
     yomi_split = []
     kanji_split = []
 
     for data in yomi_segments_data:
-        yomi_split.append(data['segment']) # 空白除去済みの yomi
+        yomi_split.append(data['segment'])
+        start, end = data['start'], data['end']
 
-        start, end = data['start'], data['end'] # 空白除去前の yomi インデックス
-
-        # yomi_text や mapping_list が空の場合のケア
         if start >= len(mapping_list):
             continue
         end = min(end, len(mapping_list))
@@ -250,10 +234,16 @@ def generate_text():
         mapping_slice = mapping_list[start:end]
         yomi_slice_raw = yomi_text[start:end]
 
+        # ★ 念のため長さチェック
+        if len(yomi_slice_raw) != len(mapping_slice):
+            logging.warning(f"Generate2 (Cache): Mismatch yomi_slice/mapping_slice length. Skipping segment.")
+            kanji_split.append("")
+            continue
+
         kanji_segment_cleaned_chars = []
         for i in range(len(yomi_slice_raw)):
             yomi_char = yomi_slice_raw[i]
-            if not yomi_char.isspace(): # yomi が空白でないなら
+            if not yomi_char.isspace():
                 kanji_segment_cleaned_chars.append(mapping_slice[i])
 
         kanji_split.append("".join(kanji_segment_cleaned_chars))
@@ -261,10 +251,9 @@ def generate_text():
 
     response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=selected_data[2])
     response = make_response(response_data)
-    # httponly=True, samesite='Lax' を推奨
     response.set_cookie('used_indices',
                         json.dumps(list(used_indices)),
-                        max_age=3600*24*30,  # 30 days
+                        max_age=3600*24*30,
                         httponly=True,
                         samesite='Lax')
 
@@ -273,7 +262,6 @@ def generate_text():
 # --- サーバー起動（開発用） ---
 if __name__ == '__main__':
     # 開発サーバー起動時にキャッシュを温める
-    # (本番環境ではGunicornなどを使うため、これは実行されない想定)
     if not TEXT_CACHE:
         logging.info("Priming cache on startup...")
         prime_thread = Thread(target=refill_cache_task)
