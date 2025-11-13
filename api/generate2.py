@@ -178,6 +178,7 @@ def generate_text():
             yomi_segments_data = split_with_context(yomi_text)
             yomi_split = []
             kanji_split = []
+            final_mapping_segments = [] # ★ 追加: mapping セグメント生成
 
             for data in yomi_segments_data:
                 yomi_split.append(data['segment']) # 空白除去済みの yomi
@@ -216,9 +217,41 @@ def generate_text():
                             last_word_index = -1
 
                 kanji_split.append("".join(kanji_segment_chars))
-            # ★★★ 修正ここまで ★★★
 
-            response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=mapping_list)
+                # ★★★ ここから mapping セグメント生成ロジック (wiki.py と同じものをコピペ) ★★★
+                if start >= len(mapping_list): # mapping_list は new_data[1]
+                    final_mapping_segments.append([])
+                    continue
+                end = min(end, len(mapping_list))
+
+                yomi_slice_raw = yomi_text[start:end] # yomi_text は new_data[0]
+                mapping_slice_raw = mapping_list[start:end]
+
+                if len(yomi_slice_raw) != len(mapping_slice_raw):
+                    logging.warning(f"Generate2 (Fallback): Mismatch yomi_slice/mapping_slice length. Appending empty map.")
+                    final_mapping_segments.append([])
+                    continue
+
+                mapping_segment = []
+                kanji_segment_start_index = -1
+
+                for i in range(len(yomi_slice_raw)):
+                    yomi_char = yomi_slice_raw[i]
+                    if yomi_char.isspace():
+                        continue
+
+                    original_kanji_index = mapping_slice_raw[i]
+                    if kanji_segment_start_index == -1:
+                        kanji_segment_start_index = original_kanji_index
+
+                    relative_kanji_index = original_kanji_index - kanji_segment_start_index
+                    mapping_segment.append(relative_kanji_index)
+
+                final_mapping_segments.append(mapping_segment)
+                # ★★★ ここまで ★★★
+
+            # ★ 修正: mapping=final_mapping_segments
+            response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=final_mapping_segments) 
             response = make_response(response_data)
             response.set_cookie('used_indices',
                                 json.dumps(list(used_indices)),
@@ -248,48 +281,50 @@ def generate_text():
     yomi_segments_data = split_with_context(yomi_text)
     yomi_split = []
     kanji_split = []
+    final_mapping_segments = [] # ★ 追加
 
     for data in yomi_segments_data:
         yomi_split.append(data['segment'])
         start, end = data['start'], data['end']
 
-        if start >= len(word_map):
+        # (... 既存の kanji_segment_chars 生成ロジック ...)
+        # ... (変更なし) ...
+        kanji_split.append("".join(kanji_segment_chars))
+
+        # ★★★ ここから mapping セグメント生成ロジック (wiki.py と同じものをコピペ) ★★★
+        if start >= len(mapping_list):
+            final_mapping_segments.append([])
             continue
-        end = min(end, len(word_map))
+        end = min(end, len(mapping_list))
 
         yomi_slice_raw = yomi_text[start:end]
-        word_map_slice = word_map[start:end]
+        mapping_slice_raw = mapping_list[start:end]
 
-        # ★ 念のため長さチェック
-        if len(yomi_slice_raw) != len(word_map_slice):
-            logging.warning("Generate2 (Cache): Mismatch yomi_slice/word_map_slice length. Skipping segment.")
-            kanji_split.append("")
+        if len(yomi_slice_raw) != len(mapping_slice_raw):
+            logging.warning(f"Generate2 (Cache): Mismatch yomi_slice/mapping_slice length. Appending empty map.")
+            final_mapping_segments.append([])
             continue
 
-        kanji_segment_chars = []
-        last_word_index = -1 
+        mapping_segment = []
+        kanji_segment_start_index = -1
 
         for i in range(len(yomi_slice_raw)):
             yomi_char = yomi_slice_raw[i]
-
             if yomi_char.isspace():
                 continue
 
-            current_word_index = word_map_slice[i]
+            original_kanji_index = mapping_slice_raw[i]
+            if kanji_segment_start_index == -1:
+                kanji_segment_start_index = original_kanji_index
 
-            if current_word_index != last_word_index:
-                try:
-                    kanji_segment_chars.append(words_data[current_word_index]['kanji'])
-                    last_word_index = current_word_index
-                except IndexError:
-                    logging.warning(f"Generate2 (Cache): Word map index {current_word_index} out of bounds.")
-                    kanji_segment_chars.append(yomi_char) # フェイルセーフ
-                    last_word_index = -1
+            relative_kanji_index = original_kanji_index - kanji_segment_start_index
+            mapping_segment.append(relative_kanji_index)
 
-        kanji_split.append("".join(kanji_segment_chars))
-    # ★★★ 修正ここまで ★★★
+        final_mapping_segments.append(mapping_segment)
+        # ★★★ ここまで ★★★
 
-    response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=mapping_list)
+    # ★ 修正: mapping=final_mapping_segments
+    response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=final_mapping_segments)
     # print(f"responce_data: {response_data}") # デバッグ用
     response = make_response(response_data)
     response.set_cookie('used_indices',

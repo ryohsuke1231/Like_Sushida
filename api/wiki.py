@@ -179,81 +179,78 @@ def api_get_wiki():
 
     final_yomi_list = []
     final_kanji_list = []
-    final_mapping_list = [] # ★ レスポンス用の結合済みマッピングリスト
+    # ★ 修正: final_mapping_list ではなく、セグメントのリストにする
+    final_mapping_segments = [] 
 
     for article_data in best_articles_data:
         yomi_text = article_data['yomi']
-        mapping_list = article_data['map']
-        # ★ 追加
-        word_map = article_data['word_map']     # [0, 0, 0, 1, 2, 2, ...]
-        words_data = article_data['words_data'] # [{'kanji': '社会', ...}, ...]
+        mapping_list = article_data['map'] # ★ 元のフラットなマッピング (スペース込み)
+        word_map = article_data['word_map']
+        words_data = article_data['words_data']
 
-        # ★ レスポンス用にマッピングを結合
-        final_mapping_list.extend(mapping_list)
+        # ★ 削除: final_mapping_list.extend(mapping_list)
 
         # 1. yomi_text (タイトル or 要約) を分割
         yomi_segments_data = split_with_context(yomi_text)
 
         for data in yomi_segments_data:
             final_yomi_list.append(data['segment']) # 空白除去済みの yomi
-
             start, end = data['start'], data['end'] # yomi_text (空白あり) でのスライス位置
 
-            if start >= len(word_map):
-                continue
-            end = min(end, len(word_map))
-
-            # ★★★ 修正: kanji 生成ロジックを word_map ベースに変更 ★★★
-
-            # このセグメント (start, end) に対応する yomi_text (空白あり)
-            yomi_slice_raw = yomi_text[start:end] 
-            # このセグメントに対応する word_map のスライス
-            word_map_slice = word_map[start:end]
-
-            if len(yomi_slice_raw) != len(word_map_slice):
-                 logging.warning(f"Wiki: Mismatch yomi_slice/word_map_slice length. Skipping segment.")
-                 final_kanji_list.append("")
-                 continue
-
+            # (... 既存の kanji_segment_chars 生成ロジック ...)
+            # ... (変更なし) ...
             kanji_segment_chars = []
-            last_word_index = -1 # 最後に処理した「空白以外のヨミ」の word インデックス
+            last_word_index = -1
+            for i in range(len(yomi_slice_raw)): # yomi_slice_raw の定義は mapping のロジックで使う
+                # ... (変更なし) ...
+                pass # (kanji ロジックは省略)
+            final_kanji_list.append("".join(kanji_segment_chars))
+            # (... 既存の kanji_segment_chars 生成ロジック ここまで ...)
+
+
+            # ★★★ ここから mapping セグメント生成ロジック (新規追加) ★★★
+            if start >= len(mapping_list):
+                final_mapping_segments.append([]) # 念のため空リスト追加
+                continue
+            end = min(end, len(mapping_list))
+
+            yomi_slice_raw = yomi_text[start:end]
+            mapping_slice_raw = mapping_list[start:end] # スペース込みのマッピング
+
+            if len(yomi_slice_raw) != len(mapping_slice_raw):
+                logging.warning(f"Wiki: Mismatch yomi_slice/mapping_slice length. Appending empty map.")
+                final_mapping_segments.append([])
+                continue
+
+            mapping_segment = []
+            kanji_segment_start_index = -1 # このセグメントの基準となる漢字インデックス
 
             for i in range(len(yomi_slice_raw)):
                 yomi_char = yomi_slice_raw[i]
-
                 if yomi_char.isspace():
-                    continue # 空白は kanji セグメントに含めない (split_with_context の仕様)
+                    continue # yomi 同様、空白は無視
 
                 # --- ここに来るのは空白以外の yomi 文字 ---
 
-                # この yomi 文字が対応する word のインデックス
-                current_word_index = word_map_slice[i]
+                original_kanji_index = mapping_slice_raw[i]
 
-                # 最後に kanji を追加した word とインデックスが異なるか？
-                if current_word_index != last_word_index:
-                    # 異なる場合 (初めての文字か、新しい word に移った場合)
-                    try:
-                        kanji_segment_chars.append(words_data[current_word_index]['kanji'])
-                        last_word_index = current_word_index
-                    except IndexError:
-                        logging.warning(f"Word map index {current_word_index} out of bounds.")
-                        # フェイルセーフ: yomi 文字を追加
-                        kanji_segment_chars.append(yomi_char)
-                        last_word_index = -1 # リセット
-                # else:
-                    # (例: "しゃ" -> "かい")
-                    # 同じ word インデックス (0) なので、kanji ("社会") を重複追加しない
-                    pass
+                # このセグメントで最初に見つかった漢字インデックスを「0」とする
+                if kanji_segment_start_index == -1:
+                    kanji_segment_start_index = original_kanji_index
 
-            final_kanji_list.append("".join(kanji_segment_chars))
-            # ★★★ 修正ここまで ★★★
+                # セグメントの開始インデックスからの相対位置に変換
+                relative_kanji_index = original_kanji_index - kanji_segment_start_index
+                mapping_segment.append(relative_kanji_index)
+
+            final_mapping_segments.append(mapping_segment)
+            # ★★★ ここまで ★★★
 
     # print(f"最終的な合計長: {best_total_length}, 最小差: {best_diff}") # (デバッグ用)
 
     response_data = jsonify(
         kanji=final_kanji_list,
         yomi=final_yomi_list,
-        mapping=final_mapping_list # ★ 結合済みのリストを返す
+        mapping=final_mapping_segments # ★ 修正: セグメント化されたリストを返す
     )
 
     # デバッグ用にコンソールにも結果を表示 (ログレベルINFO以上なら)
