@@ -729,66 +729,71 @@ function handleKeyDown(event) {
              correct_keys_count += 1;
              renda_count += 1;
              renda.value = renda_count;
-             buffer += event.key; // buffer は script.js 側で管理
+             buffer += event.key; 
 
              // ★★★ スクロールロジックの修正 ★★★
 
              // (1) possible_text (ローマ字) の計算
-             const remaining = judge.getBestMatch(); 
+             const remaining = judge.getBestMatch();
+             const romaContainerWidth = possible_text.clientWidth;
+             const romaPaddingLeft = romaContainerWidth / 2; // 左パディングの幅
+
              possible_text.innerHTML = `
-             <span style="color: #444;">${buffer}</span>
-             <span style="color: #eee;">${remaining}</span>
+               <span style="width: ${romaPaddingLeft}px;"></span>
+               <span style="color: #444;">${buffer}</span>
+               <span style="color: #eee;">${remaining}</span>
              `;
-             const typedRomaSpan = possible_text.children[0]; 
-             const typedRomaWidth = typedRomaSpan.offsetWidth; 
-             // ★修正: scrollLeft がマイナスにならないように Math.max を追加
-             let scrollTargetRoma = typedRomaWidth - (possible_text.clientWidth / 2);
-             possible_text.scrollLeft = Math.max(0, scrollTargetRoma);
+             const typedRomaSpan = possible_text.children[1]; // 2番目のspan (入力済みテキスト)
+             const typedRomaWidth = typedRomaSpan.offsetWidth;
+             // スクロール位置 = 入力済みテキストの幅
+             possible_text.scrollLeft = typedRomaWidth;
 
              // (2) yomi-text (ひらがな) の計算
              const completedHiraganaLength = judge.getCompletedHiraganaLength();
-             const fullYomi = yomi[i]; 
+             const fullYomi = yomi[i];
              const completedYomi = fullYomi.substring(0, completedHiraganaLength);
              const remainingYomi = fullYomi.substring(completedHiraganaLength);
-             console.log(`completedHiraganaLength: ${completedHiraganaLength}, completedYomi: ${completedYomi}, remainingYomi: ${remainingYomi}`);
+
+             const yomiContainerWidth = yomiBox.clientWidth;
+             const yomiPaddingLeft = yomiContainerWidth / 2; // 左パディングの幅
+
              yomiBox.innerHTML = `
-             <span>${completedYomi}</span>
-             <span>${remainingYomi}</span>
+               <span style="width: ${yomiPaddingLeft}px;"></span>
+               <span>${completedYomi}</span>
+               <span>${remainingYomi}</span>
              `;
-             const typedYomiSpan = yomiBox.children[0]; 
-             const typedYomiWidth = typedYomiSpan.offsetWidth; 
-             // ★修正: scrollLeft がマイナスにならないように Math.max を追加
-             let scrollTargetYomi = typedYomiWidth - (yomiBox.clientWidth / 2);
-             yomiBox.scrollLeft = Math.max(0, scrollTargetYomi);
+             const typedYomiSpan = yomiBox.children[1]; // 2番目のspan
+             const typedYomiWidth = typedYomiSpan.offsetWidth;
+             // スクロール位置 = 入力済みテキストの幅
+             yomiBox.scrollLeft = typedYomiWidth;
+
 
              // (3) box-text (漢字) の計算
-             const fullKanji = kanji[i]; 
-             const currentMapping = mapping[i]; // 例: [0, 1, 1] (「き」→0, 「し」→1, 「ょ」→1)
-             let kanjiSplitIndex = 0; 
+             const fullKanji = kanji[i];
+             const currentMapping = mapping[i];
+             let kanjiSplitIndex = 0;
 
              if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
-             // ★修正: 完了したひらがなの「最後の文字」に対応する「漢字インデックス」を取得
-             const lastKanjiIndex = currentMapping[completedHiraganaLength - 1];
-
-             if (lastKanjiIndex !== undefined && lastKanjiIndex >= 0) {
-             // その漢字インデックスの「次」を分割点とする
-             kanjiSplitIndex = lastKanjiIndex + 1;
+               const lastKanjiIndex = currentMapping[completedHiraganaLength - 1];
+               if (lastKanjiIndex !== undefined && lastKanjiIndex >= 0) {
+                 kanjiSplitIndex = lastKanjiIndex + 1;
+               }
              }
-             }
-             // これ以降は変更なし
              const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
              const remainingKanji = fullKanji.substring(kanjiSplitIndex);
-               console.log(`completedKanji: ${completedKanji}, remainingKanji: ${remainingKanji}`);
-               textBox.innerHTML = `
+
+             const kanjiContainerWidth = textBox.clientWidth;
+             const kanjiPaddingLeft = kanjiContainerWidth / 2; // 左パディングの幅
+
+             textBox.innerHTML = `
+               <span style="width: ${kanjiPaddingLeft}px;"></span>
                <span>${completedKanji}</span>
                <span>${remainingKanji}</span>
-               `;
-
-               const typedKanjiSpan = textBox.children[0]; 
-               const typedKanjiWidth = typedKanjiSpan.offsetWidth; 
-               // ★修正: scrollLeft がマイナスにならないように Math.max を追加
-               let scrollTargetKanji = typedKanjiWidth - (textBox.clientWidth / 2);
-               textBox.scrollLeft = Math.max(0, scrollTargetKanji);
+             `;
+             const typedKanjiSpan = textBox.children[1]; // 2番目のspan
+             const typedKanjiWidth = typedKanjiSpan.offsetWidth;
+             // スクロール位置 = 入力済みテキストの幅
+             textBox.scrollLeft = typedKanjiWidth;
 
              // ★★★ 修正ここまで ★★★
 

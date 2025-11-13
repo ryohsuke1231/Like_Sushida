@@ -309,21 +309,7 @@ progress::-moz-progress-bar {
     display: none !important;
 }
 
-#possible {
-    /*
-    font-family: "Ubuntu Mono";
-    font-weight: 400;
-    */
-    font-size: 0;
-    overflow-x: hidden;
-    display: flex;
-    white-space: nowrap;
-    /*真ん中に配置*/
-}
-#possible span {
-    font-size: 1.5rem;
-    white-space: nowrap;
-}
+
 /* * #odai-box 内のテキスト表示要素
  * (実際のセレクタが異なる場合は適宜読み替えてください)
  */
@@ -352,8 +338,6 @@ progress::-moz-progress-bar {
     /* 4. (オプション) スムーズなスクロール */
     scroll-behavior: smooth;
     font-size: 0;
-    display: flex;
-    justify-content: center;
     /*justify-content: center;*/
 }
 #yomi-text span,
@@ -361,6 +345,8 @@ progress::-moz-progress-bar {
 #possible span {
     font-size: 1.5rem;
     white-space: nowrap;
+    display: inline-block; /* 幅やパディングを正確に扱うため */
+    vertical-align: middle; /* 念のため縦位置を揃える */
 }
 
 .target-marker {
