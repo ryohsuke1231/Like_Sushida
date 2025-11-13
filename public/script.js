@@ -604,7 +604,16 @@ function startGame() {
             possible_text.innerHTML = `
                 <span style="color: #eee;">${judge.getBestMatch()}</span>
             `;
+            yomiBox.style.justifyContent = 'center';
+            textBox.style.justifyContent = 'center';
+            possible_text.style.justifyContent = 'center';
         } else {
+            yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+            textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+            possible_text.style.scrollBehavior = 'auto';
+            yomiBox.style.justifyContent = 'flex-start';
+            textBox.style.justifyContent = 'flex-start';
+            possible_text.style.justifyContent = 'flex-start';
               const fullYomi = yomi[i];
               const yomiContainerWidth = yomiBox.clientWidth;
               const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
@@ -1028,8 +1037,8 @@ function setNextWord(isFirstWord = false) {
     */
     // (1) yomi-text (ひらがな) の初期化
     if (currentCourseConfig.special !== true) {
-        yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`;
-        textBox.innerHTML = `<span style="color: #eee;">${kanji[i]}</span>`;
+        yomiBox.innerHTML = `<span style="color: #444;">${yomi[i]}</span>`;
+        textBox.innerHTML = `<span style="color: #444;">${kanji[i]}</span>`;
         possible_text.innerHTML = `
             <span style="color: #eee;">${judge.getBestMatch()}</span>
         `;
