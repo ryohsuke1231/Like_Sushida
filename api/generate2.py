@@ -32,7 +32,7 @@ if not gemini_api_key:
 else:
     try:
         genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash-lite') # モデル名を更新
+        model = genai.GenerativeModel('gemini-1.5-flash') # モデル名を更新 (1.5-flash または 1.5-pro)
     except Exception as e:
         logging.error(f"Failed to configure Gemini: {e}")
         model = None
@@ -41,7 +41,8 @@ else:
 prompt = "オリジナルで変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけ　300文字を目安に"
 
 # キャッシュ設定
-TEXT_CACHE = []  # ★★★ [ [kanji, yomi, mapping], [kanji, yomi, mapping], ... ] ★★★
+# ★★★ 修正: [yomi, mapping, word_map, words_data] のリストに変更 ★★★
+TEXT_CACHE = []
 MIN_CACHE_STOCK = 5  # 未使用の文章がこの数を下回ったら補充を試みる
 MAX_CACHE_SIZE = 50  # キャッシュが膨らみすぎないように
 generation_thread = None  # 補充スレッドが重複しないように
@@ -63,7 +64,7 @@ def safe_generate():
 
 def generate_new_text_with_furigana():
     """
-    GeminiとYahoo APIを使って新しい [kanji, yomi, mapping] のリストを生成する
+    GeminiとYahoo APIを使って新しい [yomi, mapping, word_map, words_data] のリストを生成する
     """
     if not model:
         logging.error("Gemini model is not initialized. Cannot generate text.")
@@ -80,13 +81,21 @@ def generate_new_text_with_furigana():
         furigana_result = get_furigana(message)
 
         if furigana_result:
-            yomi, mapping = furigana_result
-            # ★ furigana.py 修正により、yomi と mapping の長さは一致するはず
-            if len(yomi) != len(mapping):
-                 logging.warning("Generate2: Mismatch yomi/mapping length AFTER get_furigana. Skipping.")
-                 return None
+            # ★★★ 修正: 4つの値を受け取る ★★★
+            yomi_text, mapping_list, word_map, words_data = furigana_result
+
+            # ★ 必要な長さチェック
+            if len(yomi_text) != len(mapping_list):
+                  logging.warning("Generate2: Mismatch yomi/mapping length AFTER get_furigana. Skipping.")
+                  return None
+            if len(yomi_text) != len(word_map):
+                  logging.warning("Generate2: Mismatch yomi/word_map length AFTER get_furigana. Skipping.")
+                  return None
+
             logging.info("Successfully generated new text and furigana.")
-            return [message, yomi, mapping] # ★ mapping を追加
+
+            # ★★★ 修正: 新しいキャッシュデータを返す ★★★
+            return [yomi_text, mapping_list, word_map, words_data]
         else:
             logging.warning("Failed to get furigana for generated text.")
             return None
@@ -102,7 +111,7 @@ def refill_cache_task():
     try:
         if len(TEXT_CACHE) < MAX_CACHE_SIZE:
             logging.info("Refill task started...")
-            new_data = generate_new_text_with_furigana() # [kanji, yomi, mapping]
+            new_data = generate_new_text_with_furigana() # [yomi, mapping, word_map, words_data]
             if new_data:
                 # スレッドセーフではないが、デモ目的としては許容
                 TEXT_CACHE.append(new_data)
@@ -147,7 +156,7 @@ def generate_text():
     # 4. 利用可能な文章がない場合のフォールバック
     if not available_indices:
         logging.warning("No available text in cache. Attempting synchronous generation...")
-        new_data = generate_new_text_with_furigana() # [kanji, yomi, mapping]
+        new_data = generate_new_text_with_furigana() # [yomi, mapping, word_map, words_data]
 
         if new_data:
             if len(TEXT_CACHE) < MAX_CACHE_SIZE:
@@ -158,43 +167,58 @@ def generate_text():
                 new_index = 0
             used_indices.add(new_index)
             if len(used_indices) >= len(TEXT_CACHE):
-                used_indices = {new_index}  
+                used_indices = {new_index}
 
             # ★★★ 修正: kanji 再構築ロジック (フォールバック) ★★★
-            yomi_text = new_data[1]
-            mapping_list = new_data[2]
+            yomi_text = new_data[0]
+            mapping_list = new_data[1]
+            word_map = new_data[2]
+            words_data = new_data[3]
 
             yomi_segments_data = split_with_context(yomi_text)
             yomi_split = []
             kanji_split = []
 
             for data in yomi_segments_data:
-                yomi_split.append(data['segment'])
+                yomi_split.append(data['segment']) # 空白除去済みの yomi
                 start, end = data['start'], data['end']
 
-                if start >= len(mapping_list):
+                if start >= len(word_map):
                     continue
-                end = min(end, len(mapping_list))
+                end = min(end, len(word_map))
 
-                mapping_slice = mapping_list[start:end]
-                yomi_slice_raw = yomi_text[start:end]
+                yomi_slice_raw = yomi_text[start:end] 
+                word_map_slice = word_map[start:end]
 
-                # ★ 念のため長さチェック (furigana.py 修正により不要なはずだが)
-                if len(yomi_slice_raw) != len(mapping_slice):
-                    logging.warning(f"Generate2 (Fallback): Mismatch yomi_slice/mapping_slice length. Skipping segment.")
-                    kanji_split.append("") # 空のセグメントを追加
-                    continue
+                if len(yomi_slice_raw) != len(word_map_slice):
+                     logging.warning(f"Generate2 (Fallback): Mismatch yomi_slice/word_map_slice length. Skipping segment.")
+                     kanji_split.append("")
+                     continue
 
-                kanji_segment_cleaned_chars = []
+                kanji_segment_chars = []
+                last_word_index = -1 
+
                 for i in range(len(yomi_slice_raw)):
                     yomi_char = yomi_slice_raw[i]
-                    if not yomi_char.isspace():
-                        kanji_segment_cleaned_chars.append(mapping_slice[i])
 
-                kanji_split.append("".join(kanji_segment_cleaned_chars))
+                    if yomi_char.isspace():
+                        continue 
+
+                    current_word_index = word_map_slice[i]
+
+                    if current_word_index != last_word_index:
+                        try:
+                            kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                            last_word_index = current_word_index
+                        except IndexError:
+                            logging.warning(f"Generate2 (Fallback): Word map index {current_word_index} out of bounds.")
+                            kanji_segment_chars.append(yomi_char) # フェイルセーフ
+                            last_word_index = -1
+
+                kanji_split.append("".join(kanji_segment_chars))
             # ★★★ 修正ここまで ★★★
 
-            response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=new_data[2])
+            response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=mapping_list)
             response = make_response(response_data)
             response.set_cookie('used_indices',
                                 json.dumps(list(used_indices)),
@@ -207,7 +231,7 @@ def generate_text():
 
     # 5. ランダムに選択
     selected_index = random.choice(available_indices)
-    selected_data = TEXT_CACHE[selected_index] # [kanji, yomi, mapping]
+    selected_data = TEXT_CACHE[selected_index] # [yomi, mapping, word_map, words_data]
 
     # 6. 使用済みindexを更新し、Cookieにセット
     used_indices.add(selected_index)
@@ -216,8 +240,10 @@ def generate_text():
         used_indices = {selected_index}
 
     # ★★★ 修正: kanji 再構築ロジック (キャッシュ) ★★★
-    yomi_text = selected_data[1]
-    mapping_list = selected_data[2]
+    yomi_text = selected_data[0]
+    mapping_list = selected_data[1]
+    word_map = selected_data[2]
+    words_data = selected_data[3]
 
     yomi_segments_data = split_with_context(yomi_text)
     yomi_split = []
@@ -227,30 +253,44 @@ def generate_text():
         yomi_split.append(data['segment'])
         start, end = data['start'], data['end']
 
-        if start >= len(mapping_list):
+        if start >= len(word_map):
             continue
-        end = min(end, len(mapping_list))
+        end = min(end, len(word_map))
 
-        mapping_slice = mapping_list[start:end]
         yomi_slice_raw = yomi_text[start:end]
+        word_map_slice = word_map[start:end]
 
         # ★ 念のため長さチェック
-        if len(yomi_slice_raw) != len(mapping_slice):
-            logging.warning("Generate2 (Cache): Mismatch yomi_slice/mapping_slice length. Skipping segment.")
+        if len(yomi_slice_raw) != len(word_map_slice):
+            logging.warning("Generate2 (Cache): Mismatch yomi_slice/word_map_slice length. Skipping segment.")
             kanji_split.append("")
             continue
 
-        kanji_segment_cleaned_chars = []
+        kanji_segment_chars = []
+        last_word_index = -1 
+
         for i in range(len(yomi_slice_raw)):
             yomi_char = yomi_slice_raw[i]
-            if not yomi_char.isspace():
-                kanji_segment_cleaned_chars.append(mapping_slice[i])
 
-        kanji_split.append("".join(kanji_segment_cleaned_chars))
+            if yomi_char.isspace():
+                continue
+
+            current_word_index = word_map_slice[i]
+
+            if current_word_index != last_word_index:
+                try:
+                    kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                    last_word_index = current_word_index
+                except IndexError:
+                    logging.warning(f"Generate2 (Cache): Word map index {current_word_index} out of bounds.")
+                    kanji_segment_chars.append(yomi_char) # フェイルセーフ
+                    last_word_index = -1
+
+        kanji_split.append("".join(kanji_segment_chars))
     # ★★★ 修正ここまで ★★★
 
-    response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=selected_data[2])
-    print(f"responce_data: {response_data}")
+    response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=mapping_list)
+    # print(f"responce_data: {response_data}") # デバッグ用
     response = make_response(response_data)
     response.set_cookie('used_indices',
                         json.dumps(list(used_indices)),

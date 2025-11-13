@@ -4,12 +4,12 @@ import json
 import logging
 import os
 import unicodedata
-import math 
+import math
 
 # --- 設定 (Configuration) ---
 
 # Yahoo APIキー
-#APP_ID = os.environ.get("YAHOO_APP_ID")
+# APP_ID = os.environ.get("YAHOO_APP_ID")
 APP_ID = "dj00aiZpPUtUc3hEUWRkc0VTdiZzPWNvbnN1bWVyc2VjcmV0Jng9OGY-"
 API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana"
 
@@ -30,8 +30,14 @@ def kata_to_hira(s):
 def get_furigana(message):
     """
     Yahoo APIを呼び出してふりがなとマッピングを取得する (タイピングゲーム用に調整)
+
     Returns:
-        (str, list) | None: (ふりがなテキスト, マッピングリスト) のタプル、またはエラー時 None
+        (str, list, list, list) | None:
+        - final_yomi_text (str): 結合されたヨミ (空白含む)
+        - final_mapping_list (list): ★★★ 修正: タイピング用 1:1 漢字「インデックス」マッピング ★★★
+        - map_to_word_index (list): yomi の各文字が words_data の何番目に対応するか
+        - words_data (list[dict]): word 単位のデータ [{'kanji': str, 'yomi': str}]
+        またはエラー時 None
     """
     if not APP_ID:
         logging.error("YAHOO_APP_ID not set. Cannot get furigana.")
@@ -67,7 +73,7 @@ def get_furigana(message):
         conversion_map = {
             '『': '「', '』': '」', '（': '(', '）': ')', '［': '[', '］': ']',
             '｛': '{', '｝': '}', '＜': '<', '＞': '>', '？': '?', '！': '!',
-            '・': '/', '0': '0', '1': '1', '2': '2', '3': '3', '4': '4', 
+            '・': '/', '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
             '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '　': ' '
         }
 
@@ -76,16 +82,28 @@ def get_furigana(message):
             '?', '!', ' ', ',', '.', '-' # ★ ハイフンも追加
         }
 
-        furigana_text = ""
-        mapping_list = [] 
+        # ★ 修正: 4つのリストを同時に生成
+        yomi_text_parts = []     # word 単位のヨミ (最後に join)
+        final_mapping_list = []  # ★ タイピング用マッピング (extend)
+        map_to_word_index = []   # ヨミ 1:1 の word インデックス (extend)
+        words_data = []          # word 単位のデータ [{'kanji': str, 'yomi': str}]
+
+        word_index_counter = 0
+        kanji_index_offset = 0   # ★ 追加: 漢字文字列の全体インデックスオフセット
 
         for word in data["result"]["word"]:
+
+            current_kanji = ""
+            current_yomi = ""
+            current_mapping_parts = [] # ★ ここがインデックスのリストになる
+
+            # 1. "furigana" がある場合 (漢字)
             if "furigana" in word:
                 surface = word["surface"]
-                # ★ 修正: ここでひらがな化
-                furigana = kata_to_hira(word["furigana"]) 
+                furigana = kata_to_hira(word["furigana"])
 
-                furigana_text += furigana
+                current_kanji = surface
+                current_yomi = furigana
 
                 len_f = len(furigana)
                 len_s = len(surface)
@@ -95,76 +113,121 @@ def get_furigana(message):
                     for i in range(1, len_f + 1):
                         s_idx = math.ceil(i / ratio) - 1
                         s_idx = min(max(0, s_idx), len_s - 1)
-                        mapping_list.append(surface[s_idx])
+                        # ★ 修正: オフセットを足した「インデックス」を格納
+                        current_mapping_parts.append(s_idx + kanji_index_offset)
                 elif len_f > 0:
-                    mapping_list.extend([furigana[0]] * len_f)
+                    # ★ 修正: 漢字がない場合 (0 + オフセット)
+                    current_mapping_parts.extend([kanji_index_offset] * len_f)
 
+            # 2. "furigana" がない場合
             elif "surface" in word:
+                # 2a. "reading" がある場合 (例: 信信 (しんしん))
                 if "reading" in word and any(0x4E00 <= ord(c) <= 0x9FFF for c in word["surface"]):
                     surface = word["surface"]
-                    # ★ 修正: ここでひらがな化
                     reading = kata_to_hira(word["reading"])
-                    furigana_text += reading
+
+                    current_kanji = surface
+                    current_yomi = reading
 
                     len_f = len(reading)
                     len_s = len(surface)
-                    # ★ バグ修正: len_s が 0 の場合 ZeroDivisionError になる
                     if len_s == 0:
-                        mapping_list.extend([surface[0] if surface else " "] * len_f)
-                        continue
+                        # ★ 修正: オフセットのみ
+                        current_mapping_parts.extend([kanji_index_offset] * len_f)
+                    else:
+                        ratio = len_f / len_s
+                        for i in range(1, len_f + 1):
+                            s_idx = math.ceil(i / ratio) - 1
+                            s_idx = min(max(0, s_idx), len_s - 1)
+                            # ★ 修正: オフセットを足した「インデックス」を格納
+                            current_mapping_parts.append(s_idx + kanji_index_offset)
 
-                    ratio = len_f / len_s
-                    for i in range(1, len_f + 1):
-                        s_idx = math.ceil(i / ratio) - 1
-                        s_idx = min(max(0, s_idx), len_s - 1)
-                        mapping_list.append(surface[s_idx])
-                    continue
+                # 2b. "reading" がない場合 (ひらがな、記号、空白など)
+                else:
+                    surface = word["surface"]
+                    normalized_surface = kata_to_hira(surface)
 
-                surface = word["surface"]
+                    temp_kanji = ""
+                    temp_yomi = ""
+                    temp_map = [] # ★ ここもインデックスのリストになる
 
-                # ★ 修正: surface も NFKC 正規化 (例: ｳﾞ -> ヴ) してからひらがな化
-                normalized_surface = kata_to_hira(surface)
+                    # ★ 修正: char_idx も取得
+                    for char_idx, char in enumerate(normalized_surface):
+                        # 4a. 変換マップ
+                        if char in conversion_map:
+                            converted_char = conversion_map[char]
+                            temp_kanji += converted_char # カンジ側にも変換後を入れる
+                            temp_yomi += converted_char
+                            # ★ 修正: オフセットを足した「インデックス」を格納
+                            temp_map.append(char_idx + kanji_index_offset)
+                            continue
 
-                for char in normalized_surface: # ★ normalized_surface をループ
-                    # 4a. 変換マップ
-                    if char in conversion_map:
-                        converted_char = conversion_map[char]
-                        furigana_text += converted_char
-                        mapping_list.append(converted_char)
-                        continue
+                        # 4b. ひらがな・長音記号・アルファベット
+                        code = ord(char)
+                        if (0x3041 <= code <= 0x309F) or \
+                           (code == 0x30FC) or \
+                           (0x0041 <= code <= 0x005A) or \
+                           (0x0061 <= code <= 0x007A):
+                            temp_kanji += char
+                            temp_yomi += char
+                            # ★ 修正: オフセットを足した「インデックス」を格納
+                            temp_map.append(char_idx + kanji_index_offset)
+                            continue
 
-                    # 4b. ひらがな・長音記号・アルファベット (カタカナは kata_to_hira でひらがな化済み)
-                    code = ord(char)
-                    if (0x3041 <= code <= 0x309F) or \
-                       (code == 0x30FC) or \
-                       (0x0041 <= code <= 0x005A) or \
-                       (0x0061 <= code <= 0x007A): 
+                        # 4c. そのまま残す記号
+                        if char in keep_symbols:
+                            temp_kanji += char
+                            temp_yomi += char
+                            # ★ 修正: オフセットを足した「インデックス」を格納
+                            temp_map.append(char_idx + kanji_index_offset)
+                            continue
 
-                        furigana_text += char
-                        mapping_list.append(char)
-                        continue
+                        # 4d. それ以外 (改行コードや絵文字など) は無視
 
-                    # 4c. そのまま残す記号
-                    if char in keep_symbols:
-                        furigana_text += char
-                        mapping_list.append(char)
-                        continue
+                    current_kanji = temp_kanji
+                    current_yomi = temp_yomi
+                    current_mapping_parts = temp_map
 
-                    # 4d. それ以外 (改行コードや絵文字など) は無視
+            # --- この word の処理終了 ---
 
-        # ★ 修正: 最後の kata_to_hira は不要になった
-        final_yomi = furigana_text # ★ そのまま代入
+            if current_yomi: # ヨミが生成された word のみ追加
+                yomi_text_parts.append(current_yomi)
+                final_mapping_list.extend(current_mapping_parts)
 
-        # ★ 修正: 長さチェックと強制調整ロジック (NFKC正規化を事前に行ったため、不要になったはずだが念のため残す)
-        if len(final_yomi) != len(mapping_list):
-            logging.warning(f"Mismatch length: yomi({len(final_yomi)}) != mapping({len(mapping_list)}). Text: {message}")
-            if len(final_yomi) < len(mapping_list):
-                mapping_list = mapping_list[:len(final_yomi)]
+                # ★ 新規 (変更なし)
+                words_data.append({'kanji': current_kanji, 'yomi': current_yomi})
+                map_to_word_index.extend([word_index_counter] * len(current_yomi))
+
+                # ★ 追加: 次の word のためのオフセット更新
+                kanji_index_offset += len(current_kanji)
+                word_index_counter += 1
+
+        # --- ループ終了 ---
+
+        final_yomi_text = "".join(yomi_text_parts)
+
+        # ★ 修正: 長さチェックと強制調整ロジック
+        if len(final_yomi_text) != len(final_mapping_list):
+            logging.warning(f"Mismatch length: yomi({len(final_yomi_text)}) != mapping({len(final_mapping_list)}). Text: {message[:20]}...")
+            # (長さ調整ロジック)
+            if len(final_yomi_text) < len(final_mapping_list):
+                final_mapping_list = final_mapping_list[:len(final_yomi_text)]
             else:
-                last_char = mapping_list[-1] if mapping_list else " "
-                mapping_list.extend([last_char] * (len(final_yomi) - len(mapping_list)))
+                # ★ 修正: 最後のインデックス(数値)を取得
+                last_idx = final_mapping_list[-1] if final_mapping_list else 0
+                final_mapping_list.extend([last_idx] * (len(final_yomi_text) - len(final_mapping_list)))
 
-        return (final_yomi, mapping_list)
+        # ★ yomi と word_map の長さもチェック (変更なし)
+        if len(final_yomi_text) != len(map_to_word_index):
+            logging.error(f"FATAL: Mismatch length: yomi({len(final_yomi_text)}) != word_map({len(map_to_word_index)}). Text: {message[:20]}...")
+            # (強制調整)
+            if len(map_to_word_index) > len(final_yomi_text):
+                 map_to_word_index = map_to_word_index[:len(final_yomi_text)]
+            else:
+                 last_idx = map_to_word_index[-1] if map_to_word_index else 0
+                 map_to_word_index.extend([last_idx] * (len(final_yomi_text) - len(map_to_word_index)))
+
+        return (final_yomi_text, final_mapping_list, map_to_word_index, words_data)
 
     except requests.exceptions.RequestException as e:
         logging.error(f"Yahoo API Request Error: {e}")
@@ -173,15 +236,16 @@ def get_furigana(message):
         logging.error(f"Yahoo API JSON Decode Error: {response.text}")
         return None
     except Exception as e:
-        # ★ スタックトレースを含む、より詳細なエラーログ
         logging.error(f"Yahoo API Unknown Error in get_furigana: {e}", exc_info=True)
         return None
 
-if  __name__ == "__main__":
-     test_text = "これはテストです。なんか草生えるわw ｳﾞｨ" # ｳﾞｨ (3文字) -> ヴィ (1文字)
-     result = get_furigana(test_text)
-     if result:
-         yomi, mapping = result
-         print(f"Yomi: {yomi}")
-         print(f"Mapping: {mapping}")
-         print(f"Yomi Len: {len(yomi)}, Map Len: {len(mapping)}")
+if __name__ == "__main__":
+    test_text = "これはテストです。信信 ｳﾞｨ" # ｳﾞｨ (3文字) -> ヴィ (1文字)
+    result = get_furigana(test_text)
+    if result:
+        yomi, mapping, word_map, words_data = result
+        print(f"Yomi: {yomi}")
+        print(f"Mapping: {mapping}") # ★ ここがインデックスのリストになる
+        print(f"Word Map: {word_map}")
+        print(f"Words Data: {words_data}")
+        print(f"Yomi Len: {len(yomi)}, Map Len: {len(mapping)}, Word Map Len: {len(word_map)}")

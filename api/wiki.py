@@ -92,12 +92,12 @@ def api_get_wiki():
     漢字かな混じり文と読みをそれぞれ分割したリストを返す API。
     """
 
-    # ★★★ 修正: 蓄積データを (str, str, list) のペアのリストに変更 ★★★
-    # [{'yomi': str, 'map': list}, {'yomi': str, 'map': list}, ...]
+    # ★★★ 修正: 蓄積データに word_map と words_data を追加 ★★★
+    # [{'yomi': str, 'map': list, 'word_map': list, 'words_data': list}, ...]
 
-    best_articles_data = []   # GOAL_LENGTH に最も近かった時点のデータ
+    best_articles_data = []  # GOAL_LENGTH に最も近かった時点のデータ
     best_diff = sys.maxsize
-    # best_total_length = 0     # (デバッグ用)
+    # best_total_length = 0      # (デバッグ用)
 
     current_articles_data = [] # 現在の試行で蓄積中のデータ
     current_total_length = 0
@@ -119,19 +119,36 @@ def api_get_wiki():
         summary_furigana_result = get_furigana(summary)
 
         if title_furigana_result and summary_furigana_result:
-            title_yomi_str, title_mapping = title_furigana_result
-            summary_yomi_str, summary_mapping = summary_furigana_result
+
+            # ★★★ 修正: furigana.py から4つの値を受け取る ★★★
+            title_yomi_str, title_mapping, title_word_map, title_words_data = title_furigana_result
+            summary_yomi_str, summary_mapping, summary_word_map, summary_words_data = summary_furigana_result
 
             # ★ 今回追加するデータ (タイトルと要約)
             data_to_add = [
-                {'yomi': title_yomi_str, 'map': title_mapping},
-                {'yomi': summary_yomi_str, 'map': summary_mapping}
+                {
+                    'yomi': title_yomi_str, 
+                    'map': title_mapping, 
+                    'word_map': title_word_map, 
+                    'words_data': title_words_data
+                },
+                {
+                    'yomi': summary_yomi_str, 
+                    'map': summary_mapping, 
+                    'word_map': summary_word_map, 
+                    'words_data': summary_words_data
+                }
             ]
             length_to_add = len(title_yomi_str) + len(summary_yomi_str)
 
             # yomi と mapping の長さが一致しているか確認 (furigana.py で保証されるはず)
             if len(title_yomi_str) != len(title_mapping) or len(summary_yomi_str) != len(summary_mapping):
                 logging.warning(f"Wiki: Mismatch yomi/mapping length. Skipping.")
+                continue
+
+            # ★ yomi と word_map の長さもチェック
+            if len(title_yomi_str) != len(title_word_map) or len(summary_yomi_str) != len(summary_word_map):
+                logging.warning(f"Wiki: Mismatch yomi/word_map length. Skipping.")
                 continue
 
             new_total_length = current_total_length + length_to_add
@@ -167,6 +184,9 @@ def api_get_wiki():
     for article_data in best_articles_data:
         yomi_text = article_data['yomi']
         mapping_list = article_data['map']
+        # ★ 追加
+        word_map = article_data['word_map']     # [0, 0, 0, 1, 2, 2, ...]
+        words_data = article_data['words_data'] # [{'kanji': '社会', ...}, ...]
 
         # ★ レスポンス用にマッピングを結合
         final_mapping_list.extend(mapping_list)
@@ -177,42 +197,69 @@ def api_get_wiki():
         for data in yomi_segments_data:
             final_yomi_list.append(data['segment']) # 空白除去済みの yomi
 
-            start, end = data['start'], data['end']
+            start, end = data['start'], data['end'] # yomi_text (空白あり) でのスライス位置
 
-            if start >= len(mapping_list):
+            if start >= len(word_map):
                 continue
-            end = min(end, len(mapping_list))
+            end = min(end, len(word_map))
 
-            mapping_slice = mapping_list[start:end]
-            yomi_slice_raw = yomi_text[start:end]
+            # ★★★ 修正: kanji 生成ロジックを word_map ベースに変更 ★★★
 
-            kanji_segment_cleaned_chars = []
+            # このセグメント (start, end) に対応する yomi_text (空白あり)
+            yomi_slice_raw = yomi_text[start:end] 
+            # このセグメントに対応する word_map のスライス
+            word_map_slice = word_map[start:end]
 
-            # ★ 修正: イテレータがズレるバグ修正
-            # yomi_slice_raw (空白あり) と mapping_slice (空白あり) の長さは
-            # (修正後の furigana.py により) 一致するはず
-
-            if len(yomi_slice_raw) != len(mapping_slice):
-                 logging.warning(f"Wiki: Mismatch yomi_slice/mapping_slice length. Skipping segment.")
-                 # 万が一ズレていたら、このセグメントはスキップ (空を追加)
+            if len(yomi_slice_raw) != len(word_map_slice):
+                 logging.warning(f"Wiki: Mismatch yomi_slice/word_map_slice length. Skipping segment.")
                  final_kanji_list.append("")
                  continue
 
+            kanji_segment_chars = []
+            last_word_index = -1 # 最後に処理した「空白以外のヨミ」の word インデックス
+
             for i in range(len(yomi_slice_raw)):
                 yomi_char = yomi_slice_raw[i]
-                if not yomi_char.isspace(): # yomi が空白でないなら
-                    kanji_segment_cleaned_chars.append(mapping_slice[i])
 
-            final_kanji_list.append("".join(kanji_segment_cleaned_chars))
+                if yomi_char.isspace():
+                    continue # 空白は kanji セグメントに含めない (split_with_context の仕様)
+
+                # --- ここに来るのは空白以外の yomi 文字 ---
+
+                # この yomi 文字が対応する word のインデックス
+                current_word_index = word_map_slice[i]
+
+                # 最後に kanji を追加した word とインデックスが異なるか？
+                if current_word_index != last_word_index:
+                    # 異なる場合 (初めての文字か、新しい word に移った場合)
+                    try:
+                        kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                        last_word_index = current_word_index
+                    except IndexError:
+                        logging.warning(f"Word map index {current_word_index} out of bounds.")
+                        # フェイルセーフ: yomi 文字を追加
+                        kanji_segment_chars.append(yomi_char)
+                        last_word_index = -1 # リセット
+                # else:
+                    # (例: "しゃ" -> "かい")
+                    # 同じ word インデックス (0) なので、kanji ("社会") を重複追加しない
+                    pass
+
+            final_kanji_list.append("".join(kanji_segment_chars))
+            # ★★★ 修正ここまで ★★★
 
     # print(f"最終的な合計長: {best_total_length}, 最小差: {best_diff}") # (デバッグ用)
 
     response_data = jsonify(
-        kanji=final_kanji_list,  
-        yomi=final_yomi_list,  
+        kanji=final_kanji_list,
+        yomi=final_yomi_list,
         mapping=final_mapping_list # ★ 結合済みのリストを返す
     )
-    print(f"responce_data: {response_data}")
+
+    # デバッグ用にコンソールにも結果を表示 (ログレベルINFO以上なら)
+    # logging.info(f"Kanji: {final_kanji_list}")
+    # logging.info(f"Yomi: {final_yomi_list}")
+
     response = make_response(response_data)
     return response
 

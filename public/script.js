@@ -762,18 +762,22 @@ function handleKeyDown(event) {
              yomiBox.scrollLeft = Math.max(0, scrollTargetYomi);
 
              // (3) box-text (漢字) の計算
-               const fullKanji = kanji[i]; 
-               const currentMapping = mapping[i]; 
-               let kanjiSplitIndex = 0; 
-               if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
-                     const lastMappedChar = currentMapping[completedHiraganaLength - 1];
-                     const lastCharIndexInKanji = fullKanji.lastIndexOf(lastMappedChar);
-                     if (lastCharIndexInKanji !== -1) {
-                         kanjiSplitIndex = lastCharIndexInKanji + 1;
-                     }
-               }
-               const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
-               const remainingKanji = fullKanji.substring(kanjiSplitIndex);
+             const fullKanji = kanji[i]; 
+             const currentMapping = mapping[i]; // 例: [0, 1, 1] (「き」→0, 「し」→1, 「ょ」→1)
+             let kanjiSplitIndex = 0; 
+
+             if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
+             // ★修正: 完了したひらがなの「最後の文字」に対応する「漢字インデックス」を取得
+             const lastKanjiIndex = currentMapping[completedHiraganaLength - 1];
+
+             if (lastKanjiIndex !== undefined && lastKanjiIndex >= 0) {
+             // その漢字インデックスの「次」を分割点とする
+             kanjiSplitIndex = lastKanjiIndex + 1;
+             }
+             }
+             // これ以降は変更なし
+             const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
+             const remainingKanji = fullKanji.substring(kanjiSplitIndex);
                console.log(`completedKanji: ${completedKanji}, remainingKanji: ${remainingKanji}`);
                textBox.innerHTML = `
                <span>${completedKanji}</span>
