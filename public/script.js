@@ -1055,19 +1055,6 @@ function setNextWord(isFirstWord = false) {
       `;
       possible_text.scrollLeft = 0;
 
-
-    // (3) possible_text (ローマ字) の初期化
-    // judge.getBestMatch() などで最初のローマ字を取得
-    const initialRemaining = judge.getBestMatch(); 
-    const romaContainerWidth = possible_text.clientWidth;
-    const romaPaddingLeft = romaContainerWidth / 2; // 左パディングの幅
-
-    possible_text.innerHTML = `
-      <span style="width: ${romaPaddingLeft}px;"></span>
-      <span style="color: #444;"></span>
-      <span style="color: #eee;">${initialRemaining}</span>
-    `;
-    possible_text.scrollLeft = 0;
     // ★★★ 修正ここまで ★★★
 }
 
