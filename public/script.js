@@ -598,51 +598,59 @@ function startGame() {
         yomiBox.textContent = yomi[i]; // i=0
         */
         // (1) yomi-text (ひらがな) の初期化
-          const fullYomi = yomi[i];
-          const yomiContainerWidth = yomiBox.clientWidth;
-          const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
-
-          yomiBox.innerHTML = `
-              <span style="width: ${yomiPadding}px;"></span>
-              <span></span>
-              <span>${fullYomi}</span>
-              <span style="width: ${yomiPadding}px;"></span> 
-          `;
-          // children[0] = 左パディング
-          // children[1] = 入力済みスパン (最初は空)
-          // children[2] = 未入力スパン
-          // children[3] = 右パディング
-
-          yomiBox.scrollLeft = 0; // スクロール位置をリセット
-
-
-          // (2) box-text (漢字) の初期化
-          const fullKanji = kanji[i];
-          const kanjiContainerWidth = textBox.clientWidth;
-          const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
-
-          textBox.innerHTML = `
-              <span style="width: ${kanjiPadding}px;"></span>
-              <span></span>
-              <span>${fullKanji}</span>
-              <span style="width: ${kanjiPadding}px;"></span>
-          `;
-          textBox.scrollLeft = 0;
-
-
-          // (3) possible_text (ローマ字) の初期化
-          const initialRemaining = judge.getBestMatch(); 
-          const romaContainerWidth = possible_text.clientWidth;
-          const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
-
-          possible_text.innerHTML = `
-              <span style="width: ${romaPadding}px;"></span>
-              <span style="color: #444;"></span>
-              <span style="color: #eee;">${initialRemaining}</span>
-              <span style="width: ${romaPadding}px;"></span>
-          `;
-          possible_text.scrollLeft = 0;
-        // ★★★ 修正ここまで ★★★
+        if (currentCourseConfig.special !== true) {
+            yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`;
+            textBox.innerHTML = `<span style="color: #eee;">${kanji[i]}</span>`;
+            possible_text.innerHTML = `
+                <span style="color: #eee;">${judge.getBestMatch()}</span>
+            `;
+        } else {
+              const fullYomi = yomi[i];
+              const yomiContainerWidth = yomiBox.clientWidth;
+              const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
+    
+              yomiBox.innerHTML = `
+                  <span style="width: ${yomiPadding}px;"></span>
+                  <span></span>
+                  <span>${fullYomi}</span>
+                  <span style="width: ${yomiPadding}px;"></span> 
+              `;
+              // children[0] = 左パディング
+              // children[1] = 入力済みスパン (最初は空)
+              // children[2] = 未入力スパン
+              // children[3] = 右パディング
+    
+              yomiBox.scrollLeft = 0; // スクロール位置をリセット
+    
+    
+              // (2) box-text (漢字) の初期化
+              const fullKanji = kanji[i];
+              const kanjiContainerWidth = textBox.clientWidth;
+              const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
+    
+              textBox.innerHTML = `
+                  <span style="width: ${kanjiPadding}px;"></span>
+                  <span></span>
+                  <span>${fullKanji}</span>
+                  <span style="width: ${kanjiPadding}px;"></span>
+              `;
+              textBox.scrollLeft = 0;
+    
+    
+              // (3) possible_text (ローマ字) の初期化
+              const initialRemaining = judge.getBestMatch(); 
+              const romaContainerWidth = possible_text.clientWidth;
+              const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
+    
+              possible_text.innerHTML = `
+                  <span style="width: ${romaPadding}px;"></span>
+                  <span style="color: #444;"></span>
+                  <span style="color: #eee;">${initialRemaining}</span>
+                  <span style="width: ${romaPadding}px;"></span>
+              `;
+              possible_text.scrollLeft = 0;
+            // ★★★ 修正ここまで ★★★
+        }
         // タイマースタート
         if (currentCourseConfig.special !== true) {
             startTimer();
@@ -826,6 +834,14 @@ function handleKeyDown(event) {
              // ★★★ スクロールロジックの修正 ★★★
 
                // (1) possible_text (ローマ字) の計算
+             if (currentCourseConfig.special !== true) {
+                 const remaining = judge.getBestMatch();
+                 possible_text.innerHTML = `
+                     <span style="color: #444;">${buffer}</span>
+                     <span style="color: #eee;">${remaining}</span>
+                `;
+                 
+             } else {
                const remaining = judge.getBestMatch();
                const romaContainerWidth = possible_text.clientWidth;
                // 左右のパディング幅 (コンテナ幅の半分)
@@ -901,6 +917,7 @@ function handleKeyDown(event) {
                textBox.scrollLeft = typedKanjiWidth;
 
                // ★★★ 修正ここまで ★★★
+             }
 
              updateRendaTime();
 
@@ -1010,52 +1027,66 @@ function setNextWord(isFirstWord = false) {
     yomiBox.textContent = yomi[i];
     */
     // (1) yomi-text (ひらがな) の初期化
-      const fullYomi = yomi[i];
-      const yomiContainerWidth = yomiBox.clientWidth;
-      const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
-
-      yomiBox.innerHTML = `
-          <span style="width: ${yomiPadding}px;"></span>
-          <span></span>
-          <span>${fullYomi}</span>
-          <span style="width: ${yomiPadding}px;"></span> 
-      `;
-      // children[0] = 左パディング
-      // children[1] = 入力済みスパン (最初は空)
-      // children[2] = 未入力スパン
-      // children[3] = 右パディング
-
-      yomiBox.scrollLeft = 0; // スクロール位置をリセット
-
-
-      // (2) box-text (漢字) の初期化
-      const fullKanji = kanji[i];
-      const kanjiContainerWidth = textBox.clientWidth;
-      const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
-
-      textBox.innerHTML = `
-          <span style="width: ${kanjiPadding}px;"></span>
-          <span></span>
-          <span>${fullKanji}</span>
-          <span style="width: ${kanjiPadding}px;"></span>
-      `;
-      textBox.scrollLeft = 0;
-
-
-      // (3) possible_text (ローマ字) の初期化
-      const initialRemaining = judge.getBestMatch(); 
-      const romaContainerWidth = possible_text.clientWidth;
-      const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
-
-      possible_text.innerHTML = `
-          <span style="width: ${romaPadding}px;"></span>
-          <span style="color: #444;"></span>
-          <span style="color: #eee;">${initialRemaining}</span>
-          <span style="width: ${romaPadding}px;"></span>
-      `;
-      possible_text.scrollLeft = 0;
-
-    // ★★★ 修正ここまで ★★★
+    if (currentCourseConfig.special !== true) {
+        yomiBox.innerHTML = `<span style="color: #eee;">${yomi[i]}</span>`;
+        textBox.innerHTML = `<span style="color: #eee;">${kanji[i]}</span>`;
+        possible_text.innerHTML = `
+            <span style="color: #eee;">${judge.getBestMatch()}</span>
+        `;
+    } else {
+        yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+        textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+        possible_text.style.scrollBehavior = 'auto';
+          const fullYomi = yomi[i];
+          const yomiContainerWidth = yomiBox.clientWidth;
+          const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
+    
+          yomiBox.innerHTML = `
+              <span style="width: ${yomiPadding}px;"></span>
+              <span></span>
+              <span>${fullYomi}</span>
+              <span style="width: ${yomiPadding}px;"></span> 
+          `;
+          // children[0] = 左パディング
+          // children[1] = 入力済みスパン (最初は空)
+          // children[2] = 未入力スパン
+          // children[3] = 右パディング
+    
+          yomiBox.scrollLeft = 0; // スクロール位置をリセット
+    
+    
+          // (2) box-text (漢字) の初期化
+          const fullKanji = kanji[i];
+          const kanjiContainerWidth = textBox.clientWidth;
+          const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
+    
+          textBox.innerHTML = `
+              <span style="width: ${kanjiPadding}px;"></span>
+              <span></span>
+              <span>${fullKanji}</span>
+              <span style="width: ${kanjiPadding}px;"></span>
+          `;
+          textBox.scrollLeft = 0;
+    
+    
+          // (3) possible_text (ローマ字) の初期化
+          const initialRemaining = judge.getBestMatch(); 
+          const romaContainerWidth = possible_text.clientWidth;
+          const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
+    
+          possible_text.innerHTML = `
+              <span style="width: ${romaPadding}px;"></span>
+              <span style="color: #444;"></span>
+              <span style="color: #eee;">${initialRemaining}</span>
+              <span style="width: ${romaPadding}px;"></span>
+          `;
+          possible_text.scrollLeft = 0;
+          yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+          textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+          possible_text.style.scrollBehavior = 'smooth';
+    
+        // ★★★ 修正ここまで ★★★
+    }
 }
 
 /**
