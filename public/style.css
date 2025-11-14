@@ -1100,3 +1100,110 @@ input.cmn-toggle-round-flat {
     margin-bottom: 1rem;
     animation: rotate 2s linear infinite;
 }
+/* HTML:
+<div class="loader">
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+  <div class="bar"></div>
+</div>
+*/
+
+/* --c (色の定義) は元のまま .loader に定義します */
+.loader3 {
+  --c: linear-gradient(
+    #FF6B6B calc(1 * 100% / 30),
+    #FF8E53 0 calc(2 * 100% / 30),
+    #FFAE3B 0 calc(3 * 100% / 30),
+    #FFCD3C 0 calc(4 * 100% / 30),
+    #FFF04D 0 calc(5 * 100% / 30),
+    #E8FF4D 0 calc(6 * 100% / 30),
+    #D0FF4D 0 calc(7 * 100% / 30),
+    #AFFF4D 0 calc(8 * 100% / 30),
+    #8CFF4D 0 calc(9 * 100% / 30),
+    #68FF4D 0 calc(10 * 100% / 30),
+    #4DFF68 0 calc(11 * 100% / 30),
+    #4DFF8C 0 calc(12 * 100% / 30),
+    #4DFFAF 0 calc(13 * 100% / 30),
+    #4DFFD0 0 calc(14 * 100% / 30),
+    #4DFFE8 0 calc(15 * 100% / 30),
+    #4DFFFF 0 calc(16 * 100% / 30),
+    #4DE8FF 0 calc(17 * 100% / 30),
+    #4DD0FF 0 calc(18 * 100% / 30),
+    #4DAFFF 0 calc(19 * 100% / 30),
+    #4D8CFF 0 calc(20 * 100% / 30),
+    #4D68FF 0 calc(21 * 100% / 30),
+    #684DFF 0 calc(22 * 100% / 30),
+    #8C4DFF 0 calc(23 * 100% / 30),
+    #AF4DFF 0 calc(24 * 100% / 30),
+    #D04DFF 0 calc(25 * 100% / 30),
+    #E84DFF 0 calc(26 * 100% / 30),
+    #FF4DFF 0 calc(27 * 100% / 30),
+    #FF4DE8 0 calc(28 * 100% / 30),
+    #FF4DD0 0 calc(29 * 100% / 30),
+    #FF4DAF 0
+  );
+
+  /* 1. .loader をフレックスコンテナに変更 */
+  width: 80px;
+  aspect-ratio: 2;
+  display: flex;
+  /* 隙間なく4本並べる */
+}
+
+/* 2. 個々の帯 (.bar) のスタイル */
+.bar {
+  width: 25%; /* 4本で100% */
+  height: 100%;
+  background: var(--c);
+  background-size: 100% 3000%; /* 帯1本なので幅は100% */
+  background-repeat: no-repeat;
+
+  /* 3. 1本の帯用のアニメーションを適用 */
+  animation: l10-bar 7.2s infinite;
+}
+
+/* 4. animation-delay で開始時間をずらす (非同期化) */
+/* 元の 7.2秒を4分割 (1.8s) してずらします */
+.bar:nth-child(2) {
+  animation-delay: -1.8s; /* 1.8秒遅れ (既に進んだ状態から開始) */
+}
+.bar:nth-child(3) {
+  animation-delay: -3.6s; /* 3.6秒遅れ */
+}
+.bar:nth-child(4) {
+  animation-delay: -5.4s; /* 5.4秒遅れ */
+}
+
+/* * 3. 1本の帯用のアニメーション (l10-bar)
+ * 元の @keyframes l10 の「1番目の帯」の動きを
+ * 0%～100% に再構成したものです。
+ */
+@keyframes l10-bar {
+  /* スタート (Pos 29) */
+  0% {
+    background-position: 0 calc(29*100%/29);
+  }
+
+  /* 8.33% の時点で Pos 19 に切り替わる */
+  8.33% {
+    background-position: 0 calc(19*100%/29);
+  }
+
+  /* 41.67% の時点で Pos 9 に切り替わる (33.33%～41.67% の間は Pos 19 のまま) */
+  33.33%,
+  41.67% {
+    background-position: 0 calc(9*100%/29);
+  }
+
+  /* 75% の時点で Pos 0 に切り替わる (66.67%～75% の間は Pos 9 のまま) */
+  66.67%,
+  75% {
+    background-position: 0 calc(0*100%/29);
+  }
+
+  /* 100% 時点 (ループの直前) は Pos 0 のまま */
+  100% {
+    background-position: 0 calc(0*100%/29);
+  }
+}

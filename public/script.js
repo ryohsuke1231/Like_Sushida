@@ -358,6 +358,7 @@ function resetGameState() {
 */
 async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
+    console.log(`Starting course: ${config.id}, ai_mode_button: ${document.getElementById('cmn-toggle-5').checked}, prompt: ${document.getElementById('entered-characters').value}`);
     if (config.special === true) {
         currentCourseConfig = config;
 
