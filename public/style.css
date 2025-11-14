@@ -109,6 +109,12 @@ body {
     white-space: nowrap;
     overflow-x: hidden;
 }
+#possible {
+    text-align: center;
+    color: #333;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
 #center-box table {
     /* ★ 要望: 親(#center-box)の幅の80%にする */
     width: 80%;
@@ -1113,7 +1119,11 @@ input.cmn-toggle-round-flat {
 
 
 /* --c (色の定義) は元のまま .loader3 に定義します */
+/* * loader3: コンテナの定義
+ * (グリッド定義 6列 x 5行 は変更なし)
+ */
 .loader3 {
+  /* 縦向きグラデーション（デフォルト） */
   --c: linear-gradient(
     #FF6B6B calc(1 * 100% / 30),
     #FF8E53 0 calc(2 * 100% / 30),
@@ -1147,65 +1157,124 @@ input.cmn-toggle-round-flat {
     #FF4DAF 0
   );
 
-  /* * 変更点: 1. .loader3 を Grid コンテナに変更
-   */
-  width: 300px; /* 80px から 300px に大きく変更 */
-  aspect-ratio: 6 / 5; /* 全体の比率 (6列 x 5行 のため) */
-  display: grid;
+  /* ★変更点: 横向きグラデーションを追加 */
+  --c-horizontal: linear-gradient(
+    to right, /* ←向きを横に */
+    #FF6B6B calc(1 * 100% / 30),
+    #FF8E53 0 calc(2 * 100% / 30),
+    #FFAE3B 0 calc(3 * 100% / 30),
+    #FFCD3C 0 calc(4 * 100% / 30),
+    #FFF04D 0 calc(5 * 100% / 30),
+    #E8FF4D 0 calc(6 * 100% / 30),
+    #D0FF4D 0 calc(7 * 100% / 30),
+    #AFFF4D 0 calc(8 * 100% / 30),
+    #8CFF4D 0 calc(9 * 100% / 30),
+    #68FF4D 0 calc(10 * 100% / 30),
+    #4DFF68 0 calc(11 * 100% / 30),
+    #4DFF8C 0 calc(12 * 100% / 30),
+    #4DFFAF 0 calc(13 * 100% / 30),
+    #4DFFD0 0 calc(14 * 100% / 30),
+    #4DFFE8 0 calc(15 * 100% / 30),
+    #4DFFFF 0 calc(16 * 100% / 30),
+    #4DE8FF 0 calc(17 * 100% / 30),
+    #4DD0FF 0 calc(18 * 100% / 30),
+    #4DAFFF 0 calc(19 * 100% / 30),
+    #4D8CFF 0 calc(20 * 100% / 30),
+    #4D68FF 0 calc(21 * 100% / 30),
+    #684DFF 0 calc(22 * 100% / 30),
+    #8C4DFF 0 calc(23 * 100% / 30),
+    #AF4DFF 0 calc(24 * 100% / 30),
+    #D04DFF 0 calc(25 * 100% / 30),
+    #E84DFF 0 calc(26 * 100% / 30),
+    #FF4DFF 0 calc(27 * 100% / 30),
+    #FF4DE8 0 calc(28 * 100% / 30),
+    #FF4DD0 0 calc(29 * 100% / 30),
+    #FF4DAF 0
+  );
 
-  /* 6列 x 5行 のグリッドを定義 (これがブロックの基準になる) */
+  width: 300px;
+  aspect-ratio: 6 / 5;
+  display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(5, 1fr);
-
-  gap: 5px; /* (元の指定を維持) */
+  gap: 5px;
 }
 
-/* * 変更点: 2. .bar を .block に変更
+/* * .block: デフォルト (縦アニメ)
  */
 .block {
-  /* 元の .bar からアニメーションと背景の指定を継承 */
   background: var(--c);
-  background-size: 100% 3000%;
+  background-size: 100% 3000%; /* 縦: 100%幅 / 3000%高 */
   background-repeat: no-repeat;
-  border-radius: 4px; /* (元の指定を維持) */
+  border-radius: 4px;
   animation: smooth-scroll 3.6s infinite ease-in-out alternate;
-
-  /* width, height, flex-grow は不要 (Grid が管理) */
 }
 
-/* * 変更点: 3. 各 .block をグリッドに配置
+/* * ★変更点: 横長ブロック用のスタイル
+ */
+.block.horizontal {
+  background: var(--c-horizontal);
+  background-size: 3000% 100%; /* 横: 3000%幅 / 100%高 */
+  animation-name: smooth-scroll-x; /* 横アニメを適用 */
+}
+
+
+/* * ★変更点: グリッド配置 (バラバラ感)
  *
- * grid-column: span 2; (横に2マス)
- * grid-row: span 1;    (縦に1マス) -> 2:1 の横長
- *
- * grid-column: span 1; (横に1マス)
- * grid-row: span 2;    (縦に2マス) -> 1:2 の縦長
+ * grid-column / grid-row の開始位置を 1 以外に設定し、
+ * 隙間が空くように（不規則に）配置し直しました。
+ * * 横長のブロック (span 2 / span 1) には .horizontal クラスを
+ * HTML側で追加する代わりに、CSSの :nth-child() で直接
+ * 横アニメーション用のスタイルを上書きします。
  */
 
-/* 左側の列 */
-.block:nth-child(1) { grid-column: 1 / span 2; grid-row: 1 / span 1; }
-.block:nth-child(2) { grid-column: 1 / span 1; grid-row: 2 / span 2; }
+/* 1行目 */
+.block:nth-child(1) { grid-column: 2 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(6) { grid-column: 4 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(11) { grid-column: 6 / span 1; grid-row: 1 / span 2; } /* 縦 */
+
+/* 2行目 */
+.block:nth-child(2) { grid-column: 1 / span 1; grid-row: 2 / span 2; } /* 縦 */
+.block:nth-child(5) { grid-column: 2 / span 1; grid-row: 2 / span 2; } /* 縦 */
+.block:nth-child(7) { grid-column: 4 / span 1; grid-row: 2 / span 2; } /* 縦 */
+
+/* 3行目 */
+.block:nth-child(10) { grid-column: 3 / span 1; grid-row: 3 / span 2; } /* 縦 */
+.block:nth-child(12) { grid-column: 5 / span 2; grid-row: 3 / span 1; }
+
+/* 4行目 */
 .block:nth-child(3) { grid-column: 1 / span 2; grid-row: 4 / span 1; }
-.block:nth-child(4) { grid-column: 1 / span 2; grid-row: 5 / span 1; }
+.block:nth-child(8) { grid-column: 5 / span 1; grid-row: 4 / span 2; } /* 縦 */
 
-/* 中央の列 */
-.block:nth-child(5) { grid-column: 2 / span 1; grid-row: 2 / span 2; }
-.block:nth-child(6) { grid-column: 3 / span 2; grid-row: 1 / span 1; }
-.block:nth-child(7) { grid-column: 3 / span 1; grid-row: 2 / span 2; }
-.block:nth-child(8) { grid-column: 3 / span 2; grid-row: 4 / span 1; }
-.block:nth-child(9) { grid-column: 3 / span 2; grid-row: 5 / span 1; }
+/* 5行目 */
+.block:nth-child(4) { grid-column: 2 / span 2; grid-row: 5 / span 1; }
+.block:nth-child(9) { grid-column: 4 / span 1; grid-row: 5 / span 1; } /* 1x1 */
+.block:nth-child(13) { grid-column: 6 / span 1; grid-row: 5 / span 1; } /* 1x1 */
 
-/* 右側の列 */
-.block:nth-child(10) { grid-column: 4 / span 1; grid-row: 2 / span 2; }
-.block:nth-child(11) { grid-column: 5 / span 2; grid-row: 1 / span 1; }
-.block:nth-child(12) { grid-column: 5 / span 1; grid-row: 2 / span 2; }
-.block:nth-child(13) { grid-column: 5 / span 2; grid-row: 4 / span 1; }
-.block:nth-child(14) { grid-column: 5 / span 2; grid-row: 5 / span 1; }
-.block:nth-child(15) { grid-column: 6 / span 1; grid-row: 2 / span 2; }
+/* 1x1 (個別に指定) */
+.block:nth-child(14) { grid-column: 1 / span 1; grid-row: 1 / span 1; } /* 1x1 */
+.block:nth-child(15) { grid-column: 3 / span 1; grid-row: 2 / span 1; } /* 1x1 */
 
 
-/* * 変更点: 4. animation-delay を 15個のブロックに分散
- * (3.6s / 15 = 0.24s ずつずらす)
+/* * ★変更点: 横長ブロックに横アニメを適用
+ * (上記レイアウトで横長 [span 2/span 1] または 1x1 になったもの)
+ */
+.block:nth-child(1),
+.block:nth-child(3),
+.block:nth-child(4),
+.block:nth-child(6),
+.block:nth-child(9),
+.block:nth-child(12),
+.block:nth-child(13),
+.block:nth-child(14),
+.block:nth-child(15) {
+  background: var(--c-horizontal);
+  background-size: 3000% 100%;
+  animation-name: smooth-scroll-x;
+}
+
+
+/* * animation-delay (変更なし)
  */
 .block:nth-child(2)  { animation-delay: -0.24s; }
 .block:nth-child(3)  { animation-delay: -0.48s; }
@@ -1223,10 +1292,7 @@ input.cmn-toggle-round-flat {
 .block:nth-child(15) { animation-delay: -3.36s; }
 
 
-/* * 5. アニメーション (smooth-scroll)
- *
- * この @keyframes は元のコードから変更ありません。
- * 各 .block が個別にこのアニメーションを実行します。
+/* * 縦アニメ (変更なし)
  */
 @keyframes smooth-scroll {
   0% {
@@ -1234,5 +1300,16 @@ input.cmn-toggle-round-flat {
   }
   100% {
     background-position: 0% 100%;
+  }
+}
+
+/* * ★変更点: 横アニメ (新規追加)
+ */
+@keyframes smooth-scroll-x {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%; /* X軸 (横) 方向に動かす */
   }
 }

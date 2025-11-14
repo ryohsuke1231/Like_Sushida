@@ -254,11 +254,12 @@ function setupEventListeners() {
         button.addEventListener('click', () => {
             if (currentCourseConfig.id === "ai_mode") {
                 showAImodeConfig();
-            }
-            if (currentCourseConfig.name) {
-                startCourse(currentCourseConfig); // 同じコースでリトライ
             } else {
-                showCourseSelection(); // 念のためコース選択へ
+                if (currentCourseConfig.name) {
+                    startCourse(currentCourseConfig); // 同じコースでリトライ
+                } else {
+                    showCourseSelection(); // 念のためコース選択へ
+                }
             }
         });
     });
@@ -277,6 +278,7 @@ function setupEventListeners() {
 
 function showAImodeConfig() {
     // 画面切り替え
+    resetGameState();
     selectBox.style.display = 'none';
     startBox.style.display = 'none';
     centerBox.style.display = 'none';
@@ -295,6 +297,9 @@ function showCourseSelection() {
     startBox.style.display = 'none';
     centerBox.style.display = 'none';
     resultBox.style.display = 'none';
+    endBox.style.display = 'none';
+    document.getElementById('wait-box').style.display = 'none';
+    document.getElementById('special-mode-result-box').style.display = 'none';
     document.getElementById('ai-config-box').style.display = 'none';
 
     // ゲーム状態のリセット
@@ -332,6 +337,7 @@ function resetGameState() {
     document.getElementById('entered-characters').value = "";
     document.getElementById('remaining-characters').textContent = "50";
     document.getElementById('cmn-toggle-5').checked = false;
+    document.getElementById('special-mode-result-box').style.display = 'none';
     // 皿カウントリセット
     amounts.forEach(amount => {
         const countEl = document.getElementById(`${amount}_count`);
@@ -664,9 +670,7 @@ function startGame() {
         if (currentCourseConfig.special !== true) {
             yomiBox.innerHTML = `<span style="color: #444;">${yomi[i]}</span>`;
             textBox.innerHTML = `<span style="color: #444;">${kanji[i]}</span>`;
-            possible_text.innerHTML = `
-                <span style="color: #eee;">${judge.getBestMatch()}</span>
-            `;
+            possible_text.innerHTML = `<span style="color: #eee;">${judge.getBestMatch()}</span>`;
             yomiBox.style.justifyContent = 'center';
             textBox.style.justifyContent = 'center';
             possible_text.style.justifyContent = 'center';
@@ -1180,13 +1184,6 @@ function endGame() {
     start = null;
     // 「終了！」表示から1秒待って結果画面を表示
     setTimeout(() => {
-        let total = 0;
-        for (let k = 0; k < amounts.length; k++) {
-            const countEl = document.getElementById(`${amounts[k]}_count`);
-            if (countEl) {
-                total += amounts[k] * parseInt(countEl.textContent);
-            }
-        }
 
         if (currentCourseConfig.special === true) {
             const specialModeResultBox = document.getElementById('special-mode-result-box');
@@ -1202,10 +1199,16 @@ function endGame() {
             if (ippatsu === true) {
                 plus = "　一発勝負";
             }
-            document.getElementById('course-result').textContent = currentCourseConfig.name + plus;
-            let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
+            document.getElementById('course-result2').textContent = currentCourseConfig.name + plus;
+            let key_per_second = 0;
+            if (start_time > 0 && end_time > start_time) {
+                 const elapsedTimeSeconds = (end_time - start_time) / 1000;
+                 if (elapsedTimeSeconds > 0) {
+                     key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
+                 }
+            }
             setTimeout(() => {
-                document.getElementById('result-keys-per-second').textContent = `${parseFloat(correct_keys_count / ((end_time - start_time) / 1000)).toFixed(1)} キー/秒`;
+                document.getElementById('result-keys-per-second').textContent = `${parseFloat(key_per_second.toFixed(2))} キー/秒`;
                 document.getElementById('result-keys-per-second').style.display = 'flex';
             }, 500);
             setTimeout(() => {
@@ -1216,6 +1219,13 @@ function endGame() {
                 document.getElementById('result-image').style.display = 'flex';
             }, 1500);
         } else {
+            let total = 0;
+            for (let k = 0; k < amounts.length; k++) {
+                const countEl = document.getElementById(`${amounts[k]}_count`);
+                if (countEl) {
+                    total += amounts[k] * parseInt(countEl.textContent);
+                }
+            }
 
             const resultTotalEl = document.getElementById('result-total');
             const harattaEl = document.getElementById('haratta');

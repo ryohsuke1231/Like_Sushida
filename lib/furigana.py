@@ -160,8 +160,10 @@ def get_furigana(message):
                         # 4a. 変換マップ
                         if char in conversion_map:
                             converted_char = conversion_map[char]
-                            temp_kanji += converted_char # カンジ側にも変換後を入れる
-                            temp_yomi += converted_char
+                            # --- ユーザーリクエストによる修正 ---
+                            temp_kanji += char           # カンジ側(表示用)は変換前の文字
+                            temp_yomi += converted_char  # ヨミ側(タイピング用)は変換後の文字
+                            # ---------------------------------
                             # ★ 修正: オフセットを足した「インデックス」を格納
                             temp_map.append(char_idx + kanji_index_offset)
                             continue
@@ -244,12 +246,27 @@ def get_furigana(message):
         return None
 
 if __name__ == "__main__":
-    test_text = "いやっほ" # ｳﾞｨ (3文字) -> ヴィ (1文字)
+    # 修正確認のためテストケースを変更
+    test_text = "テスト（TEST）"
+    print(f"Input: {test_text}")
     result = get_furigana(test_text)
     if result:
         yomi, mapping, word_map, words_data = result
         print(f"Yomi: {yomi}")
         print(f"Mapping: {mapping}") # ★ ここがインデックスのリストになる
+        print(f"Word Map: {word_map}")
+        print(f"Words Data: {words_data}")
+        print(f"Yomi Len: {len(yomi)}, Map Len: {len(mapping)}, Word Map Len: {len(word_map)}")
+
+    print("---")
+    # 元のテストケース
+    test_text = "いやっほ" # ｳﾞｨ (3文字) -> ヴィ (1文字)
+    print(f"Input: {test_text}")
+    result = get_furigana(test_text)
+    if result:
+        yomi, mapping, word_map, words_data = result
+        print(f"Yomi: {yomi}")
+        print(f"Mapping: {mapping}")
         print(f"Word Map: {word_map}")
         print(f"Words Data: {words_data}")
         print(f"Yomi Len: {len(yomi)}, Map Len: {len(mapping)}, Word Map Len: {len(word_map)}")
