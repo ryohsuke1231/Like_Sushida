@@ -1012,9 +1012,9 @@ input.cmn-toggle-round-flat {
     gap: 1rem;
 }
 
-#ai-config-box input {
+#ai-config-box textarea {
     width: 80%;
-    height: 3rem;
+    row
     font-size: 1.5rem;
     padding: 1rem;
     border: 2px solid #ccc;
@@ -1034,12 +1034,12 @@ input.cmn-toggle-round-flat {
     transition: border-color 0.3s ease;
 }
 
-#ai-config-box input:disabled {
+#ai-config-box textarea:disabled {
     background-color: #f0f0f0;
     color: #999
 }
 
-#ai-config-box input:focus {
+#ai-config-box textarea:focus {
     border-color: #007bff;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }

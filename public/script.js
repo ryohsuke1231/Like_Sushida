@@ -181,7 +181,12 @@ function grabDomElements() {
         } else {
             document.getElementById('entered-characters').disabled = true;
         }
-    })
+    });
+    if (toggleInput2.checked) {
+        document.getElementById('entered-characters').disabled = false;
+    } else {
+        document.getElementById('entered-characters').disabled = true;
+    }
 
 }
 
@@ -317,7 +322,9 @@ function resetGameState() {
     document.getElementById('keys-per-second').textContent = '0.0 キー/秒,　正確率 0.0%';
     remainingTime.textContent = `残り時間: ...秒`;
     remainingTime.style.display = '';
-
+    document.getElementById('entered-characters').value = "";
+    document.getElementById('remaining-characters').textContent = "50";
+    document.getElementById('cmn-toggle-5').checked = false;
     // 皿カウントリセット
     amounts.forEach(amount => {
         const countEl = document.getElementById(`${amount}_count`);

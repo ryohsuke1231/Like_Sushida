@@ -64,6 +64,7 @@ def get_furigana(message):
 
         if "error" in data:
             logging.error(f"Yahoo API Error: {data['error']['message']}")
+            logging.error(f"requested: {message}")
             return None
 
         if "result" not in data or "word" not in data["result"]:
@@ -243,7 +244,7 @@ def get_furigana(message):
         return None
 
 if __name__ == "__main__":
-    test_text = "これはテストです。信信 ｳﾞｨ" # ｳﾞｨ (3文字) -> ヴィ (1文字)
+    test_text = "いやっほ" # ｳﾞｨ (3文字) -> ヴィ (1文字)
     result = get_furigana(test_text)
     if result:
         yomi, mapping, word_map, words_data = result
