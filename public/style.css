@@ -1110,7 +1110,10 @@ input.cmn-toggle-round-flat {
 */
 
 /* --c (色の定義) は元のまま .loader に定義します */
-.loader-b {
+
+
+/* --c (色の定義) は元のまま .loader3 に定義します */
+.loader3 {
   --c: linear-gradient(
     #FF6B6B calc(1 * 100% / 30),
     #FF8E53 0 calc(2 * 100% / 30),
@@ -1144,337 +1147,92 @@ input.cmn-toggle-round-flat {
     #FF4DAF 0
   );
 
-  /* 1. .loader をフレックスコンテナに変更 */
-  width: 80px;
-  aspect-ratio: 2;
-  display: flex;
-  /* 隙間なく4本並べる */
+  /* * 変更点: 1. .loader3 を Grid コンテナに変更
+   */
+  width: 300px; /* 80px から 300px に大きく変更 */
+  aspect-ratio: 6 / 5; /* 全体の比率 (6列 x 5行 のため) */
+  display: grid;
+
+  /* 6列 x 5行 のグリッドを定義 (これがブロックの基準になる) */
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+
+  gap: 5px; /* (元の指定を維持) */
 }
 
-/* 2. 個々の帯 (.bar) のスタイル */
-.bar2 {
-  width: 25%; /* 4本で100% */
-  height: 100%;
-  background: var(--c);
-  background-size: 100% 3000%; /* 帯1本なので幅は100% */
-  background-repeat: no-repeat;
-
-  /* 3. 1本の帯用のアニメーションを適用 */
-  animation: l10-bar 7.2s infinite;
-}
-
-/* 4. animation-delay で開始時間をずらす (非同期化) */
-/* 元の 7.2秒を4分割 (1.8s) してずらします */
-.bar2:nth-child(2) {
-  animation-delay: -1.8s; /* 1.8秒遅れ (既に進んだ状態から開始) */
-}
-.bar2:nth-child(3) {
-  animation-delay: -3.6s; /* 3.6秒遅れ */
-}
-.bar2:nth-child(4) {
-  animation-delay: -5.4s; /* 5.4秒遅れ */
-}
-
-/* * 3. 1本の帯用のアニメーション (l10-bar)
- * 元の @keyframes l10 の「1番目の帯」の動きを
- * 0%～100% に再構成したものです。
+/* * 変更点: 2. .bar を .block に変更
  */
-@keyframes l10-bar {
-  /* スタート (Pos 29) */
-  0% {
-    background-position: 0 calc(29*100%/29);
-  }
+.block {
+  /* 元の .bar からアニメーションと背景の指定を継承 */
+  background: var(--c);
+  background-size: 100% 3000%;
+  background-repeat: no-repeat;
+  border-radius: 4px; /* (元の指定を維持) */
+  animation: smooth-scroll 3.6s infinite ease-in-out alternate;
 
-  /* 8.33% の時点で Pos 19 に切り替わる */
-  8.33% {
-    background-position: 0 calc(19*100%/29);
-  }
-
-  /* 41.67% の時点で Pos 9 に切り替わる (33.33%～41.67% の間は Pos 19 のまま) */
-  33.33%,
-  41.67% {
-    background-position: 0 calc(9*100%/29);
-  }
-
-  /* 75% の時点で Pos 0 に切り替わる (66.67%～75% の間は Pos 9 のまま) */
-  66.67%,
-  75% {
-    background-position: 0 calc(0*100%/29);
-  }
-
-  /* 100% 時点 (ループの直前) は Pos 0 のまま */
-  100% {
-    background-position: 0 calc(0*100%/29);
-  }
+  /* width, height, flex-grow は不要 (Grid が管理) */
 }
 
+/* * 変更点: 3. 各 .block をグリッドに配置
+ *
+ * grid-column: span 2; (横に2マス)
+ * grid-row: span 1;    (縦に1マス) -> 2:1 の横長
+ *
+ * grid-column: span 1; (横に1マス)
+ * grid-row: span 2;    (縦に2マス) -> 1:2 の縦長
+ */
+
+/* 左側の列 */
+.block:nth-child(1) { grid-column: 1 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(2) { grid-column: 1 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(3) { grid-column: 1 / span 2; grid-row: 4 / span 1; }
+.block:nth-child(4) { grid-column: 1 / span 2; grid-row: 5 / span 1; }
+
+/* 中央の列 */
+.block:nth-child(5) { grid-column: 2 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(6) { grid-column: 3 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(7) { grid-column: 3 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(8) { grid-column: 3 / span 2; grid-row: 4 / span 1; }
+.block:nth-child(9) { grid-column: 3 / span 2; grid-row: 5 / span 1; }
+
+/* 右側の列 */
+.block:nth-child(10) { grid-column: 4 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(11) { grid-column: 5 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(12) { grid-column: 5 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(13) { grid-column: 5 / span 2; grid-row: 4 / span 1; }
+.block:nth-child(14) { grid-column: 5 / span 2; grid-row: 5 / span 1; }
+.block:nth-child(15) { grid-column: 6 / span 1; grid-row: 2 / span 2; }
 
 
+/* * 変更点: 4. animation-delay を 15個のブロックに分散
+ * (3.6s / 15 = 0.24s ずつずらす)
+ */
+.block:nth-child(2)  { animation-delay: -0.24s; }
+.block:nth-child(3)  { animation-delay: -0.48s; }
+.block:nth-child(4)  { animation-delay: -0.72s; }
+.block:nth-child(5)  { animation-delay: -0.96s; }
+.block:nth-child(6)  { animation-delay: -1.20s; }
+.block:nth-child(7)  { animation-delay: -1.44s; }
+.block:nth-child(8)  { animation-delay: -1.68s; }
+.block:nth-child(9)  { animation-delay: -1.92s; }
+.block:nth-child(10) { animation-delay: -2.16s; }
+.block:nth-child(11) { animation-delay: -2.40s; }
+.block:nth-child(12) { animation-delay: -2.64s; }
+.block:nth-child(13) { animation-delay: -2.88s; }
+.block:nth-child(14) { animation-delay: -3.12s; }
+.block:nth-child(15) { animation-delay: -3.36s; }
 
 
-
-
-
-
-/* --c (色の定義) は元のまま .loader3 に定義します */
-.loader-a {
---c: linear-gradient(
-#FF6B6B calc(1 * 100% / 30),
-#FF8E53 0 calc(2 * 100% / 30),
-#FFAE3B 0 calc(3 * 100% / 30),
-#FFCD3C 0 calc(4 * 100% / 30),
-#FFF04D 0 calc(5 * 100% / 30),
-#E8FF4D 0 calc(6 * 100% / 30),
-#D0FF4D 0 calc(7 * 100% / 30),
-#AFFF4D 0 calc(8 * 100% / 30),
-#8CFF4D 0 calc(9 * 100% / 30),
-#68FF4D 0 calc(10 * 100% / 30),
-#4DFF68 0 calc(11 * 100% / 30),
-#4DFF8C 0 calc(12 * 100% / 30),
-#4DFFAF 0 calc(13 * 100% / 30),
-#4DFFD0 0 calc(14 * 100% / 30),
-#4DFFE8 0 calc(15 * 100% / 30),
-#4DFFFF 0 calc(16 * 100% / 30),
-#4DE8FF 0 calc(17 * 100% / 30),
-#4DD0FF 0 calc(18 * 100% / 30),
-#4DAFFF 0 calc(19 * 100% / 30),
-#4D8CFF 0 calc(20 * 100% / 30),
-#4D68FF 0 calc(21 * 100% / 30),
-#684DFF 0 calc(22 * 100% / 30),
-#8C4DFF 0 calc(23 * 100% / 30),
-#AF4DFF 0 calc(24 * 100% / 30),
-#D04DFF 0 calc(25 * 100% / 30),
-#E84DFF 0 calc(26 * 100% / 30),
-#FF4DFF 0 calc(27 * 100% / 30),
-#FF4DE8 0 calc(28 * 100% / 30),
-#FF4DD0 0 calc(29 * 100% / 30),
-#FF4DAF 0
-);
-
-/* 1. .loader をフレックスコンテナに変更 */
-width: 80px;
-aspect-ratio: 2;
-display: flex;
-
-/* 変更点: 隙間を空けて視覚的な分離を良くする */
-gap: 5px; 
-}
-
-/* 2. 個々の帯 (.bar) のスタイル */
-.bar {
-/* 変更点: 隙間を考慮し、flex-grow: 1 で幅を均等に埋める */
-flex-grow: 1; 
-width: 25%; /* flex-grow が優先されるが、フォールバックとして残す */
-height: 100%;
-background: var(--c);
-background-size: 100% 3000%; /* グラデーションの全体像はコンテナの30倍 */
-background-repeat: no-repeat;
-
-/* 変更点: 角を丸めて柔らかい印象にする */
-border-radius: 4px;
-
-/* 3. 滑らかなアニメーションに変更 */
-animation: smooth-scroll 3.6s infinite ease-in-out alternate;
-}
-
-/* 4. animation-delay で開始時間をずらす (非同期化) */
-/* 新しい周期 3.6秒を4分割 (0.9s) してずらします */
-.bar:nth-child(2) {
-animation-delay: -0.9s; 
-}
-.bar:nth-child(3) {
-animation-delay: -1.8s;
-}
-.bar:nth-child(4) {
-animation-delay: -2.7s;
-}
-
-/* * 3. 滑らかにスクロールするアニメーション (smooth-scroll)
- * * 元の `l10-bar` (ジャンプする動き) を、
- * グラデーションの上端 (0%) から下端 (100%) までを
- * 滑らかに `ease-in-out` で往復 (`alternate`) する
- * アニメーションに変更しました。
+/* * 5. アニメーション (smooth-scroll)
+ *
+ * この @keyframes は元のコードから変更ありません。
+ * 各 .block が個別にこのアニメーションを実行します。
  */
 @keyframes smooth-scroll {
-/* スタート (一番上) */
-0% {
-background-position: 0% 0%; /* Y=0% (グラデーションの開始点) */
-}
-
-/* エンド (一番下) */
-100% {
-background-position: 0% 100%; /* Y=100% (グラデーションの終了点) */
-}
-}
-
-
-
-
-
-/*
- * 変更点 1:
- * グラデーション定義を2種類用意し、:root に移動
- * --c-vertical:   横向きローダー (縦スクロール) 用
- * --c-horizontal: 縦向きローダー (横スクロール) 用
- */
-:root {
-  /* 縦スクロール用 (to bottom) */
-  --c-vertical: linear-gradient(
-    #FF6B6B calc(1 * 100% / 30),
-    #FF8E53 0 calc(2 * 100% / 30),
-    #FFAE3B 0 calc(3 * 100% / 30),
-    #FFCD3C 0 calc(4 * 100% / 30),
-    #FFF04D 0 calc(5 * 100% / 30),
-    #E8FF4D 0 calc(6 * 100% / 30),
-    #D0FF4D 0 calc(7 * 100% / 30),
-    #AFFF4D 0 calc(8 * 100% / 30),
-    #8CFF4D 0 calc(9 * 100% / 30),
-    #68FF4D 0 calc(10 * 100% / 30),
-    #4DFF68 0 calc(11 * 100% / 30),
-    #4DFF8C 0 calc(12 * 100% / 30),
-    #4DFFAF 0 calc(13 * 100% / 30),
-    #4DFFD0 0 calc(14 * 100% / 30),
-    #4DFFE8 0 calc(15 * 100% / 30),
-    #4DFFFF 0 calc(16 * 100% / 30),
-    #4DE8FF 0 calc(17 * 100% / 30),
-    #4DD0FF 0 calc(18 * 100% / 30),
-    #4DAFFF 0 calc(19 * 100% / 30),
-    #4D8CFF 0 calc(20 * 100% / 30),
-    #4D68FF 0 calc(21 * 100% / 30),
-    #684DFF 0 calc(22 * 100% / 30),
-    #8C4DFF 0 calc(23 * 100% / 30),
-    #AF4DFF 0 calc(24 * 100% / 30),
-    #D04DFF 0 calc(25 * 100% / 30),
-    #E84DFF 0 calc(26 * 100% / 30),
-    #FF4DFF 0 calc(27 * 100% / 30),
-    #FF4DE8 0 calc(28 * 100% / 30),
-    #FF4DD0 0 calc(29 * 100% / 30),
-    #FF4DAF 0
-  );
-
-  /* 横スクロール用 (to right) */
-  --c-horizontal: linear-gradient( to right, /* ★向きを変更 */
-    #FF6B6B calc(1 * 100% / 30),
-    #FF8E53 0 calc(2 * 100% / 30),
-    #FFAE3B 0 calc(3 * 100% / 30),
-    #FFCD3C 0 calc(4 * 100% / 30),
-    #FFF04D 0 calc(5 * 100% / 30),
-    #E8FF4D 0 calc(6 * 100% / 30),
-    #D0FF4D 0 calc(7 * 100% / 30),
-    #AFFF4D 0 calc(8 * 100% / 30),
-    #8CFF4D 0 calc(9 * 100% / 30),
-    #68FF4D 0 calc(10 * 100% / 30),
-    #4DFF68 0 calc(11 * 100% / 30),
-    #4DFF8C 0 calc(12 * 100% / 30),
-    #4DFFAF 0 calc(13 * 100% / 30),
-    #4DFFD0 0 calc(14 * 100% / 30),
-    #4DFFE8 0 calc(15 * 100% / 30),
-    #4DFFFF 0 calc(16 * 100% / 30),
-    #4DE8FF 0 calc(17 * 100% / 30),
-    #4DD0FF 0 calc(18 * 100% / 30),
-    #4DAFFF 0 calc(19 * 100% / 30),
-    #4D8CFF 0 calc(20 * 100% / 30),
-    #4D68FF 0 calc(21 * 100% / 30),
-    #684DFF 0 calc(22 * 100% / 30),
-    #8C4DFF 0 calc(23 * 100% / 30),
-    #AF4DFF 0 calc(24 * 100% / 30),
-    #D04DFF 0 calc(25 * 100% / 30),
-    #E84DFF 0 calc(26 * 100% / 30),
-    #FF4DFF 0 calc(27 * 100% / 30),
-    #FF4DE8 0 calc(28 * 100% / 30),
-    #FF4DD0 0 calc(29 * 100% / 30),
-    #FF4DAF 0
-  );
-}
-
-/* * 変更点 2:
- * 大きな正方形のコンテナ (.container) を追加
- * CSS Grid で 2x2 にレイアウトします
- */
-.container1 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  width: 30vw; /* もっと大きく */
-  aspect-ratio: 1; /* 正方形 */
-  gap: 15px; /* ローダー間の隙間 */
-  padding: 15px; /* 内側の余白 */
-  background: #f0f0f0; /* コンテナの背景色（任意）*/
-  border-radius: 20px; /* コンテナの角丸 */
-}
-
-
-/* * 変更点 3:
- * .loader3 はコンテナいっぱいに広がるように変更
- */
-.loader3 {
-  width: 100%; /* 親 (gridセル) いっぱいに広がる */
-  height: 100%; /* 親 (gridセル) いっぱいに広がる */
-  display: flex;
-  gap: 5px; 
-  border-radius: 10px; /* ローダー自体の角丸 */
-  overflow: hidden; /* バーがはみ出ないように */
-}
-
-/* 5. バー (共通スタイル) */
-.bar3 {
-  flex-grow: 1; /* flexコンテナの空きスペースを埋める */
-  background-repeat: no-repeat;
-  border-radius: 4px;
-}
-
-/* * 変更点 4:
- * 横向きローダー (デフォルト) のスタイル
- * 縦スクロール用のアニメーションを適用
- */
-.loader3:not(.loader3-vertical) {
-  flex-direction: row; /* バーを横に並べる */
-}
-.loader3:not(.loader3-vertical) .bar3 {
-  background-image: var(--c-vertical); /* 縦グラデーション */
-  background-size: 100% 3000%; /* 幅100%, 高さ3000% */
-  animation: smooth-scroll-y 3.6s infinite ease-in-out alternate;
-}
-
-/* * 変更点 5:
- * 縦向きローダー (.loader3-vertical) のスタイル
- * 横スクロール用のアニメーションを適用
- */
-.loader3.loader3-vertical {
-  flex-direction: column; /* バーを縦に並べる */
-}
-.loader3.loader3-vertical .bar3 {
-  background-image: var(--c-horizontal); /* 横グラデーション */
-  background-size: 3000% 100%; /* 幅3000%, 高さ100% */
-  animation: smooth-scroll-x 3.6s infinite ease-in-out alternate;
-}
-
-
-/* * 6. アニメーションの遅延 (共通)
- * (周期 3.6s / 4本 = 0.9s ずつずらす)
- */
-.bar3:nth-child(2) {
-  animation-delay: -0.9s; 
-}
-.bar3:nth-child(3) {
-  animation-delay: -1.8s;
-}
-.bar3:nth-child(4) {
-  animation-delay: -2.7s;
-}
-
-/* * 7. キーフレーム (Y方向 / 縦スクロール)
- * (元の smooth-scroll から名前変更)
- */
-@keyframes smooth-scroll-y {
-  0%   { background-position: 0% 0%; }
-  100% { background-position: 0% 100%; }
-}
-
-/* * 変更点 6:
- * キーフレーム (X方向 / 横スクロール) を追加
- */
-@keyframes smooth-scroll-x {
-  0%   { background-position: 0% 0%; }
-  100% { background-position: 100% 0%; }
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
 }

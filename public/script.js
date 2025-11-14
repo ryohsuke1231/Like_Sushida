@@ -1195,7 +1195,7 @@ function endGame() {
             startBox.style.display = 'none';
             resultBox.style.display = 'none';
             endBox.style.display = 'none';
-            document.getElementById('result-kawaii').style.display = 'hidden';
+            document.getElementById('result-image').style.display = 'hidden';
             document.getElementById('result-keys-per-second').style.display = 'hidden';
             document.getElementById('result-correct-percent').style.display = 'hidden';
             let plus = "";
@@ -1213,7 +1213,7 @@ function endGame() {
                 document.getElementById('result-correct-percent').style.display = 'flex';
             }, 1000);
             setTimeout(() => {
-                document.getElementById('result-kawaii').style.display = 'flex';
+                document.getElementById('result-image').style.display = 'flex';
             }, 1500);
         } else {
 
