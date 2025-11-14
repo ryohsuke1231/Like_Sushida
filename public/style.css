@@ -75,6 +75,16 @@ body {
     margin-top: 1rem;
     overflow-x: auto;
 }
+#remaining-chars {
+    width: 80%;
+    height: 0.8rem;
+    /* ブラウザのデフォルトの見た目をリセット */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: none;
+}
+
 #renda {
     width: 100%;
     /*margin-bottom: 1rem;*/
@@ -1228,52 +1238,45 @@ input.cmn-toggle-round-flat {
  * 横アニメーション用のスタイルを上書きします。
  */
 
-/* 1行目 */
-.block:nth-child(1) { grid-column: 2 / span 2; grid-row: 1 / span 1; }
-.block:nth-child(6) { grid-column: 4 / span 2; grid-row: 1 / span 1; }
-.block:nth-child(11) { grid-column: 6 / span 1; grid-row: 1 / span 2; } /* 縦 */
+/* * ★変更点: グリッド配置 (30マスを隙間なく埋め尽くす)
+ * 15個のブロックを (1x2) または (2x1) のサイズで配置し、
+ * 6x5=30マスをすべて埋めます。
+ */
 
-/* 2行目 */
-.block:nth-child(2) { grid-column: 1 / span 1; grid-row: 2 / span 2; } /* 縦 */
-.block:nth-child(5) { grid-column: 2 / span 1; grid-row: 2 / span 2; } /* 縦 */
-.block:nth-child(7) { grid-column: 4 / span 1; grid-row: 2 / span 2; } /* 縦 */
+/* 縦 (1x2) ブロック: 8個 */
+.block:nth-child(1) { grid-column: 1 / span 1; grid-row: 1 / span 2; }
+.block:nth-child(3) { grid-column: 4 / span 1; grid-row: 1 / span 2; }
+.block:nth-child(6) { grid-column: 5 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(7) { grid-column: 6 / span 1; grid-row: 2 / span 2; }
+.block:nth-child(8) { grid-column: 1 / span 1; grid-row: 3 / span 2; }
+.block:nth-child(10) { grid-column: 4 / span 1; grid-row: 3 / span 2; }
+.block:nth-child(13) { grid-column: 3 / span 1; grid-row: 4 / span 2; }
+.block:nth-child(15) { grid-column: 6 / span 1; grid-row: 4 / span 2; }
 
-/* 3行目 */
-.block:nth-child(10) { grid-column: 3 / span 1; grid-row: 3 / span 2; } /* 縦 */
-.block:nth-child(12) { grid-column: 5 / span 2; grid-row: 3 / span 1; }
-
-/* 4行目 */
-.block:nth-child(3) { grid-column: 1 / span 2; grid-row: 4 / span 1; }
-.block:nth-child(8) { grid-column: 5 / span 1; grid-row: 4 / span 2; } /* 縦 */
-
-/* 5行目 */
-.block:nth-child(4) { grid-column: 2 / span 2; grid-row: 5 / span 1; }
-.block:nth-child(9) { grid-column: 4 / span 1; grid-row: 5 / span 1; } /* 1x1 */
-.block:nth-child(13) { grid-column: 6 / span 1; grid-row: 5 / span 1; } /* 1x1 */
-
-/* 1x1 (個別に指定) */
-.block:nth-child(14) { grid-column: 1 / span 1; grid-row: 1 / span 1; } /* 1x1 */
-.block:nth-child(15) { grid-column: 3 / span 1; grid-row: 2 / span 1; } /* 1x1 */
+/* 横 (2x1) ブロック: 7個 */
+.block:nth-child(2) { grid-column: 2 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(4) { grid-column: 5 / span 2; grid-row: 1 / span 1; }
+.block:nth-child(5) { grid-column: 2 / span 2; grid-row: 2 / span 1; }
+.block:nth-child(9) { grid-column: 2 / span 2; grid-row: 3 / span 1; }
+.block:nth-child(11) { grid-column: 5 / span 2; grid-row: 4 / span 1; }
+.block:nth-child(12) { grid-column: 1 / span 2; grid-row: 5 / span 1; }
+.block:nth-child(14) { grid-column: 4 / span 2; grid-row: 5 / span 1; }
 
 
 /* * ★変更点: 横長ブロックに横アニメを適用
- * (上記レイアウトで横長 [span 2/span 1] または 1x1 になったもの)
+ * (上記レイアウトで横長 [span 2/span 1] になった 7個のブロック)
  */
-.block:nth-child(1),
-.block:nth-child(3),
+.block:nth-child(2),
 .block:nth-child(4),
-.block:nth-child(6),
+.block:nth-child(5),
 .block:nth-child(9),
+.block:nth-child(11),
 .block:nth-child(12),
-.block:nth-child(13),
-.block:nth-child(14),
-.block:nth-child(15) {
+.block:nth-child(14) {
   background: var(--c-horizontal);
   background-size: 3000% 100%;
   animation-name: smooth-scroll-x;
 }
-
-
 /* * animation-delay (変更なし)
  */
 .block:nth-child(2)  { animation-delay: -0.24s; }

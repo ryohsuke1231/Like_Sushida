@@ -23,6 +23,10 @@ const ai_mode = false;
 let renda_ends = 0;
 let now_selected_course = null;
 
+let total_chars = 0;
+let typed_chars = 0;
+let kakutei_typed_chars = 0;
+
 // DOM要素 (initGame で取得)
 let textBox, yomiBox, renda, remainingTime, startBox, resultBox, centerBox, selectBox, start_text, jikan, possible_text;
 
@@ -431,6 +435,13 @@ async function startCourse(config) {
             nokorijikan = null;
             remainingTime.textContent = ` `;
             remainingTime.style.display = 'none';
+            total_chars = 0;
+            for (let k = 0; k < yomi.length; k++) {
+                total_chars += yomi[k].length;
+            }
+            document.getElementById('remaining-chars').setAttribute('max', total_chars);
+            document.getElementById('remaining-chars').value = 0;
+            document.getElementById('remaining-chars').style.display = 'flex';
 
             document.getElementById('haratta').textContent = ``;
             document.getElementById('wait-box').style.display = 'none';
@@ -479,12 +490,16 @@ async function startCourse(config) {
     // 4. 画面切り替え (スタート待機画面)
     // (special モードの try 成功後、または
     //  special false モードの単語準備成功後にここに来る)
+    typed_chars = 0;
+    kakutei_typed_chars = 0;
     selectBox.style.display = 'none';
     startBox.style.display = 'flex';
     centerBox.style.display = 'none';
     resultBox.style.display = 'none';
     endBox.style.display = 'none'; // ★ 追加: 念のため非表示
     document.getElementById('wait-box').style.display = 'none'; // ★ 追加: 念のため非表示
+    document.getElementById('ai-config-box').style.display = 'none';
+    document.getElementById('remaining-chars').style.display = 'none';
 
     // start フラグは false のまま (handleKeyDown が Enter/Space を待つ)
 }
@@ -960,6 +975,9 @@ function handleKeyDown(event) {
                    <span style="width: ${yomiPadding}px;"></span>
                `;
 
+              typed_chars = kakutei_typed_chars + completedHiraganaLength;
+              document.getElementById('remaining-chars').value = typed_chars;
+
                const typedYomiSpan = yomiBox.children[1]; // 2番目のspan
                const typedYomiWidth = typedYomiSpan.offsetWidth;
 
@@ -1071,6 +1089,7 @@ function updateRendaTime() {
 function setNextWord(isFirstWord = false) {
 
     if (!isFirstWord) {
+        kakutei_typed_chars += yomi[i].length;
         i++; // 次のインデックスへ
     }
 
@@ -1212,7 +1231,8 @@ function endGame() {
                 document.getElementById('result-keys-per-second').style.display = 'flex';
             }, 500);
             setTimeout(() => {
-                document.getElementById('result-correct-percent').textContent = `正確率 ${correct_keys_persent}%`;
+                const correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(2);
+                document.getElementById('result-correct-percent').textContent = `正確率 ${correct_keys_count}%`;
                 document.getElementById('result-correct-percent').style.display = 'flex';
             }, 1000);
             setTimeout(() => {
