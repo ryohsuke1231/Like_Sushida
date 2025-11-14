@@ -178,8 +178,10 @@ function grabDomElements() {
         //もしチェックされたら、entered-charactersを有効化する
         if (toggleInput2.checked) {
             document.getElementById('entered-characters').disabled = false;
+            console.log("checked");
         } else {
             document.getElementById('entered-characters').disabled = true;
+            console.log("unchecked");
         }
     });
     if (toggleInput2.checked) {
@@ -244,7 +246,7 @@ function setupEventListeners() {
     document.getElementById('ai-mode').addEventListener('click', () => showAImodeConfig());
     document.getElementById('wiki-mode').addEventListener('click', () => startCourse(courses.wiki_mode));
 
-    document.getElementById('ai-config-button').addEventListener('click', () => startCourse(courses.ai_mode))
+    document.getElementById('ai-config-button').addEventListener('click', () => startCourse(courses.ai_mode));
 
     // 結果画面ボタン
     const retryButtons = document.querySelectorAll('.retry');
