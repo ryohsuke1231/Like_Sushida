@@ -357,8 +357,11 @@ function resetGameState() {
 * @param {object} config - courses オブジェクト (例: courses.otegaru)
 */
 async function startCourse(config) {
+    const promptConfigured = document.getElementById('cmn-toggle-5').checked;
+    const customPrompt = document.getElementById('entered-characters').value;
+    let endpointToUse = config.endpoint;
     resetGameState(); // (nokorijikan もリセットされる)
-    console.log(`Starting course: ${config.id}, ai_mode_button: ${document.getElementById('cmn-toggle-5').checked}, prompt: ${document.getElementById('entered-characters').value}`);
+    //console.log(`Starting course: ${config.id}, ai_mode_button: ${document.getElementById('cmn-toggle-5').checked}, prompt: ${document.getElementById('entered-characters').value}`);
     if (config.special === true) {
         currentCourseConfig = config;
 
@@ -373,9 +376,9 @@ async function startCourse(config) {
         let promptConfigured = false;
 
         if (config.id === "ai_mode") {
-            if (document.getElementById('cmn-toggle-5').checked) {
-                promptConfigured = true;
-                config.endpoint = "/api/generate3";
+            if (promptConfigured) {
+                //promptConfigured = true;
+                endpointToUse = "/api/generate3";
             }
         }
 
@@ -387,10 +390,10 @@ async function startCourse(config) {
 
             if (promptConfigured === true) {
                 // (1) prompt テキストを取得
-                const customPrompt = document.getElementById('entered-characters').value;
+                //const customPrompt = document.getElementById('entered-characters').value;
 
                 // (2) URLにクエリパラメータとしてエンコードして追加
-                fetchUrl = `${config.endpoint}?prompt=${encodeURIComponent(customPrompt)}`;
+                fetchUrl = `${endpointToUse}?prompt=${encodeURIComponent(customPrompt)}`;
 
                 // ※元の config.prompt への代入は不要
                 // config.prompt = document.getElementById('entered-characters').value;

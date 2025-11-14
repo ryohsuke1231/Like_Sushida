@@ -1110,7 +1110,7 @@ input.cmn-toggle-round-flat {
 */
 
 /* --c (色の定義) は元のまま .loader に定義します */
-.loader3 {
+.loader4 {
   --c: linear-gradient(
     #FF6B6B calc(1 * 100% / 30),
     #FF8E53 0 calc(2 * 100% / 30),
@@ -1152,7 +1152,7 @@ input.cmn-toggle-round-flat {
 }
 
 /* 2. 個々の帯 (.bar) のスタイル */
-.bar {
+.bar2 {
   width: 25%; /* 4本で100% */
   height: 100%;
   background: var(--c);
@@ -1165,13 +1165,13 @@ input.cmn-toggle-round-flat {
 
 /* 4. animation-delay で開始時間をずらす (非同期化) */
 /* 元の 7.2秒を4分割 (1.8s) してずらします */
-.bar:nth-child(2) {
+.bar2:nth-child(2) {
   animation-delay: -1.8s; /* 1.8秒遅れ (既に進んだ状態から開始) */
 }
-.bar:nth-child(3) {
+.bar2:nth-child(3) {
   animation-delay: -3.6s; /* 3.6秒遅れ */
 }
-.bar:nth-child(4) {
+.bar2:nth-child(4) {
   animation-delay: -5.4s; /* 5.4秒遅れ */
 }
 
@@ -1206,4 +1206,94 @@ input.cmn-toggle-round-flat {
   100% {
     background-position: 0 calc(0*100%/29);
   }
+}
+/* --c (色の定義) は元のまま .loader3 に定義します */
+.loader3 {
+--c: linear-gradient(
+#FF6B6B calc(1 * 100% / 30),
+#FF8E53 0 calc(2 * 100% / 30),
+#FFAE3B 0 calc(3 * 100% / 30),
+#FFCD3C 0 calc(4 * 100% / 30),
+#FFF04D 0 calc(5 * 100% / 30),
+#E8FF4D 0 calc(6 * 100% / 30),
+#D0FF4D 0 calc(7 * 100% / 30),
+#AFFF4D 0 calc(8 * 100% / 30),
+#8CFF4D 0 calc(9 * 100% / 30),
+#68FF4D 0 calc(10 * 100% / 30),
+#4DFF68 0 calc(11 * 100% / 30),
+#4DFF8C 0 calc(12 * 100% / 30),
+#4DFFAF 0 calc(13 * 100% / 30),
+#4DFFD0 0 calc(14 * 100% / 30),
+#4DFFE8 0 calc(15 * 100% / 30),
+#4DFFFF 0 calc(16 * 100% / 30),
+#4DE8FF 0 calc(17 * 100% / 30),
+#4DD0FF 0 calc(18 * 100% / 30),
+#4DAFFF 0 calc(19 * 100% / 30),
+#4D8CFF 0 calc(20 * 100% / 30),
+#4D68FF 0 calc(21 * 100% / 30),
+#684DFF 0 calc(22 * 100% / 30),
+#8C4DFF 0 calc(23 * 100% / 30),
+#AF4DFF 0 calc(24 * 100% / 30),
+#D04DFF 0 calc(25 * 100% / 30),
+#E84DFF 0 calc(26 * 100% / 30),
+#FF4DFF 0 calc(27 * 100% / 30),
+#FF4DE8 0 calc(28 * 100% / 30),
+#FF4DD0 0 calc(29 * 100% / 30),
+#FF4DAF 0
+);
+
+/* 1. .loader をフレックスコンテナに変更 */
+width: 80px;
+aspect-ratio: 2;
+display: flex;
+
+/* 変更点: 隙間を空けて視覚的な分離を良くする */
+gap: 5px; 
+}
+
+/* 2. 個々の帯 (.bar) のスタイル */
+.bar {
+/* 変更点: 隙間を考慮し、flex-grow: 1 で幅を均等に埋める */
+flex-grow: 1; 
+width: 25%; /* flex-grow が優先されるが、フォールバックとして残す */
+height: 100%;
+background: var(--c);
+background-size: 100% 3000%; /* グラデーションの全体像はコンテナの30倍 */
+background-repeat: no-repeat;
+
+/* 変更点: 角を丸めて柔らかい印象にする */
+border-radius: 4px;
+
+/* 3. 滑らかなアニメーションに変更 */
+animation: smooth-scroll 3.6s infinite ease-in-out alternate;
+}
+
+/* 4. animation-delay で開始時間をずらす (非同期化) */
+/* 新しい周期 3.6秒を4分割 (0.9s) してずらします */
+.bar:nth-child(2) {
+animation-delay: -0.9s; 
+}
+.bar:nth-child(3) {
+animation-delay: -1.8s;
+}
+.bar:nth-child(4) {
+animation-delay: -2.7s;
+}
+
+/* * 3. 滑らかにスクロールするアニメーション (smooth-scroll)
+ * * 元の `l10-bar` (ジャンプする動き) を、
+ * グラデーションの上端 (0%) から下端 (100%) までを
+ * 滑らかに `ease-in-out` で往復 (`alternate`) する
+ * アニメーションに変更しました。
+ */
+@keyframes smooth-scroll {
+/* スタート (一番上) */
+0% {
+background-position: 0% 0%; /* Y=0% (グラデーションの開始点) */
+}
+
+/* エンド (一番下) */
+100% {
+background-position: 0% 100%; /* Y=100% (グラデーションの終了点) */
+}
 }
