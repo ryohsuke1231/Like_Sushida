@@ -283,6 +283,7 @@ function showCourseSelection() {
     startBox.style.display = 'none';
     centerBox.style.display = 'none';
     resultBox.style.display = 'none';
+    document.getElementById('ai-config-box').style.display = 'none';
 
     // ゲーム状態のリセット
     resetGameState();

@@ -945,12 +945,11 @@ input.cmn-toggle-round-flat {
     background-position: calc(0*100%/3) 100%,calc(1*100%/3) 100%,calc(2*100%/3) 100%,calc(3*100%/3) 100%;
     background-repeat: no-repeat;
     
-      /* ▼▼▼ この行を変更 ▼▼▼ */
+      /* ▼▼▼ ここの 4s を 7.2s に変更します ▼▼▼ */
     animation: l10 7.2s infinite; 
-      /* ▲▲▲ この行を変更 ▲▲▲ */
 }
 
-/* @keyframes l10 は変更不要です */
+/* @keyframes l10 は変更ありません */
 @keyframes l10 {
     /* Pos 3 -> 29 (calc(29*100%/29)) = 100% */
     0%     {background-position: calc(0*100%/3) calc(29*100%/29),calc(1*100%/3) calc(29*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
@@ -1013,7 +1012,7 @@ input.cmn-toggle-round-flat {
 
 #ai-config-box input {
     width: 80%;
-    height: 10rem;
+    height: 1.2rem;
     font-size: 1.5rem;
     padding: 1rem;
     border: 2px solid #ccc;
@@ -1032,10 +1031,14 @@ input.cmn-toggle-round-flat {
     transition: border-color 0.3s ease;
 }
 
+#ai-config-box input:disabled {
+    background-color: #f0f0f0;
+    color: #999
+}
+
 #ai-config-box input:focus {
     border-color: #007bff;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    
 }
 #ai-config-box p {
     font-size: 1.2rem;
