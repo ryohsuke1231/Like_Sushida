@@ -373,7 +373,7 @@ async function startCourse(config) {
         endBox.style.display = 'none';
         document.getElementById('ai-config-box').style.display = 'none';
         document.getElementById('wait-box').style.display = 'none'; // wait-boxも一旦非表示
-        let promptConfigured = false;
+        //let promptConfigured = false;
 
         if (config.id === "ai_mode") {
             if (promptConfigured) {

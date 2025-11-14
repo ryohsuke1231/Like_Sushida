@@ -1110,7 +1110,7 @@ input.cmn-toggle-round-flat {
 */
 
 /* --c (色の定義) は元のまま .loader に定義します */
-.loader4 {
+.loader-b {
   --c: linear-gradient(
     #FF6B6B calc(1 * 100% / 30),
     #FF8E53 0 calc(2 * 100% / 30),
@@ -1207,8 +1207,17 @@ input.cmn-toggle-round-flat {
     background-position: 0 calc(0*100%/29);
   }
 }
+
+
+
+
+
+
+
+
+
 /* --c (色の定義) は元のまま .loader3 に定義します */
-.loader3 {
+.loader-a {
 --c: linear-gradient(
 #FF6B6B calc(1 * 100% / 30),
 #FF8E53 0 calc(2 * 100% / 30),
@@ -1296,4 +1305,176 @@ background-position: 0% 0%; /* Y=0% (グラデーションの開始点) */
 100% {
 background-position: 0% 100%; /* Y=100% (グラデーションの終了点) */
 }
+}
+
+
+
+
+
+/*
+ * 変更点 1:
+ * グラデーション定義を2種類用意し、:root に移動
+ * --c-vertical:   横向きローダー (縦スクロール) 用
+ * --c-horizontal: 縦向きローダー (横スクロール) 用
+ */
+:root {
+  /* 縦スクロール用 (to bottom) */
+  --c-vertical: linear-gradient(
+    #FF6B6B calc(1 * 100% / 30),
+    #FF8E53 0 calc(2 * 100% / 30),
+    #FFAE3B 0 calc(3 * 100% / 30),
+    #FFCD3C 0 calc(4 * 100% / 30),
+    #FFF04D 0 calc(5 * 100% / 30),
+    #E8FF4D 0 calc(6 * 100% / 30),
+    #D0FF4D 0 calc(7 * 100% / 30),
+    #AFFF4D 0 calc(8 * 100% / 30),
+    #8CFF4D 0 calc(9 * 100% / 30),
+    #68FF4D 0 calc(10 * 100% / 30),
+    #4DFF68 0 calc(11 * 100% / 30),
+    #4DFF8C 0 calc(12 * 100% / 30),
+    #4DFFAF 0 calc(13 * 100% / 30),
+    #4DFFD0 0 calc(14 * 100% / 30),
+    #4DFFE8 0 calc(15 * 100% / 30),
+    #4DFFFF 0 calc(16 * 100% / 30),
+    #4DE8FF 0 calc(17 * 100% / 30),
+    #4DD0FF 0 calc(18 * 100% / 30),
+    #4DAFFF 0 calc(19 * 100% / 30),
+    #4D8CFF 0 calc(20 * 100% / 30),
+    #4D68FF 0 calc(21 * 100% / 30),
+    #684DFF 0 calc(22 * 100% / 30),
+    #8C4DFF 0 calc(23 * 100% / 30),
+    #AF4DFF 0 calc(24 * 100% / 30),
+    #D04DFF 0 calc(25 * 100% / 30),
+    #E84DFF 0 calc(26 * 100% / 30),
+    #FF4DFF 0 calc(27 * 100% / 30),
+    #FF4DE8 0 calc(28 * 100% / 30),
+    #FF4DD0 0 calc(29 * 100% / 30),
+    #FF4DAF 0
+  );
+
+  /* 横スクロール用 (to right) */
+  --c-horizontal: linear-gradient( to right, /* ★向きを変更 */
+    #FF6B6B calc(1 * 100% / 30),
+    #FF8E53 0 calc(2 * 100% / 30),
+    #FFAE3B 0 calc(3 * 100% / 30),
+    #FFCD3C 0 calc(4 * 100% / 30),
+    #FFF04D 0 calc(5 * 100% / 30),
+    #E8FF4D 0 calc(6 * 100% / 30),
+    #D0FF4D 0 calc(7 * 100% / 30),
+    #AFFF4D 0 calc(8 * 100% / 30),
+    #8CFF4D 0 calc(9 * 100% / 30),
+    #68FF4D 0 calc(10 * 100% / 30),
+    #4DFF68 0 calc(11 * 100% / 30),
+    #4DFF8C 0 calc(12 * 100% / 30),
+    #4DFFAF 0 calc(13 * 100% / 30),
+    #4DFFD0 0 calc(14 * 100% / 30),
+    #4DFFE8 0 calc(15 * 100% / 30),
+    #4DFFFF 0 calc(16 * 100% / 30),
+    #4DE8FF 0 calc(17 * 100% / 30),
+    #4DD0FF 0 calc(18 * 100% / 30),
+    #4DAFFF 0 calc(19 * 100% / 30),
+    #4D8CFF 0 calc(20 * 100% / 30),
+    #4D68FF 0 calc(21 * 100% / 30),
+    #684DFF 0 calc(22 * 100% / 30),
+    #8C4DFF 0 calc(23 * 100% / 30),
+    #AF4DFF 0 calc(24 * 100% / 30),
+    #D04DFF 0 calc(25 * 100% / 30),
+    #E84DFF 0 calc(26 * 100% / 30),
+    #FF4DFF 0 calc(27 * 100% / 30),
+    #FF4DE8 0 calc(28 * 100% / 30),
+    #FF4DD0 0 calc(29 * 100% / 30),
+    #FF4DAF 0
+  );
+}
+
+/* * 変更点 2:
+ * 大きな正方形のコンテナ (.container) を追加
+ * CSS Grid で 2x2 にレイアウトします
+ */
+.container1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 30vw; /* もっと大きく */
+  aspect-ratio: 1; /* 正方形 */
+  gap: 15px; /* ローダー間の隙間 */
+  padding: 15px; /* 内側の余白 */
+  background: #f0f0f0; /* コンテナの背景色（任意）*/
+  border-radius: 20px; /* コンテナの角丸 */
+}
+
+
+/* * 変更点 3:
+ * .loader3 はコンテナいっぱいに広がるように変更
+ */
+.loader3 {
+  width: 100%; /* 親 (gridセル) いっぱいに広がる */
+  height: 100%; /* 親 (gridセル) いっぱいに広がる */
+  display: flex;
+  gap: 5px; 
+  border-radius: 10px; /* ローダー自体の角丸 */
+  overflow: hidden; /* バーがはみ出ないように */
+}
+
+/* 5. バー (共通スタイル) */
+.bar3 {
+  flex-grow: 1; /* flexコンテナの空きスペースを埋める */
+  background-repeat: no-repeat;
+  border-radius: 4px;
+}
+
+/* * 変更点 4:
+ * 横向きローダー (デフォルト) のスタイル
+ * 縦スクロール用のアニメーションを適用
+ */
+.loader3:not(.loader3-vertical) {
+  flex-direction: row; /* バーを横に並べる */
+}
+.loader3:not(.loader3-vertical) .bar3 {
+  background-image: var(--c-vertical); /* 縦グラデーション */
+  background-size: 100% 3000%; /* 幅100%, 高さ3000% */
+  animation: smooth-scroll-y 3.6s infinite ease-in-out alternate;
+}
+
+/* * 変更点 5:
+ * 縦向きローダー (.loader3-vertical) のスタイル
+ * 横スクロール用のアニメーションを適用
+ */
+.loader3.loader3-vertical {
+  flex-direction: column; /* バーを縦に並べる */
+}
+.loader3.loader3-vertical .bar3 {
+  background-image: var(--c-horizontal); /* 横グラデーション */
+  background-size: 3000% 100%; /* 幅3000%, 高さ100% */
+  animation: smooth-scroll-x 3.6s infinite ease-in-out alternate;
+}
+
+
+/* * 6. アニメーションの遅延 (共通)
+ * (周期 3.6s / 4本 = 0.9s ずつずらす)
+ */
+.bar3:nth-child(2) {
+  animation-delay: -0.9s; 
+}
+.bar3:nth-child(3) {
+  animation-delay: -1.8s;
+}
+.bar3:nth-child(4) {
+  animation-delay: -2.7s;
+}
+
+/* * 7. キーフレーム (Y方向 / 縦スクロール)
+ * (元の smooth-scroll から名前変更)
+ */
+@keyframes smooth-scroll-y {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+/* * 変更点 6:
+ * キーフレーム (X方向 / 横スクロール) を追加
+ */
+@keyframes smooth-scroll-x {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 0%; }
 }
