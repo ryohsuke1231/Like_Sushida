@@ -360,6 +360,7 @@ async function startCourse(config) {
         if (config.id === "ai_mode") {
             if (document.getElementById('cmn-toggle-5').checked) {
                 promptConfigured = true;
+                config.endpoint = "/api/generate3";
             }
         }
 

@@ -210,15 +210,18 @@
         <div id="ai-config-box">
             <p id="ai-config-text">AIモードの設定</p>
             <div class="switch">
-                <label for="cmn-toggle-5" class="switch-label">一発勝負</label>
+                <label for="cmn-toggle-5" class="switch-label">プロンプトを変更</label>
                 <input id="cmn-toggle-5" class="cmn-toggle cmn-toggle-round-flat" type="checkbox">
                 <label for="cmn-toggle-5"></label>
             </div>
-            <input type="text" placeholder="変な面白おかしい文章を書いて！ 奇妙な話でも、日常についての話でもなんでもいいです！ 「わかりました」とかはなしで文章だけ　300文字を目安に" 
+            <textarea placeholder="変な面白おかしい文章を書いて！ 奇妙な話でも、日常についての話でもなんでもいいです！ 「わかりました」とかはなしで文章だけ　300文字を目安に" 
                 maxlength="100" oninput="limitTextLength();" id="entered-characters">
-            </input>
+            </textarea>
             <p>残りの文字数：<span id="remaining-characters">50</span></p>
-            <button id="ai-config-button" class="result-button" onclick="startCourse(courses.ai_mode)">決定</button>
+            <div class="button-box">
+                <button class="result-button select-course">コース選択に戻る</button>
+                <button id="ai-config-button" class="result-button" onclick="startCourse(courses.ai_mode)">決定</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

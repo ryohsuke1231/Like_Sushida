@@ -894,14 +894,14 @@ input.cmn-toggle-round-flat {
 }
 
 /* HTML: <div class="loader"></div> */
+
 .loader {
-    width: 80px;
-    aspect-ratio: 2;
-    
-    /* * 1. 30色の単色ストライプを定義します。
-    * 各色の幅は calc(100% / 30) です。
-    */
-    --c: linear-gradient(
+  width: 80px;
+  aspect-ratio: 2;
+  /* * 1. 30色の単色ストライプを定義します。
+   * 各色の幅は calc(100% / 30) です。
+   */
+  --c: linear-gradient(
     #FF6B6B calc(1 * 100% / 30),
     #FF8E53 0 calc(2 * 100% / 30),
     #FFAE3B 0 calc(3 * 100% / 30),
@@ -932,48 +932,48 @@ input.cmn-toggle-round-flat {
     #FF4DE8 0 calc(28 * 100% / 30),
     #FF4DD0 0 calc(29 * 100% / 30),
     #FF4DAF 0 /* 30色目 */
-    );
-    
-    background: var(--c), var(--c), var(--c), var(--c);
-    
-    /* 2. 背景の高さを 30色分 (3000%) に変更 */
-    background-size: 26% 3000%; 
-    
-    /* * 初期位置は一番下の色 (calc(29*100%/29) = 100%)
-    * (ここは元の 100% のままで機能します)
-    */
-    background-position: calc(0*100%/3) 100%,calc(1*100%/3) 100%,calc(2*100%/3) 100%,calc(3*100%/3) 100%;
-    background-repeat: no-repeat;
-    
-      /* ▼▼▼ ここの 4s を 7.2s に変更します ▼▼▼ */
-    animation: l10 7.2s infinite; 
-}
+  );
 
-/* @keyframes l10 は変更ありません */
+  background: var(--c), var(--c), var(--c), var(--c);
+  /* 2. 背景の高さを 30色分 (3000%) に変更 */
+  background-size: 26% 3000%; 
+  /* * 初期位置は一番下の色 (calc(29*100%/29) = 100%)
+   * (ここは元の 100% のままで機能します)
+   */
+  background-position: calc(0*100%/3) 100%,calc(1*100%/3) 100%,calc(2*100%/3) 100%,calc(3*100%/3) 100%;
+  background-repeat: no-repeat;
+  animation: l10 4s infinite;  
+}
+/* * 3. アニメーションを調整
+ * 元の4段階 (0, 1, 2, 3) は calc(N * 100% / 3) でした。
+ * 新しい30段階 (0～29) は calc(N * 100% / 29) となります。
+ * * 元の4段階に対応する位置として、30段階の中から
+ * 4つの点 (0, 9, 19, 29) を選び、置き換えます。
+ */
 @keyframes l10 {
-    /* Pos 3 -> 29 (calc(29*100%/29)) = 100% */
-    0%     {background-position: calc(0*100%/3) calc(29*100%/29),calc(1*100%/3) calc(29*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
-    
-    /* Pos 2 -> 19 (calc(19*100%/29)) */
-    8.33%  {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(29*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
-    16.67% {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
-    25%    {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(29*100%/29)}
-    30%,
-    33.33% {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(19*100%/29)}
-    
-    /* Pos 1 -> 9 (calc(9*100%/29)) */
-    41.67% {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(19*100%/29)}
-    50%    {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(19*100%/29)}
-    58.33% {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(19*100%/29)}
-    63%,
-    66.67% {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(9*100%/29)}
-    
-    /* Pos 0 -> 0 (calc(0*100%/29)) = 0% */
-    75%    {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(9*100%/29)}
-    83.33% {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(9*100%/29)}
-    91.67% {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(0*100%/29),calc(3*100%/3) calc(9*100%/29)}
-    97%,
-    100%   {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(0*100%/29),calc(3*100%/3) calc(0*100%/29)}
+  /* Pos 3 -> 29 (calc(29*100%/29)) = 100% */
+  0%     {background-position: calc(0*100%/3) calc(29*100%/29),calc(1*100%/3) calc(29*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
+
+  /* Pos 2 -> 19 (calc(19*100%/29)) */
+  8.33%  {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(29*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
+  16.67% {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(29*100%/29),calc(3*100%/3) calc(29*100%/29)}
+  25%    {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(29*100%/29)}
+  30%,
+  33.33% {background-position: calc(0*100%/3) calc(19*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(19*100%/29)}
+
+  /* Pos 1 -> 9 (calc(9*100%/29)) */
+  41.67% {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(19*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(19*100%/29)}
+  50%    {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(19*100%/29),calc(3*100%/3) calc(19*100%/29)}
+  58.33% {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(19*100%/29)}
+  63%,
+  66.67% {background-position: calc(0*100%/3) calc(9*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(9*100%/29)}
+
+  /* Pos 0 -> 0 (calc(0*100%/29)) = 0% */
+  75%    {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(9*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(9*100%/29)}
+  83.33% {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(9*100%/29),calc(3*100%/3) calc(9*100%/29)}
+  91.67% {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(0*100%/29),calc(3*100%/3) calc(9*100%/29)}
+  97%,
+  100%   {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(0*100%/29),calc(3*100%/3) calc(0*100%/29)}
 }
 .beta-mark {
   /* インラインブロック要素として表示 */
@@ -1008,17 +1008,20 @@ input.cmn-toggle-round-flat {
     border-radius: 5rem;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     padding: 2rem;
+    /*要素が均等に配置されるようにする*/
+    gap: 1rem;
 }
 
 #ai-config-box input {
     width: 80%;
-    height: 1.2rem;
+    height: 3rem;
     font-size: 1.5rem;
     padding: 1rem;
     border: 2px solid #ccc;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
+    margin-top: 2rem
     resize: none;
     overflow-y: auto;
     box-sizing: border-box;
