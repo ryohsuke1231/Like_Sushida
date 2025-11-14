@@ -942,7 +942,7 @@ input.cmn-toggle-round-flat {
    */
   background-position: calc(0*100%/3) 100%,calc(1*100%/3) 100%,calc(2*100%/3) 100%,calc(3*100%/3) 100%;
   background-repeat: no-repeat;
-  animation: l10 4s infinite;  
+  animation: l10 7.2s infinite;  
 }
 /* * 3. アニメーションを調整
  * 元の4段階 (0, 1, 2, 3) は calc(N * 100% / 3) でした。
@@ -1063,4 +1063,40 @@ input.cmn-toggle-round-flat {
     bottom: 2rem;
     margin-top: auto;
     margin-bottom: 0;
+}
+
+#special-mode-result-box {
+    display: none;
+    width: 80vw;
+    min-height: 70vh;
+    background-color: #f0e68c;
+    border-radius: 5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    overflow-y: visible;
+    flex-direction: column;
+    gap: 2rem;
+    margin: auto;
+}
+#result-keys-per-second {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+}
+#result-correct-percent {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #000;
+}
+#special-mode-result-box img {
+    height: 48%;
+    z-index: 1000;
+    border-radius: 50%;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    animation: rotate 2s linear infinite;
 }

@@ -244,10 +244,15 @@ function setupEventListeners() {
     document.getElementById('ai-mode').addEventListener('click', () => showAImodeConfig());
     document.getElementById('wiki-mode').addEventListener('click', () => startCourse(courses.wiki_mode));
 
+    document.getElementById('ai-config-button').addEventListener('click', () => startCourse(courses.ai_mode))
+
     // 結果画面ボタン
     const retryButtons = document.querySelectorAll('.retry');
     retryButtons.forEach(button => {
         button.addEventListener('click', () => {
+            if (currentCourseConfig.id === "ai_mode") {
+                showAImodeConfig();
+            }
             if (currentCourseConfig.name) {
                 startCourse(currentCourseConfig); // 同じコースでリトライ
             } else {
@@ -1177,69 +1182,100 @@ function endGame() {
             }
         }
 
-        const resultTotalEl = document.getElementById('result-total');
-        const harattaEl = document.getElementById('haratta');
-        const otokuBoxEl = document.getElementById('otoku-box');
-        const otokuEl = document.getElementById('otoku');
-        const resultTableEl = document.getElementById('result-table');
-        let plus = "";
-        if (ippatsu === true) {
-            plus = "　一発勝負";
+        if (currentCourseConfig.special === true) {
+            const specialModeResultBox = document.getElementById('special-mode-result-box');
+            specialModeResultBox.style.display = 'flex';
+            centerBox.style.display = 'none';
+            startBox.style.display = 'none';
+            resultBox.style.display = 'none';
+            endBox.style.display = 'none';
+            document.getElementById('result-kawaii').style.display = 'hidden';
+            document.getElementById('result-keys-per-second').style.display = 'hidden';
+            document.getElementById('result-correct-percent').style.display = 'hidden';
+            let plus = "";
+            if (ippatsu === true) {
+                plus = "　一発勝負";
+            }
+            document.getElementById('course-result').textContent = currentCourseConfig.name + plus;
+            let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
+            setTimeout(() => {
+                document.getElementById('result-keys-per-second').textContent = `${parseFloat(correct_keys_count / ((end_time - start_time) / 1000)).toFixed(1)} キー/秒`;
+                document.getElementById('result-keys-per-second').style.display = 'flex';
+            }, 500);
+            setTimeout(() => {
+                document.getElementById('result-correct-percent').textContent = `正確率 ${correct_keys_persent}%`;
+                document.getElementById('result-correct-percent').style.display = 'flex';
+            }, 1000);
+            setTimeout(() => {
+                document.getElementById('result-kawaii').style.display = 'flex';
+            }, 1500);
+        } else {
+
+            const resultTotalEl = document.getElementById('result-total');
+            const harattaEl = document.getElementById('haratta');
+            const otokuBoxEl = document.getElementById('otoku-box');
+            const otokuEl = document.getElementById('otoku');
+            const resultTableEl = document.getElementById('result-table');
+            let plus = "";
+            if (ippatsu === true) {
+                plus = "　一発勝負";
+            }
+            document.getElementById('course-result').textContent = currentCourseConfig.name + plus;
+    
+            // (1) 画面切り替え (startBox -> resultBox)
+            startBox.style.display = 'none';
+            resultBox.style.display = 'flex';
+            centerBox.style.display = 'none';
+            endBox.style.display = 'none';
+            document.getElementById('special-mode-result-box').style.display = 'none';
+    
+            resultTotalEl.style.visibility = 'hidden';
+            harattaEl.style.visibility = 'hidden';
+            otokuBoxEl.style.visibility = 'hidden';
+            resultTableEl.style.visibility = 'hidden';
+    
+            // (2) 500ms後: 合計金額
+            setTimeout(() => {
+                resultTotalEl.textContent = `${total} 円分のお寿司をゲット！`;
+                resultTotalEl.style.visibility = 'visible';
+            }, 500);
+    
+            // (3) 1000ms後: 支払金額
+            setTimeout(() => {
+                // (テキストは startCourse で設定済み)
+                harattaEl.style.visibility = 'visible';
+            }, 1000);
+    
+            // (4) 1500ms後: お得＆詳細テーブル
+            setTimeout(() => {
+                const price = currentCourseConfig.price || 0; // コース料金
+                if (total >= price) {
+                    otokuEl.textContent = `${total - price} 円分お得でした！`;
+                    otokuBoxEl.style.borderColor = '#9acd32';
+                } else {
+                    otokuEl.textContent = `${price - total} 円分損でした・・・`;
+                    otokuBoxEl.style.borderColor = '#696969';
+                }
+                otokuBoxEl.style.visibility = 'visible';
+    
+                // 詳細テーブル
+                document.getElementById('correct_keys_count').textContent = correct_keys_count;
+                document.getElementById('incorrect_keys_count').textContent = incorrect_keys_count;
+    
+                let key_per_second = 0;
+                if (start_time > 0 && end_time > start_time) {
+                     const elapsedTimeSeconds = (end_time - start_time) / 1000;
+                     if (elapsedTimeSeconds > 0) {
+                         key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
+                     }
+                }
+                document.getElementById('average_keys_count').textContent = parseFloat(key_per_second.toFixed(2));
+    
+                resultTableEl.style.visibility = 'visible';
+    
+            }, 1500);
         }
-        document.getElementById('course-result').textContent = currentCourseConfig.name + plus;
-
-        // (1) 画面切り替え (startBox -> resultBox)
-        startBox.style.display = 'none';
-        resultBox.style.display = 'flex';
-        centerBox.style.display = 'none';
-        endBox.style.display = 'none';
-
-        resultTotalEl.style.visibility = 'hidden';
-        harattaEl.style.visibility = 'hidden';
-        otokuBoxEl.style.visibility = 'hidden';
-        resultTableEl.style.visibility = 'hidden';
-
-        // (2) 500ms後: 合計金額
-        setTimeout(() => {
-            resultTotalEl.textContent = `${total} 円分のお寿司をゲット！`;
-            resultTotalEl.style.visibility = 'visible';
-        }, 500);
-
-        // (3) 1000ms後: 支払金額
-        setTimeout(() => {
-            // (テキストは startCourse で設定済み)
-            harattaEl.style.visibility = 'visible';
-        }, 1000);
-
-        // (4) 1500ms後: お得＆詳細テーブル
-        setTimeout(() => {
-            const price = currentCourseConfig.price || 0; // コース料金
-            if (total >= price) {
-                otokuEl.textContent = `${total - price} 円分お得でした！`;
-                otokuBoxEl.style.borderColor = '#9acd32';
-            } else {
-                otokuEl.textContent = `${price - total} 円分損でした・・・`;
-                otokuBoxEl.style.borderColor = '#696969';
-            }
-            otokuBoxEl.style.visibility = 'visible';
-
-            // 詳細テーブル
-            document.getElementById('correct_keys_count').textContent = correct_keys_count;
-            document.getElementById('incorrect_keys_count').textContent = incorrect_keys_count;
-
-            let key_per_second = 0;
-            if (start_time > 0 && end_time > start_time) {
-                 const elapsedTimeSeconds = (end_time - start_time) / 1000;
-                 if (elapsedTimeSeconds > 0) {
-                     key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
-                 }
-            }
-            document.getElementById('average_keys_count').textContent = parseFloat(key_per_second.toFixed(2));
-
-            resultTableEl.style.visibility = 'visible';
-
-        }, 1500);
-
+    
     }, 1000); // 「終了！」表示から1秒待つ
 }
 const limitTextLength = () => {

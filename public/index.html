@@ -106,6 +106,15 @@
                 <button class="result-button select-course">コース選択</button>
             </div>
         </div>
+        <div id="special-mode-result-box">
+            <p id="course-result"></p>
+            <p id="result-keys-per-second"></p>
+            <p id="result-correct-percent"></p>
+            <img src="marusan_dance.gif" alt="kawaii" id="result-image">
+            <div class="button-box">
+                <button class="result-button retry">もう一度</button>
+                <button class="result-button select-course">コース選択</button>
+            </div>
         <div id="result-box">
             <p id="course-result"></p>
             <p id="result-total">〜円分のお寿司をゲット！</p>
@@ -220,7 +229,7 @@
             <p>残りの文字数：<span id="remaining-characters">50</span></p>
             <div class="button-box">
                 <button class="result-button select-course">コース選択に戻る</button>
-                <button id="ai-config-button" class="result-button" onclick="startCourse(courses.ai_mode)">決定</button>
+                <button id="ai-config-button" class="result-button">決定</button>
             </div>
         </div>
     </div>
