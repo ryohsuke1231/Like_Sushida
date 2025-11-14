@@ -182,7 +182,7 @@
             </div>
             <div id="ai-mode" class="course-option">
                 <div class="course-primary">
-                    <span id="ai-mode-text" class="course-name">なぞのAIモード？</span><span class="beta-mark">Beta</span>
+                    <span id="ai-mode-text" class="course-name">なぞのAIモード？<span class="beta-mark">Beta</span></span>
                     <span class="course-price">いやっほー</span>
                 </div>
                 <!--
@@ -194,7 +194,7 @@
             </div>
             <div id="wiki-mode" class="course-option">
                 <div class="course-primary">
-                    <span id="wiki-mode-text" class="course-name">Wikiモード</span><span class="beta-mark">Beta</span>
+                    <span id="wiki-mode-text" class="course-name">Wikiモード<span class="beta-mark">Beta</span></span>
                     <span class="course-price">ﾅﾆｺﾚ(´・ω・｀)</span>
                 </div>
             </div>
@@ -206,6 +206,19 @@
             <img src="marusan_dance.gif" alt="Loading...">
             <div class="loader"></div>
             <p id="wait-text">サーバーを待機中...</p>
+        </div>
+        <div id="ai-config-box">
+            <p id="ai-config-text">AIモードの設定</p>
+            <div class="switch">
+                <label for="cmn-toggle-5" class="switch-label">一発勝負</label>
+                <input id="cmn-toggle-5" class="cmn-toggle cmn-toggle-round-flat" type="checkbox">
+                <label for="cmn-toggle-5"></label>
+            </div>
+            <input type="text" placeholder="変な面白おかしい文章を書いて！ 奇妙な話でも、日常についての話でもなんでもいいです！ 「わかりました」とかはなしで文章だけ　300文字を目安に" 
+                maxlength="100" oninput="limitTextLength();" id="entered-characters">
+            </input>
+            <p>残りの文字数：<span id="remaining-characters">50</span></p>
+            <button id="ai-config-button" class="result-button" onclick="startCourse(currentCourseConfig)"">決定</button>
         </div>
     </div>
     <script src="script.js"></script>

@@ -35,7 +35,7 @@ else:
         logging.error(f"Failed to configure Gemini: {e}")
         model = None
 
-prompt = "オリジナルで変な面白おかしい文章を書いて 「わかりました」とかはなしで文章だけT300文字を目安に"
+prompt = "変な面白おかしい文章を書いて！ 奇妙な話でも、日常についての話でもなんでもいいです！ 「わかりました」とかはなしで文章だけ　300文字を目安に"
 
 TEXT_CACHE = []
 MIN_CACHE_STOCK = 5 

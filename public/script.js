@@ -135,6 +135,7 @@ function grabDomElements() {
     jikan = document.getElementById('jikan');
     possible_text = document.getElementById('possible');
     const toggleInput = document.getElementById('cmn-toggle-4');
+    const toggleInput2 = document.getElementById('cmn-toggle-5');
     toggleInput.addEventListener('change', () => {
         if (toggleInput.checked) {
           // もしチェックされたら、#select-box に 'osusume-mode' クラスを追加
@@ -173,6 +174,14 @@ function grabDomElements() {
             endBox.style.backgroundColor = normal_color;
             ippatsu = false;
         }
+    toggleInput2.addEventListener('change', () => {
+        //もしチェックされたら、entered-charactersを有効化する
+        if (toggleInput2.checked) {
+            document.getElementById('entered-characters').disabled = false;
+        } else {
+            document.getElementById('entered-characters').disabled = true;
+        }
+    })
 
 }
 
@@ -227,7 +236,7 @@ function setupEventListeners() {
     document.getElementById('otegaru').addEventListener('click', () => startCourse(courses.otegaru));
     document.getElementById('osusume').addEventListener('click', () => startCourse(courses.osusume));
     document.getElementById('koukyuu').addEventListener('click', () => startCourse(courses.koukyuu));
-    document.getElementById('ai-mode').addEventListener('click', () => startCourse(courses.ai_mode));
+    document.getElementById('ai-mode').addEventListener('click', () => showAImodeConfig());
     document.getElementById('wiki-mode').addEventListener('click', () => startCourse(courses.wiki_mode));
 
     // 結果画面ボタン
@@ -254,6 +263,14 @@ function setupEventListeners() {
     window.addEventListener('keydown', handleKeyDown);
 }
 
+function showAImodeConfig() {
+    // 画面切り替え
+    selectBox.style.display = 'none';
+    startBox.style.display = 'none';
+    centerBox.style.display = 'none';
+    resultBox.style.display = 'none';
+    document.getElementById('ai-config-box').style.display = 'flex';
+}
 
 // --- 画面遷移・ゲーム準備 ---
 
@@ -328,30 +345,54 @@ async function startCourse(config) {
     resetGameState(); // (nokorijikan もリセットされる)
     if (config.special === true) {
         currentCourseConfig = config;
-        
+
         // ★ 修正: リトライ時に備え、他の主要ボックスを非表示にする
         selectBox.style.display = 'none';
         startBox.style.display = 'none';
         centerBox.style.display = 'none';
         resultBox.style.display = 'none';
         endBox.style.display = 'none';
+        document.getElementById('ai-config-box').style.display = 'none';
         document.getElementById('wait-box').style.display = 'none'; // wait-boxも一旦非表示
-        
+        let promptConfigured = false;
+
+        if (config.id === "ai_mode") {
+            if (document.getElementById('cmn-toggle-5').checked) {
+                promptConfigured = true;
+            }
+        }
+
         try {
             document.getElementById('wait-box').style.display = 'flex'; // ここでwait-boxを表示
-            //selectBox.style.display = 'none'; // (上で実施済み)
-            const response = await fetch(config.endpoint, {
+
+            // ★★★ api/generate3 への対応 ★★★
+            let fetchUrl = config.endpoint; // (例: "/api/generate3")
+
+            if (promptConfigured === true) {
+                // (1) prompt テキストを取得
+                const customPrompt = document.getElementById('entered-characters').value;
+
+                // (2) URLにクエリパラメータとしてエンコードして追加
+                fetchUrl = `${config.endpoint}?prompt=${encodeURIComponent(customPrompt)}`;
+
+                // ※元の config.prompt への代入は不要
+                // config.prompt = document.getElementById('entered-characters').value;
+            }
+            // ★★★ 修正ここまで ★★★
+
+            // ★ 修正: 動的に構築した fetchUrl を使用
+            const response = await fetch(fetchUrl, {
                 credentials: 'include' // ★ これを追加
             });
             const data = await response.json();
-            
+
             // (2) fetch完了後、まだAIモードが選択されているかチェック
             // （ユーザーが「戻る」を押したり、別コースを選んだりしたら currentCourseConfig が変わっているはず）
             if (currentCourseConfig.id !== config.id) {
                 console.log("Special mode data fetched, but user navigated away. Discarding data.");
                 return; // yomi/kanji を上書きしない
             }
-            
+
             // (3) AIモードの単語をセット
             //yomi = splitWithContext(data.yomi);
             //kanji = splitWithContext(data.kanji);
@@ -364,24 +405,24 @@ async function startCourse(config) {
             nokorijikan = null;
             remainingTime.textContent = ` `;
             remainingTime.style.display = 'none';
-            
+
             document.getElementById('haratta').textContent = ``;
             document.getElementById('wait-box').style.display = 'none';
             //selectBox.style.display = 'none'; // (上で実施済み)
-    
-    
+
+
         //return; // ← 共通処理（startBox表示）に行くために return しない
         } catch (error) {
             console.error("AIモードのデータ取得に失敗:", error);
             // エラー時も、ユーザーが待機し続けないようコース選択に戻す
-            showCourseSelection(); 
+            showCourseSelection(); 
             return; // ★ 共通処理には行かない
         }
     } else { // special === false の場合
         currentCourseConfig = config;
 
         // 1. ゲーム状態をリセット (済)
-        
+
         // 2. このコース用の単語を準備
         try {
             // allWords (グローバル) から単語リスト (yomi, kanji) を生成
@@ -400,7 +441,7 @@ async function startCourse(config) {
         jikan.setAttribute('max', config.time); // 時間経過progressのmax
         jikan.value = 0;
         document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
-    
+
     }
     let plus = "";
     if (ippatsu === true) {
@@ -408,7 +449,7 @@ async function startCourse(config) {
     }
     start_text.textContent = 'スペースかEnterキーを押すとスタートします';
     document.getElementById('course').textContent = config.name + plus;
-    
+
     // 4. 画面切り替え (スタート待機画面)
     // (special モードの try 成功後、または
     //  special false モードの単語準備成功後にここに来る)
@@ -418,7 +459,7 @@ async function startCourse(config) {
     resultBox.style.display = 'none';
     endBox.style.display = 'none'; // ★ 追加: 念のため非表示
     document.getElementById('wait-box').style.display = 'none'; // ★ 追加: 念のため非表示
-    
+
     // start フラグは false のまま (handleKeyDown が Enter/Space を待つ)
 }
 function splitWithContext(text) {
@@ -1192,7 +1233,20 @@ function endGame() {
 
     }, 1000); // 「終了！」表示から1秒待つ
 }
-
+const limitTextLength = () => {
+    let maxLength = 50; // 文字数の上限
+    let enteredCharacters = document.getElementById('entered-characters');
+    let remainingCharacters = document.getElementById('remaining-characters');
+    
+    if (enteredCharacters.value.length > maxLength) {
+        enteredCharacters.value = enteredCharacters.value.substr(0, maxLength);
+        remainingCharacters.classList.add('max');
+    } else {
+        remainingCharacters.classList.remove('max');
+    }
+    
+    remainingCharacters.textContent = maxLength - enteredCharacters.value.length;
+};
 /**
  * TypingJudge クラス (Trie木ベースに全面改修)
  * * setProblem時にローマ字変換のTrie(オートマトン)を構築し、
@@ -1248,7 +1302,7 @@ class TypingJudge2 {
         "うぁ": ["wha"], "うぃ": ["wi"], "うぇ": ["we"], "うぉ": ["who"],
         "ゔぁ": ["va"], "ゔぃ": ["vi"], "ゔ": ["vu"], "ゔぇ": ["ve"], "ゔぉ": ["vo"],
         "てぃ": ["thi"], "でぃ": ["dhi"], "とぅ": ["twu"], "どぅ": ["dwu"],
-        "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "S": [" "], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
+        "ー": ["-"], "、": [","], "。": ["."], "・": ["・"], "「": ["["], "」": ["]"], "？": ["?"], "！": ["!"], "：": [":"], "；": [";"], "（": ["("], "）": [")"], "＜": ["<"], "＞": [">"],
 
         // 小文字単体 (x/l 始まり)
         "ぁ": ["xa", "la"], "ぃ": ["xi", "li"], "ぅ": ["xu", "lu"], "ぇ": ["xe", "le"], "ぉ": ["xo", "lo"],
