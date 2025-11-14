@@ -942,7 +942,7 @@ input.cmn-toggle-round-flat {
    */
   background-position: calc(0*100%/3) 100%,calc(1*100%/3) 100%,calc(2*100%/3) 100%,calc(3*100%/3) 100%;
   background-repeat: no-repeat;
-  animation: l10 2s infinite;  
+  animation: l10 4s infinite;  
 }
 
 /* * 3. アニメーションを調整
@@ -975,4 +975,25 @@ input.cmn-toggle-round-flat {
   91.67% {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(0*100%/29),calc(3*100%/3) calc(9*100%/29)}
   97%,
   100%   {background-position: calc(0*100%/3) calc(0*100%/29),calc(1*100%/3) calc(0*100%/29),calc(2*100%/3) calc(0*100%/29),calc(3*100%/3) calc(0*100%/29)}
+}
+.beta-mark {
+  /* インラインブロック要素として表示 */
+  display: inline-block;
+
+  /* 内側の余白 (上下に少し、左右に多めに) */
+  padding: 3px 8px;
+
+  /* 文字のスタイル */
+  font-size: 0.75em;  /* 周囲のテキストより少し小さく */
+  font-weight: bold;  /* 太字 */
+  color: #ffffff;     /* 文字色: 白 */
+  line-height: 1;     /* 行の高さを詰める */
+
+  /* 背景と角丸 */
+  background-color: #007bff; /* 背景色: 青 (お好みで変更してください) */
+  border-radius: 5px;      /* 角を5px丸くする */
+
+  /* 縦位置の調整 (テキストの真ん中に来やすいように) */
+  vertical-align: middle; 
+  /* もし上付き文字のようにしたい場合は 'vertical-align: super;' も試してみてください */
 }

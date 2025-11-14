@@ -125,12 +125,17 @@ def refill_cache_if_needed(available_indices_count):
 def generate_text():
     try:
         used_indices_json = request.cookies.get('used_indices', '[]')
-        if not used_indices_json.startswith('[') or not used_indices_json.endswith(']'):
-            raise json.JSONDecodeError("Invalid JSON format", used_indices_json, 0)
-        used_indices = set(json.loads(used_indices_json))
-    except (json.JSONDecodeError, TypeError):
-        used_indices = set()
+        loaded_data = json.loads(used_indices_json)
 
+        # CookieがJSONリスト形式であることを確認
+        if not isinstance(loaded_data, list):
+            raise TypeError("Cookie is not a JSON list")
+
+        used_indices = set(loaded_data)
+
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        # 不正な形式、null、空文字、またはリストでない場合はリセット
+        used_indices = set()
     all_indices = set(range(len(TEXT_CACHE)))
     available_indices = list(all_indices - used_indices)
 
@@ -234,7 +239,8 @@ def generate_text():
                                 json.dumps(list(used_indices)),
                                 max_age=3600*24*30,
                                 httponly=True,
-                                samesite='Lax')
+                                secure=True,
+                                samesite='None')
             return response
         else:
             return jsonify(error="Failed to generate new text. API keys might be missing."), 500
@@ -333,7 +339,9 @@ def generate_text():
                         json.dumps(list(used_indices)),
                         max_age=3600*24*30,
                         httponly=True,
-                        samesite='Lax')
+                        secure=True,
+                        samesite='None'
+                       )
 
     return response
 

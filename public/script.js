@@ -340,7 +340,9 @@ async function startCourse(config) {
         try {
             document.getElementById('wait-box').style.display = 'flex'; // ここでwait-boxを表示
             //selectBox.style.display = 'none'; // (上で実施済み)
-            const response = await fetch(config.endpoint);
+            const response = await fetch(config.endpoint, {
+                credentials: 'include' // ★ これを追加
+            });
             const data = await response.json();
             
             // (2) fetch完了後、まだAIモードが選択されているかチェック
@@ -607,6 +609,9 @@ function startGame() {
             yomiBox.style.justifyContent = 'center';
             textBox.style.justifyContent = 'center';
             possible_text.style.justifyContent = 'center';
+            yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+            textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+            possible_text.style.scrollBehavior = 'auto';
         } else {
             yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
             textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
@@ -659,6 +664,9 @@ function startGame() {
               `;
               possible_text.scrollLeft = 0;
             // ★★★ 修正ここまで ★★★
+            yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+            textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+            possible_text.style.scrollBehavior = 'smooth';
         }
         // タイマースタート
         if (currentCourseConfig.special !== true) {
