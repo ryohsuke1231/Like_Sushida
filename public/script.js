@@ -283,6 +283,11 @@ function setupEventListeners() {
 function showAImodeConfig() {
     // 画面切り替え
     resetGameState();
+    document.getElementById('cmn-toggle-5').checked = false;
+    document.getElementById('entered-characters').disabled = true;
+    document.getElementById('entered-characters').value = "";
+    document.getElementById('remaining-characters').textContent = "50";
+    document.getElementById('remaining-characters').classList.remove('max');
     selectBox.style.display = 'none';
     startBox.style.display = 'none';
     centerBox.style.display = 'none';
