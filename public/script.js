@@ -102,21 +102,21 @@ document.addEventListener('DOMContentLoaded', initGame);
  */
 async function initGame() {
     //setTimeout(async () => {
-        //document.getElementById('splash').classList.add('hide');
+    //document.getElementById('splash').classList.add('hide');
 
-        try {
-            allWords = await readWords("word.txt", true);
-            console.log("単語データ読み込み完了:", allWords);
-        } catch (error) {
-            console.error("単語ファイルの読み込みに失敗しました:", error);
-            document.getElementById('select-text').textContent = "エラー: 単語ファイルを読み込めません。";
-            return;
-        }
+    try {
+        allWords = await readWords("word.txt", true);
+        console.log("単語データ読み込み完了:", allWords);
+    } catch (error) {
+        console.error("単語ファイルの読み込みに失敗しました:", error);
+        document.getElementById('select-text').textContent = "エラー: 単語ファイルを読み込めません。";
+        return;
+    }
 
-        grabDomElements();
-        setupUI();
-        setupEventListeners();
-        showCourseSelection();
+    grabDomElements();
+    setupUI();
+    setupEventListeners();
+    showCourseSelection();
 
     //}, 1500);
 }
@@ -142,42 +142,42 @@ function grabDomElements() {
     const toggleInput2 = document.getElementById('cmn-toggle-5');
     toggleInput.addEventListener('change', () => {
         if (toggleInput.checked) {
-          // もしチェックされたら、#select-box に 'osusume-mode' クラスを追加
-          selectBox.style.backgroundColor = ippatsu_color;
+            // もしチェックされたら、#select-box に 'osusume-mode' クラスを追加
+            selectBox.style.backgroundColor = ippatsu_color;
             startBox.style.backgroundColor = ippatsu_color;
             centerBox.style.backgroundColor = ippatsu_color;
             resultBox.style.backgroundColor = ippatsu_color;
             endBox.style.backgroundColor = ippatsu_color;
             ippatsu = true;
         } else {
-          // もしチェックが外れたら、'osusume-mode' クラスを削除
-          selectBox.style.backgroundColor = normal_color;
+            // もしチェックが外れたら、'osusume-mode' クラスを削除
+            selectBox.style.backgroundColor = normal_color;
             startBox.style.backgroundColor = normal_color;
             centerBox.style.backgroundColor = "#deb887";
             resultBox.style.backgroundColor = normal_color;
             endBox.style.backgroundColor = normal_color;
             ippatsu = false;
         }
-      });
+    });
 
-      // (おまけ) 読み込み時に一度、現在の状態でクラスを反映させておく
+    // (おまけ) 読み込み時に一度、現在の状態でクラスを反映させておく
     if (toggleInput.checked) {
-          // もしチェックされたら、#select-box に 'osusume-mode' クラスを追加
-          selectBox.style.backgroundColor = ippatsu_color;
-            startBox.style.backgroundColor = ippatsu_color;
-            centerBox.style.backgroundColor = ippatsu_color;
-            resultBox.style.backgroundColor = ippatsu_color;
-            endBox.style.backgroundColor = ippatsu_color;
-            ippatsu = true;
-        } else {
-          // もしチェックが外れたら、'osusume-mode' クラスを削除
-          selectBox.style.backgroundColor = normal_color;
-            startBox.style.backgroundColor = normal_color;
-            centerBox.style.backgroundColor = "#deb887";
-            resultBox.style.backgroundColor = normal_color;
-            endBox.style.backgroundColor = normal_color;
-            ippatsu = false;
-        }
+        // もしチェックされたら、#select-box に 'osusume-mode' クラスを追加
+        selectBox.style.backgroundColor = ippatsu_color;
+        startBox.style.backgroundColor = ippatsu_color;
+        centerBox.style.backgroundColor = ippatsu_color;
+        resultBox.style.backgroundColor = ippatsu_color;
+        endBox.style.backgroundColor = ippatsu_color;
+        ippatsu = true;
+    } else {
+        // もしチェックが外れたら、'osusume-mode' クラスを削除
+        selectBox.style.backgroundColor = normal_color;
+        startBox.style.backgroundColor = normal_color;
+        centerBox.style.backgroundColor = "#deb887";
+        resultBox.style.backgroundColor = normal_color;
+        endBox.style.backgroundColor = normal_color;
+        ippatsu = false;
+    }
     toggleInput2.addEventListener('change', () => {
         //もしチェックされたら、entered-charactersを有効化する
         if (toggleInput2.checked) {
@@ -194,6 +194,18 @@ function grabDomElements() {
         document.getElementById('entered-characters').disabled = true;
     }
 
+}
+
+/**
+ * 指定IDの要素の visibility を切り替えるユーティリティ
+ * visible === true で 'visible'、false で 'hidden' をセットします（要素が存在する場合のみ）。
+ * @param {string} id
+ * @param {boolean} visible
+ */
+function setVisibilityById(id, visible) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.visibility = visible ? 'visible' : 'hidden';
 }
 
 /**
@@ -223,19 +235,19 @@ function setupUI() {
     const stops = stopsData ? stopsData.split(',').map(s => parseFloat(s.trim())) : [];
 
     // stops[2] (3番目の値 '93') を参照するため、stops.length >= 3 を確認
-    if (max > 0 && stops.length >= 3) { 
+    if (max > 0 && stops.length >= 3) {
         const stopAPercent = `${(stops[0] / max) * 100}%`;
         const stopBPercent = `${(stops[1] / max) * 100}%`;
-        const stopCPercent = `${(stops[2] / max) * 100}%`; 
+        const stopCPercent = `${(stops[2] / max) * 100}%`;
 
         renda.style.setProperty('--stop-a', stopAPercent);
         renda.style.setProperty('--stop-b', stopBPercent);
         renda.style.setProperty('--stop-c', stopCPercent);
     } else if (max > 0 && stops.length >= 2) { // 2つしかない場合のフォールバック
-         const stopAPercent = `${(stops[0] / max) * 100}%`;
-         const stopBPercent = `${(stops[1] / max) * 100}%`;
-         renda.style.setProperty('--stop-a', stopAPercent);
-         renda.style.setProperty('--stop-b', stopBPercent);
+        const stopAPercent = `${(stops[0] / max) * 100}%`;
+        const stopBPercent = `${(stops[1] / max) * 100}%`;
+        renda.style.setProperty('--stop-a', stopAPercent);
+        renda.style.setProperty('--stop-b', stopBPercent);
     }
 }
 
@@ -453,11 +465,11 @@ async function startCourse(config) {
             //selectBox.style.display = 'none'; // (上で実施済み)
 
 
-        //return; // ← 共通処理（startBox表示）に行くために return しない
+            //return; // ← 共通処理（startBox表示）に行くために return しない
         } catch (error) {
             console.error("AIモードのデータ取得に失敗:", error);
             // エラー時も、ユーザーが待機し続けないようコース選択に戻す
-            showCourseSelection(); 
+            showCourseSelection();
             return; // ★ 共通処理には行かない
         }
     } else { // special === false の場合
@@ -479,7 +491,7 @@ async function startCourse(config) {
         // 3. UI設定
         nokorijikan = config.time;
         remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
-            // remainingTime.style.display = ''; // ★ resetGameState に移動済み
+        // remainingTime.style.display = ''; // ★ resetGameState に移動済み
         jikan.setAttribute('max', config.time); // 時間経過progressのmax
         jikan.value = 0;
         document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
@@ -594,7 +606,7 @@ function prepareWords(relevantKeys, flow) {
 
                 // (B) 3個取得する
                 for (let k = 0; k < 3; k++) {
-                    const wordPair = availableWords[length].pop(); 
+                    const wordPair = availableWords[length].pop();
 
                     if (wordPair && wordPair.length >= 2) {
                         yomi.push(wordPair[0]);
@@ -602,7 +614,7 @@ function prepareWords(relevantKeys, flow) {
                     } else {
                         console.warn(`(pop失敗) 文字数 ${length} で有効な単語ペアを取得できませんでした。`);
                         running = false;
-                        break; 
+                        break;
                     }
                 }
 
@@ -610,8 +622,8 @@ function prepareWords(relevantKeys, flow) {
                 // (C) 3個未満しか残っていない = 終了条件
                 const remainingCount = (availableWords[length] || []).length;
                 console.log(`文字数 ${length} の単語が3個未満 (残り ${remainingCount} 個) のため、処理を終了します。`);
-                running = false; 
-                break; 
+                running = false;
+                break;
             }
 
             if (!running) {
@@ -679,7 +691,7 @@ function startGame() {
         // setNextWord(true); // ← この呼び出しを削除し、
 
         // ↓↓↓ setNextWord(true) の中身を展開 (setProblem以外)
-        buffer = ""; 
+        buffer = "";
         // judge.setProblem(yomi[i]); // ← 呼ばない (既に yomi[0] で初期化済み)
         // ★★★ 修正 (textContent を使用) ★★★
         /*
@@ -704,50 +716,50 @@ function startGame() {
             yomiBox.style.justifyContent = 'flex-start';
             textBox.style.justifyContent = 'flex-start';
             possible_text.style.justifyContent = 'flex-start';
-              const fullYomi = yomi[i];
-              const yomiContainerWidth = yomiBox.clientWidth;
-              const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
-    
-              yomiBox.innerHTML = `
+            const fullYomi = yomi[i];
+            const yomiContainerWidth = yomiBox.clientWidth;
+            const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
+
+            yomiBox.innerHTML = `
                   <span style="width: ${yomiPadding}px;"></span>
                   <span></span>
                   <span>${fullYomi}</span>
                   <span style="width: ${yomiPadding}px;"></span> 
               `;
-              // children[0] = 左パディング
-              // children[1] = 入力済みスパン (最初は空)
-              // children[2] = 未入力スパン
-              // children[3] = 右パディング
-    
-              yomiBox.scrollLeft = 0; // スクロール位置をリセット
-    
-    
-              // (2) box-text (漢字) の初期化
-              const fullKanji = kanji[i];
-              const kanjiContainerWidth = textBox.clientWidth;
-              const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
-    
-              textBox.innerHTML = `
+            // children[0] = 左パディング
+            // children[1] = 入力済みスパン (最初は空)
+            // children[2] = 未入力スパン
+            // children[3] = 右パディング
+
+            yomiBox.scrollLeft = 0; // スクロール位置をリセット
+
+
+            // (2) box-text (漢字) の初期化
+            const fullKanji = kanji[i];
+            const kanjiContainerWidth = textBox.clientWidth;
+            const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
+
+            textBox.innerHTML = `
                   <span style="width: ${kanjiPadding}px;"></span>
                   <span></span>
                   <span>${fullKanji}</span>
                   <span style="width: ${kanjiPadding}px;"></span>
               `;
-              textBox.scrollLeft = 0;
-    
-    
-              // (3) possible_text (ローマ字) の初期化
-              const initialRemaining = judge.getBestMatch(); 
-              const romaContainerWidth = possible_text.clientWidth;
-              const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
-    
-              possible_text.innerHTML = `
+            textBox.scrollLeft = 0;
+
+
+            // (3) possible_text (ローマ字) の初期化
+            const initialRemaining = judge.getBestMatch();
+            const romaContainerWidth = possible_text.clientWidth;
+            const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
+
+            possible_text.innerHTML = `
                   <span style="width: ${romaPadding}px;"></span>
                   <span style="color: #444;"></span>
                   <span style="color: #eee;">${initialRemaining}</span>
                   <span style="width: ${romaPadding}px;"></span>
               `;
-              possible_text.scrollLeft = 0;
+            possible_text.scrollLeft = 0;
             // ★★★ 修正ここまで ★★★
             yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
             textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
@@ -766,7 +778,7 @@ function startGame() {
  * ゲームのメインタイマーを開始する
  */
 function startTimer() {
-    if (secondsTimer) clearInterval(secondsTimer); 
+    if (secondsTimer) clearInterval(secondsTimer);
 
     secondsTimer = setInterval(() => {
         if (nokorijikan > 1) {
@@ -779,7 +791,7 @@ function startTimer() {
             // ★ 時間切れ
             remainingTime.textContent = `残り時間: 0秒`;
             jikan.value = currentCourseConfig.time;
-            end_time = Date.now(); 
+            end_time = Date.now();
 
             if (secondsTimer) clearInterval(secondsTimer);
             secondsTimer = null;
@@ -807,67 +819,67 @@ function startTimer() {
  * @param {KeyboardEvent} event
  */
 function handleKeyDown(event) {
-     // 1. スタート待ち (Enter/Space)
-     if (start === false) {
-         if (event.key === 'Enter' || event.key === ' ') {
-             event.preventDefault(); 
-             startGame();
-         }
-         return; // ゲーム開始前はタイピング処理をしない
-     }
-     if (!judge) {
-         return; 
-     }
+    // 1. スタート待ち (Enter/Space)
+    if (start === false) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            startGame();
+        }
+        return; // ゲーム開始前はタイピング処理をしない
+    }
+    if (!judge) {
+        return;
+    }
 
-     // 2. ゲーム中の処理
-     const isSingleCharacter = event.key.length === 1;
+    // 2. ゲーム中の処理
+    const isSingleCharacter = event.key.length === 1;
 
-     if (isSingleCharacter) {
+    if (isSingleCharacter) {
 
-         const result = judge.check(event.key);
-         let now_time = Date.now();
-         let elapsed_time = now_time - start_time;
-         if (result === null) { // null は「完了」
-             // ★修正: 完了キーも「正解」としてカウント
-             correct_keys_count += 1; 
+        const result = judge.check(event.key);
+        let now_time = Date.now();
+        let elapsed_time = now_time - start_time;
+        if (result === null) { // null は「完了」
+            // ★修正: 完了キーも「正解」としてカウント
+            correct_keys_count += 1;
 
-             renda_count += 1;
-             renda.value = renda_count;
+            renda_count += 1;
+            renda.value = renda_count;
 
-             updateRendaTime();
+            updateRendaTime();
 
-             // スコア計算 (i++ する前に行う)
-             // 完了した単語 (yomi[i]) の文字数から金額を取得
-             if (currentCourseConfig.special !== true) {
-                 let _amount = currentCourseConfig.amountMap[yomi[i].length];
+            // スコア計算 (i++ する前に行う)
+            // 完了した単語 (yomi[i]) の文字数から金額を取得
+            if (currentCourseConfig.special !== true) {
+                let _amount = currentCourseConfig.amountMap[yomi[i].length];
 
-                 console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
+                console.log(`完了: ${yomi[i]} (文字数 ${yomi[i].length}, 金額 ${_amount})`);
 
-                 // HTMLの皿カウントID (100, 180, ...)
-                 if (_amount && amounts.includes(_amount)) {
-                     const countEl = document.getElementById(`${_amount}_count`);
-                     if (countEl) {
-                         countEl.textContent = parseInt(countEl.textContent) + 1;
-                     }
-                 }
-                 if (currentCourseConfig.special !== true) {
-                     // 合計皿数
-                     document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
-                     //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
-                 }
-             } else {
+                // HTMLの皿カウントID (100, 180, ...)
+                if (_amount && amounts.includes(_amount)) {
+                    const countEl = document.getElementById(`${_amount}_count`);
+                    if (countEl) {
+                        countEl.textContent = parseInt(countEl.textContent) + 1;
+                    }
+                }
+                if (currentCourseConfig.special !== true) {
+                    // 合計皿数
+                    document.getElementById('total_got_odai').textContent = `${i + 1} 皿`;
+                    //document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒`;
+                }
+            } else {
 
-             }
-             // 次の単語へ
-             setNextWord();
+            }
+            // 次の単語へ
+            setNextWord();
 
-         } else if (result === true) { // true は「途中」
-             correct_keys_count += 1;
-             renda_count += 1;
-             renda.value = renda_count;
-             buffer += event.key; 
+        } else if (result === true) { // true は「途中」
+            correct_keys_count += 1;
+            renda_count += 1;
+            renda.value = renda_count;
+            buffer += event.key;
 
-             // ★★★ スクロールロジックの修正 ★★★
+            // ★★★ スクロールロジックの修正 ★★★
             /*
              // (1) possible_text (ローマ字) の計算
              const remaining = judge.getBestMatch();
@@ -933,127 +945,184 @@ function handleKeyDown(event) {
 
              // ★★★ 修正ここまで ★★★
              */
-             // ★★★ スクロールロジックの修正 ★★★
+            // ★★★ スクロールロジックの修正 ★★★
 
-               // (1) possible_text (ローマ字) の計算
-             if (currentCourseConfig.special !== true) {
-                 const remaining = judge.getBestMatch();
-                 possible_text.innerHTML = `
+            // (1) possible_text (ローマ字) の計算
+            let remaining;
+            if (currentCourseConfig.special !== true) {
+                remaining = judge.getBestMatch();
+                possible_text.innerHTML = `
                      <span style="color: #444;">${buffer}</span>
                      <span style="color: #eee;">${remaining}</span>
                 `;
-                 
-             } else {
-               const remaining = judge.getBestMatch();
-               const romaContainerWidth = possible_text.clientWidth;
-               // 左右のパディング幅 (コンテナ幅の半分)
-               const romaPadding = romaContainerWidth / 2; 
 
-               possible_text.innerHTML = `
+            } else {
+                remaining = judge.getBestMatch();
+                const romaContainerWidth = possible_text.clientWidth;
+                // 左右のパディング幅 (コンテナ幅の半分)
+                const romaPadding = romaContainerWidth / 2;
+
+                possible_text.innerHTML = `
                    <span style="width: ${romaPadding}px;"></span>
                    <span style="color: #444;">${buffer}</span>
                    <span style="color: #eee;">${remaining}</span>
                    <span style="width: ${romaPadding}px;"></span>
                `;
 
-               const typedRomaSpan = possible_text.children[1]; // 2番目のspan (入力済みテキスト)
-               const typedRomaWidth = typedRomaSpan.offsetWidth;
+                const typedRomaSpan = possible_text.children[1]; // 2番目のspan (入力済みテキスト)
+                const typedRomaWidth = typedRomaSpan.offsetWidth;
 
-               // スクロール位置 = 入力済みテキストの幅
-               // (左右にパディングがあるため、テキストが短くても機能します)
-               possible_text.scrollLeft = typedRomaWidth;
+                // スクロール位置 = 入力済みテキストの幅
+                // (左右にパディングがあるため、テキストが短くても機能します)
+                possible_text.scrollLeft = typedRomaWidth;
 
-               // (2) yomi-text (ひらがな) の計算
-               const completedHiraganaLength = judge.getCompletedHiraganaLength();
-               const fullYomi = yomi[i];
-               const completedYomi = fullYomi.substring(0, completedHiraganaLength);
-               const remainingYomi = fullYomi.substring(completedHiraganaLength);
+                // (2) yomi-text (ひらがな) の計算
+                const completedHiraganaLength = judge.getCompletedHiraganaLength();
+                const fullYomi = yomi[i];
+                const completedYomi = fullYomi.substring(0, completedHiraganaLength);
+                const remainingYomi = fullYomi.substring(completedHiraganaLength);
 
-               const yomiContainerWidth = yomiBox.clientWidth;
-               // 左右のパディング幅 (コンテナ幅の半分)
-               const yomiPadding = yomiContainerWidth / 2; 
+                const yomiContainerWidth = yomiBox.clientWidth;
+                // 左右のパディング幅 (コンテナ幅の半分)
+                const yomiPadding = yomiContainerWidth / 2;
 
-               yomiBox.innerHTML = `
+                yomiBox.innerHTML = `
                    <span style="width: ${yomiPadding}px;"></span>
                    <span>${completedYomi}</span>
                    <span>${remainingYomi}</span>
                    <span style="width: ${yomiPadding}px;"></span>
                `;
 
-              typed_chars = kakutei_typed_chars + completedHiraganaLength;
-              document.getElementById('remaining-chars').value = typed_chars;
+                typed_chars = kakutei_typed_chars + completedHiraganaLength;
+                document.getElementById('remaining-chars').value = typed_chars;
 
-               const typedYomiSpan = yomiBox.children[1]; // 2番目のspan
-               const typedYomiWidth = typedYomiSpan.offsetWidth;
+                const typedYomiSpan = yomiBox.children[1]; // 2番目のspan
+                const typedYomiWidth = typedYomiSpan.offsetWidth;
+                // スクロール位置 = 入力済みテキストの幅
+                yomiBox.scrollLeft = typedYomiWidth;
 
-               // スクロール位置 = 入力済みテキストの幅
-               yomiBox.scrollLeft = typedYomiWidth;
+
+                // (3) box-text (漢字) の計算
+
+                // --- (A) 現在のかな単位のローマ字進捗率 (0.0 〜 1.0) ---
+                // (1) の処理で使った buffer と remaining が必要
+                const remaining = judge.getBestMatch();
+                const totalRomaLength = buffer.length + remaining.length;
+                const currentProgressRate = (totalRomaLength > 0) ? (buffer.length / totalRomaLength) : 0;
+
+                // --- (B) 完了済みひらがな数 ---
+                //const completedHiraganaLength = judge.getCompletedHiraganaLength();
+                const fullKanji = kanji[i];
+                const currentMapping = mapping[i];
+
+                // --- (C) 現在の「漢字単位」の情報を計算 ---
+
+                // 現在のひらがな位置 (例: 「きょ」の「ょ」なら 1)
+                const currentHiraganaIndex = completedHiraganaLength;
+
+                if (!currentMapping || currentMapping.length <= currentHiraganaIndex) {
+                    // マッピング情報がないか、既に入力が終わっている場合は何もしない
+                    // (必要に応じてエラー処理や終了処理)
+                    return;
+                }
+
+                // (C-1) 現在のひらがなが対応する漢字インデックス (例: "今" なら 0)
+                const currentKanjiIdx = currentMapping[currentHiraganaIndex];
+
+                // (C-2) この漢字単位の「開始」ひらがなインデックスを探す (例: "き" の 0)
+                let startHiraganaIndex = currentHiraganaIndex;
+                while (startHiraganaIndex > 0 && currentMapping[startHiraganaIndex - 1] === currentKanjiIdx) {
+                    startHiraganaIndex--;
+                }
+
+                // (C-3) この漢字単位の「終了」ひらがなインデックスを探す (例: "ょ" の 1)
+                // (※ ユーザーの言う「今と同じindexが出てくる最後の場所」)
+                let endHiraganaIndex = currentHiraganaIndex;
+                while (endHiraganaIndex < currentMapping.length - 1 && currentMapping[endHiraganaIndex + 1] === currentKanjiIdx) {
+                    endHiraganaIndex++;
+                }
+
+                // (C-4) この漢字単位のひらがな総数 (例: 「き」「ょ」で 2)
+                const hiraganaCountInUnit = (endHiraganaIndex - startHiraganaIndex) + 1;
+
+                // (C-5) この漢字単位で、完了済みのひらがな数 (例: 「ょ」入力中なら「き」の 1)
+                const completedHiraganaInUnit = currentHiraganaIndex - startHiraganaIndex;
+
+                // --- (D) この漢字単位の「全体の進捗率」を計算 ---
+                // (完了ひらがな数 + 現在のローマ字進捗) / ひらがな総数
+                // 例: (1 + 0.5) / 2 = 0.75 (75%)
+                const totalProgressRateInUnit = (completedHiraganaInUnit + currentProgressRate) / hiraganaCountInUnit;
 
 
-               // (3) box-text (漢字) の計算
-               const fullKanji = kanji[i];
-               const currentMapping = mapping[i];
-               let kanjiSplitIndex = 0;
+                // --- (E) HTMLの構築とスクロール ---
 
-               if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
-                   const lastKanjiIndex = currentMapping[completedHiraganaLength - 1];
-                   if (lastKanjiIndex !== undefined && lastKanjiIndex >= 0) {
-                       kanjiSplitIndex = lastKanjiIndex + 1;
-                   }
-               }
-               const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
-               const remainingKanji = fullKanji.substring(kanjiSplitIndex);
+                // (E-1) テキストを3分割
+                const kanjiSplitIndex = currentKanjiIdx; // 「今」より前
+                const nextKanjiSplitIndex = currentKanjiIdx + 1; // 「今」の次
 
-               const kanjiContainerWidth = textBox.clientWidth;
-               // 左右のパディング幅 (コンテナ幅の半分)
-               const kanjiPadding = kanjiContainerWidth / 2; 
+                const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
+                const currentKanji = fullKanji.substring(kanjiSplitIndex, nextKanjiSplitIndex);
+                const futureKanji = fullKanji.substring(nextKanjiSplitIndex);
 
-               textBox.innerHTML = `
-                   <span style="width: ${kanjiPadding}px;"></span>
-                   <span>${completedKanji}</span>
-                   <span>${remainingKanji}</span>
-                   <span style="width: ${kanjiPadding}px;"></span>
-               `;
+                // (E-2) HTML構築
+                const kanjiContainerWidth = textBox.clientWidth;
+                const kanjiPadding = kanjiContainerWidth / 2;
 
-               const typedKanjiSpan = textBox.children[1]; // 2番目のspan
-               const typedKanjiWidth = typedKanjiSpan.offsetWidth;
+                textBox.innerHTML = `
+                    <span style="width: ${kanjiPadding}px;"></span>
+                    <span id="typed-kanji">${completedKanji}</span>
+                    <span id="current-kanji">${currentKanji}</span>
+                    <span id="future-kanji">${futureKanji}</span>
+                    <span style="width: ${kanjiPadding}px;"></span>
+                `;
 
-               // スクロール位置 = 入力済みテキストの幅
-               textBox.scrollLeft = typedKanjiWidth;
+                // (E-3) スクロール位置を計算
+                // (innerHTMLの再構築直後はoffsetWidthが反映されないことがあるため、
+                //  IDを付与するか、確実に要素を取得できる children を使います)
+                const typedKanjiSpan = textBox.children[1]; // 完了済み (例: "")
+                const currentKanjiSpan = textBox.children[2]; // 入力中 (例: "今")
 
-               // ★★★ 修正ここまで ★★★
-             }
+                const typedKanjiWidth = typedKanjiSpan.offsetWidth;
+                const currentKanjiWidth = currentKanjiSpan.offsetWidth;
 
-             updateRendaTime();
+                // スクロール位置 = (完了済みの幅) + (入力中の幅 * この漢字単位の進捗率)
+                const smoothScrollLeft = typedKanjiWidth + (currentKanjiWidth * totalProgressRateInUnit);
 
-         } else { // false は「間違い」
-             if (ippatsu === true) {
-                 end_time = Date.now(); 
-                 if (secondsTimer) clearInterval(secondsTimer);
-                 secondsTimer = null;
-                 start = null; // ゲーム終了
+                textBox.scrollLeft = smoothScrollLeft;
 
-                 // 終了表示
-                 startBox.style.display = 'none';
-                 resultBox.style.display = 'none';
-                 centerBox.style.display = 'none';
-                 endBox.style.display = 'flex';
-                 start_text.textContent = '終了！';
-                 yomiBox.innerHTML = "";
-                 possible_text.innerHTML = "";
-                 textBox.innerHTML = "";
+                // ★★★ 修正ここまで ★★★
+            }
 
-                 // 結果表示ロジックへ
-                 endGame();
-             }
-             incorrect_keys_count += 1;
-             renda_count = 0;
-             renda.value = renda_count;
-         }
-         let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
-         document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒, 正確率 ${correct_keys_persent}%`;
+            updateRendaTime();
 
-     }
+        } else { // false は「間違い」
+            if (ippatsu === true) {
+                end_time = Date.now();
+                if (secondsTimer) clearInterval(secondsTimer);
+                secondsTimer = null;
+                start = null; // ゲーム終了
+
+                // 終了表示
+                startBox.style.display = 'none';
+                resultBox.style.display = 'none';
+                centerBox.style.display = 'none';
+                endBox.style.display = 'flex';
+                start_text.textContent = '終了！';
+                yomiBox.innerHTML = "";
+                possible_text.innerHTML = "";
+                textBox.innerHTML = "";
+
+                // 結果表示ロジックへ
+                endGame();
+            }
+            incorrect_keys_count += 1;
+            renda_count = 0;
+            renda.value = renda_count;
+        }
+        let correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(1);
+        document.getElementById('keys-per-second').textContent = `${parseFloat(correct_keys_count / (elapsed_time / 1000)).toFixed(1)} キー/秒, 正確率 ${correct_keys_persent}%`;
+
+    }
 }
 /**
  * 連打数に応じた時間ボーナス処理
@@ -1120,7 +1189,7 @@ function setNextWord(isFirstWord = false) {
         // 結果表示ロジックへ
         endGame();
 
-        return; 
+        return;
     }
 
     // 次の単語をセット
@@ -1149,54 +1218,54 @@ function setNextWord(isFirstWord = false) {
         yomiBox.style.justifyContent = 'flex-start';
         textBox.style.justifyContent = 'flex-start';
         possible_text.style.justifyContent = 'flex-start';
-          const fullYomi = yomi[i];
-          const yomiContainerWidth = yomiBox.clientWidth;
-          const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
-    
-          yomiBox.innerHTML = `
+        const fullYomi = yomi[i];
+        const yomiContainerWidth = yomiBox.clientWidth;
+        const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
+
+        yomiBox.innerHTML = `
               <span style="width: ${yomiPadding}px;"></span>
               <span></span>
               <span>${fullYomi}</span>
               <span style="width: ${yomiPadding}px;"></span> 
           `;
-          // children[0] = 左パディング
-          // children[1] = 入力済みスパン (最初は空)
-          // children[2] = 未入力スパン
-          // children[3] = 右パディング
-    
-          yomiBox.scrollLeft = 0; // スクロール位置をリセット
-    
-    
-          // (2) box-text (漢字) の初期化
-          const fullKanji = kanji[i];
-          const kanjiContainerWidth = textBox.clientWidth;
-          const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
-    
-          textBox.innerHTML = `
+        // children[0] = 左パディング
+        // children[1] = 入力済みスパン (最初は空)
+        // children[2] = 未入力スパン
+        // children[3] = 右パディング
+
+        yomiBox.scrollLeft = 0; // スクロール位置をリセット
+
+
+        // (2) box-text (漢字) の初期化
+        const fullKanji = kanji[i];
+        const kanjiContainerWidth = textBox.clientWidth;
+        const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
+
+        textBox.innerHTML = `
               <span style="width: ${kanjiPadding}px;"></span>
               <span></span>
               <span>${fullKanji}</span>
               <span style="width: ${kanjiPadding}px;"></span>
           `;
-          textBox.scrollLeft = 0;
-    
-    
-          // (3) possible_text (ローマ字) の初期化
-          const initialRemaining = judge.getBestMatch(); 
-          const romaContainerWidth = possible_text.clientWidth;
-          const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
-    
-          possible_text.innerHTML = `
+        textBox.scrollLeft = 0;
+
+
+        // (3) possible_text (ローマ字) の初期化
+        const initialRemaining = judge.getBestMatch();
+        const romaContainerWidth = possible_text.clientWidth;
+        const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
+
+        possible_text.innerHTML = `
               <span style="width: ${romaPadding}px;"></span>
               <span style="color: #444;"></span>
               <span style="color: #eee;">${initialRemaining}</span>
               <span style="width: ${romaPadding}px;"></span>
           `;
-          possible_text.scrollLeft = 0;
-          yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
-          textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
-          possible_text.style.scrollBehavior = 'smooth';
-    
+        possible_text.scrollLeft = 0;
+        yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+        textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+        possible_text.style.scrollBehavior = 'smooth';
+
         // ★★★ 修正ここまで ★★★
     }
 }
@@ -1209,6 +1278,33 @@ function endGame() {
     // 「終了！」表示から1秒待って結果画面を表示
     setTimeout(() => {
 
+        // ---------------------------------
+        // 共通の計算処理 (キー/秒, 正確率, 一発勝負)
+        // ---------------------------------
+        let key_per_second = 0;
+        if (start_time > 0 && end_time > start_time) {
+            const elapsedTimeSeconds = (end_time - start_time) / 1000;
+            if (elapsedTimeSeconds > 0) {
+                key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
+            }
+        }
+        // toFixed(2) で小数点以下2桁に丸める
+        const key_per_second_text = parseFloat(key_per_second.toFixed(2));
+
+        let correct_keys_percent = 0;
+        const total_keys = correct_keys_count + incorrect_keys_count;
+        if (total_keys > 0) {
+            correct_keys_percent = parseFloat(((correct_keys_count / total_keys) * 100).toFixed(2));
+        }
+
+        let plus = "";
+        if (ippatsu === true) {
+            plus = "　一発勝負";
+        }
+
+        // ---------------------------------
+        // Special モードの場合の処理
+        // ---------------------------------
         if (currentCourseConfig.special === true) {
             const specialModeResultBox = document.getElementById('special-mode-result-box');
             specialModeResultBox.style.display = 'flex';
@@ -1216,33 +1312,41 @@ function endGame() {
             startBox.style.display = 'none';
             resultBox.style.display = 'none';
             endBox.style.display = 'none';
-            document.getElementById('result-image').style.display = 'hidden';
-            document.getElementById('result-keys-per-second').style.display = 'hidden';
-            document.getElementById('result-correct-percent').style.display = 'hidden';
-            let plus = "";
-            if (ippatsu === true) {
-                plus = "　一発勝負";
-            }
+
+            // visibility を使って非表示にする (新しい処理)
+            setVisibilityById('result-image', false);
+            setVisibilityById('result-keys-per-second', false);
+            setVisibilityById('result-correct-percent', false);
+            
             document.getElementById('course-result2').textContent = currentCourseConfig.name + plus;
-            let key_per_second = 0;
-            if (start_time > 0 && end_time > start_time) {
-                 const elapsedTimeSeconds = (end_time - start_time) / 1000;
-                 if (elapsedTimeSeconds > 0) {
-                     key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
-                 }
-            }
+            
+            // (キー/秒の計算は共通処理に移動)
+
             setTimeout(() => {
-                document.getElementById('result-keys-per-second').textContent = `${parseFloat(key_per_second.toFixed(2))} キー/秒`;
-                document.getElementById('result-keys-per-second').style.display = 'flex';
+                const el = document.getElementById('result-keys-per-second');
+                if (el) {
+                    // 共通計算の結果を使用
+                    el.textContent = `${key_per_second_text} キー/秒`;
+                    setVisibilityById('result-keys-per-second', true);
+                }
             }, 500);
+
             setTimeout(() => {
-                const correct_keys_persent = parseFloat((correct_keys_count / (correct_keys_count + incorrect_keys_count)) * 100).toFixed(2);
-                document.getElementById('result-correct-percent').textContent = `正確率 ${correct_keys_count}%`;
-                document.getElementById('result-correct-percent').style.display = 'flex';
+                const el = document.getElementById('result-correct-percent');
+                if (el) {
+                    // 【バグ修正】 correct_keys_count ではなく、計算済みの correct_keys_percent を使う
+                    el.textContent = `正確率 ${correct_keys_percent}%`;
+                    setVisibilityById('result-correct-percent', true);
+                }
             }, 1000);
+
             setTimeout(() => {
-                document.getElementById('result-image').style.display = 'flex';
+                setVisibilityById('result-image', true);
             }, 1500);
+
+        // ---------------------------------
+        // 通常モードの場合の処理
+        // ---------------------------------
         } else {
             let total = 0;
             for (let k = 0; k < amounts.length; k++) {
@@ -1257,36 +1361,32 @@ function endGame() {
             const otokuBoxEl = document.getElementById('otoku-box');
             const otokuEl = document.getElementById('otoku');
             const resultTableEl = document.getElementById('result-table');
-            let plus = "";
-            if (ippatsu === true) {
-                plus = "　一発勝負";
-            }
+            
             document.getElementById('course-result').textContent = currentCourseConfig.name + plus;
-    
-            // (1) 画面切り替え (startBox -> resultBox)
+
+            // (1) 画面切り替え
             startBox.style.display = 'none';
             resultBox.style.display = 'flex';
             centerBox.style.display = 'none';
             endBox.style.display = 'none';
             document.getElementById('special-mode-result-box').style.display = 'none';
-    
+
             resultTotalEl.style.visibility = 'hidden';
             harattaEl.style.visibility = 'hidden';
             otokuBoxEl.style.visibility = 'hidden';
             resultTableEl.style.visibility = 'hidden';
-    
+
             // (2) 500ms後: 合計金額
             setTimeout(() => {
                 resultTotalEl.textContent = `${total} 円分のお寿司をゲット！`;
                 resultTotalEl.style.visibility = 'visible';
             }, 500);
-    
+
             // (3) 1000ms後: 支払金額
             setTimeout(() => {
-                // (テキストは startCourse で設定済み)
                 harattaEl.style.visibility = 'visible';
             }, 1000);
-    
+
             // (4) 1500ms後: お得＆詳細テーブル
             setTimeout(() => {
                 const price = currentCourseConfig.price || 0; // コース料金
@@ -1298,39 +1398,34 @@ function endGame() {
                     otokuBoxEl.style.borderColor = '#696969';
                 }
                 otokuBoxEl.style.visibility = 'visible';
-    
+
                 // 詳細テーブル
                 document.getElementById('correct_keys_count').textContent = correct_keys_count;
                 document.getElementById('incorrect_keys_count').textContent = incorrect_keys_count;
-    
-                let key_per_second = 0;
-                if (start_time > 0 && end_time > start_time) {
-                     const elapsedTimeSeconds = (end_time - start_time) / 1000;
-                     if (elapsedTimeSeconds > 0) {
-                         key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
-                     }
-                }
-                document.getElementById('average_keys_count').textContent = parseFloat(key_per_second.toFixed(2));
-    
+
+                // (キー/秒の計算は共通処理に移動)
+                // 共通計算の結果を使用
+                document.getElementById('average_keys_count').textContent = key_per_second_text;
+
                 resultTableEl.style.visibility = 'visible';
-    
+
             }, 1500);
         }
-    
+
     }, 1000); // 「終了！」表示から1秒待つ
 }
 const limitTextLength = () => {
     let maxLength = 50; // 文字数の上限
     let enteredCharacters = document.getElementById('entered-characters');
     let remainingCharacters = document.getElementById('remaining-characters');
-    
+
     if (enteredCharacters.value.length > maxLength) {
         enteredCharacters.value = enteredCharacters.value.substr(0, maxLength);
         remainingCharacters.classList.add('max');
     } else {
         remainingCharacters.classList.remove('max');
     }
-    
+
     remainingCharacters.textContent = maxLength - enteredCharacters.value.length;
 };
 /**
@@ -1790,7 +1885,7 @@ class TypingJudge2 {
 
         if (minHIndex === Infinity) {
             // ノードはあるが hIndex がない (※ 起こらないはずだが念のため)
-            return 0; 
+            return 0;
         }
 
         // minHIndex が 3 なら、ブロック 0, 1, 2 は完了している
@@ -1821,7 +1916,7 @@ class TypingJudge2 {
  * @returns {Promise<Object<number, string[]> | string[][]>} 
  */
 async function readWords(url, yeah) {
-    
+
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -1840,7 +1935,7 @@ async function readWords(url, yeah) {
             if (!word) continue; // 空行をスキップ
 
             // Pythonの re.search(r"txt(\d+)", word) と同じ
-            const match = word.match(/txt(\d+)/); 
+            const match = word.match(/txt(\d+)/);
 
             if (match) {
                 nowLevel = parseInt(match[1], 10);
@@ -1851,27 +1946,27 @@ async function readWords(url, yeah) {
             }
 
             // "txt..." の行自体は追加しないようにする (もしtxt行も単語として扱いたいならこのif文は不要)
-            if (!match) { 
-                 const parts = word.split(",");
-                 if (parts.length >= 2) { // 読みと漢字が揃っているものだけ追加
+            if (!match) {
+                const parts = word.split(",");
+                if (parts.length >= 2) { // 読みと漢字が揃っているものだけ追加
                     levels[nowLevel].push(parts);
-                 }
+                }
             }
         }
-        
+
         if (yeah) {
             return levels; // {1: [...], 2: [...]}
         } else {
             // filterで空のレベル(例: levels[0])を除外
-            
-            return Object.values(levels).filter(level => level.length > 0); 
+
+            return Object.values(levels).filter(level => level.length > 0);
         }
-    
+
     } catch (error) {
         console.error("Error reading words:", error);
         return yeah ? {} : []; // エラー時は空のデータを返す
     }
-    
+
 }
 /**
  * 配列の要素をランダムにシャッフルします (Fisher-Yatesアルゴリズム)。
@@ -1880,17 +1975,17 @@ async function readWords(url, yeah) {
  * @returns {Array} シャッフルされた新しい配列
  */
 function shuffleArray(array) {
-  // 元の配列をコピーする
-  const newArray = [...array]; 
+    // 元の配列をコピーする
+    const newArray = [...array];
 
-  // Fisher-Yates (Knuth) シャッフル
-  for (let i = newArray.length - 1; i > 0; i--) {
-    // 0 から i までのランダムなインデックスを選ぶ
-    const j = Math.floor(Math.random() * (i + 1)); 
+    // Fisher-Yates (Knuth) シャッフル
+    for (let i = newArray.length - 1; i > 0; i--) {
+        // 0 から i までのランダムなインデックスを選ぶ
+        const j = Math.floor(Math.random() * (i + 1));
 
-    // newArray[i] と newArray[j] の要素を交換する
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
+        // newArray[i] と newArray[j] の要素を交換する
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
 
-  return newArray;
+    return newArray;
 }

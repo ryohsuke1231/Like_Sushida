@@ -62,7 +62,15 @@ def split_with_context(text: str) -> list[dict]: # ★ 戻り値を list[dict] �
     cleaned_segments_data = []
     for data in raw_segments_data:
         # \s+（1つ以上の空白文字）の置換
-        cleaned_segment = re.sub(r'\s+', '', data['raw'])
+        text = data['raw']
+
+        # 全角スペースを半角スペースへ
+        text = text.replace('　', ' ')
+
+        # タブ・改行などは削除（ただし半角スペースは残す）
+        text = re.sub(r'[^\S ]+', '', text)
+
+        cleaned_segment = text
 
         # 元のJSは空になったセグメントを除去していないため、Pythonでもそのまま返す
         cleaned_segments_data.append({
