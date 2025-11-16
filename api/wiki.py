@@ -211,8 +211,8 @@ def api_get_wiki():
                     for i in range(len(yomi_slice_raw)):
                         yomi_char = yomi_slice_raw[i]
 
-                        if yomi_char.isspace():
-                            continue 
+                        #if yomi_char.isspace():
+                            #continue 
 
                         current_word_index = word_map_slice[i]
 
@@ -249,9 +249,9 @@ def api_get_wiki():
             mapping_segment = []
             kanji_segment_start_index = -1 
             for i in range(len(yomi_slice_raw)):
-                yomi_char = yomi_slice_raw[i]
-                if yomi_char.isspace():
-                    continue 
+                #yomi_char = yomi_slice_raw[i]
+                #if yomi_char.isspace():
+                #    continue 
 
                 original_kanji_index = mapping_slice_raw[i]
                 if kanji_segment_start_index == -1:

@@ -79,7 +79,7 @@ def get_furigana(message):
         "jsonrpc": "2.0",
         "method": "jlp.furiganaservice.furigana",
         "params": {
-            "q": message
+            "q": sanitized_message
         }
     }
 
