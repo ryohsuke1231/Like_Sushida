@@ -1006,7 +1006,7 @@ function handleKeyDown(event) {
 
                 // --- (A) 現在のかな単位のローマ字進捗率 (0.0 〜 1.0) ---
                 // (1) の処理で使った buffer と remaining が必要
-                const remaining = judge.getBestMatch();
+                //const remaining = judge.getBestMatch();
                 const totalRomaLength = buffer.length + remaining.length;
                 const currentProgressRate = (totalRomaLength > 0) ? (buffer.length / totalRomaLength) : 0;
 
