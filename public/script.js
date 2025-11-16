@@ -120,11 +120,6 @@ async function initGame() {
 
     //}, 1500);
 }
-
-
-/**
- * 必要なDOM要素を変数に格納する
- */
 function grabDomElements() {
     textBox = document.getElementById('box-text');
     yomiBox = document.getElementById('yomi-text');
@@ -716,19 +711,14 @@ function startGame() {
             yomiBox.style.justifyContent = 'flex-start';
             textBox.style.justifyContent = 'flex-start';
             possible_text.style.justifyContent = 'flex-start';
-            yomiBox.style.whiteSpace = 'pre'; // スペースを保持
-            textBox.style.whiteSpace = 'pre'; // スペースを保持
-            possible_text.style.whiteSpace = 'pre'; // スペースを保持
+            // スペースは保持したいが、親要素に 'pre' を設定すると
+            // テンプレート内の改行文字がそのまま反映され縦並びになるため、
+            // テキストを含むスパンのみ 'white-space: pre' にします。
             const fullYomi = yomi[i];
             const yomiContainerWidth = yomiBox.clientWidth;
             const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
 
-            yomiBox.innerHTML = `
-                  <span style="width: ${yomiPadding}px;"></span>
-                  <span></span>
-                  <span>${fullYomi}</span>
-                  <span style="width: ${yomiPadding}px;"></span> 
-              `;
+            yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span></span><span style="white-space: pre;">${fullYomi}</span><span style="width: ${yomiPadding}px;"></span>`;
             // children[0] = 左パディング
             // children[1] = 入力済みスパン (最初は空)
             // children[2] = 未入力スパン
@@ -742,12 +732,7 @@ function startGame() {
             const kanjiContainerWidth = textBox.clientWidth;
             const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
 
-            textBox.innerHTML = `
-                  <span style="width: ${kanjiPadding}px;"></span>
-                  <span></span>
-                  <span>${fullKanji}</span>
-                  <span style="width: ${kanjiPadding}px;"></span>
-              `;
+            textBox.innerHTML = `<span style="width: ${kanjiPadding}px;"></span><span></span><span style="white-space: pre;">${fullKanji}</span><span style="width: ${kanjiPadding}px;"></span>`;
             textBox.scrollLeft = 0;
 
 
@@ -756,12 +741,7 @@ function startGame() {
             const romaContainerWidth = possible_text.clientWidth;
             const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
 
-            possible_text.innerHTML = `
-                  <span style="width: ${romaPadding}px;"></span>
-                  <span style="color: #444;"></span>
-                  <span style="color: #eee;">${initialRemaining}</span>
-                  <span style="width: ${romaPadding}px;"></span>
-              `;
+            possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${initialRemaining}</span><span style="width: ${romaPadding}px;"></span>`;
             possible_text.scrollLeft = 0;
             // ★★★ 修正ここまで ★★★
             yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
@@ -989,12 +969,9 @@ function handleKeyDown(event) {
                 // 左右のパディング幅 (コンテナ幅の半分)
                 const yomiPadding = yomiContainerWidth / 2;
 
-                yomiBox.innerHTML = `
-                   <span style="width: ${yomiPadding}px;"></span>
-                   <span>${completedYomi}</span>
-                   <span>${remainingYomi}</span>
-                   <span style="width: ${yomiPadding}px;"></span>
-               `;
+                // completedYomi / remainingYomi に含まれるスペースを保持するため、
+                // それらを含むスパンだけ 'white-space: pre' を指定します。
+                yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span style="white-space: pre;">${completedYomi}</span><span style="white-space: pre;">${remainingYomi}</span><span style="width: ${yomiPadding}px;"></span>`;
 
                 typed_chars = kakutei_typed_chars + completedHiraganaLength;
                 document.getElementById('remaining-chars').value = typed_chars;
@@ -1221,19 +1198,11 @@ function setNextWord(isFirstWord = false) {
         yomiBox.style.justifyContent = 'flex-start';
         textBox.style.justifyContent = 'flex-start';
         possible_text.style.justifyContent = 'flex-start';
-        yomiBox.style.whiteSpace = 'pre'; // スペースを保持
-        textBox.style.whiteSpace = 'pre'; // スペースを保持
-        possible_text.style.whiteSpace = 'pre'; // スペースを保持
         const fullYomi = yomi[i];
         const yomiContainerWidth = yomiBox.clientWidth;
         const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
 
-        yomiBox.innerHTML = `
-              <span style="width: ${yomiPadding}px;"></span>
-              <span></span>
-              <span>${fullYomi}</span>
-              <span style="width: ${yomiPadding}px;"></span> 
-          `;
+        yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span></span><span style="white-space: pre;">${fullYomi}</span><span style="width: ${yomiPadding}px;"></span>`;
         // children[0] = 左パディング
         // children[1] = 入力済みスパン (最初は空)
         // children[2] = 未入力スパン
@@ -1247,12 +1216,7 @@ function setNextWord(isFirstWord = false) {
         const kanjiContainerWidth = textBox.clientWidth;
         const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
 
-        textBox.innerHTML = `
-              <span style="width: ${kanjiPadding}px;"></span>
-              <span></span>
-              <span>${fullKanji}</span>
-              <span style="width: ${kanjiPadding}px;"></span>
-          `;
+        textBox.innerHTML = `<span style="width: ${kanjiPadding}px;"></span><span></span><span style="white-space: pre;">${fullKanji}</span><span style="width: ${kanjiPadding}px;"></span>`;
         textBox.scrollLeft = 0;
 
 
