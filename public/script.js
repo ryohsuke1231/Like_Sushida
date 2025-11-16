@@ -716,6 +716,9 @@ function startGame() {
             yomiBox.style.justifyContent = 'flex-start';
             textBox.style.justifyContent = 'flex-start';
             possible_text.style.justifyContent = 'flex-start';
+            yomiBox.style.whiteSpace = 'pre'; // スペースを保持
+            textBox.style.whiteSpace = 'pre'; // スペースを保持
+            possible_text.style.whiteSpace = 'pre'; // スペースを保持
             const fullYomi = yomi[i];
             const yomiContainerWidth = yomiBox.clientWidth;
             const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
@@ -1218,6 +1221,9 @@ function setNextWord(isFirstWord = false) {
         yomiBox.style.justifyContent = 'flex-start';
         textBox.style.justifyContent = 'flex-start';
         possible_text.style.justifyContent = 'flex-start';
+        yomiBox.style.whiteSpace = 'pre'; // スペースを保持
+        textBox.style.whiteSpace = 'pre'; // スペースを保持
+        possible_text.style.whiteSpace = 'pre'; // スペースを保持
         const fullYomi = yomi[i];
         const yomiContainerWidth = yomiBox.clientWidth;
         const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
@@ -1283,13 +1289,16 @@ function endGame() {
         // ---------------------------------
         let key_per_second = 0;
         if (start_time > 0 && end_time > start_time) {
+            console.log(`start_time: ${start_time}, end_time: ${end_time}`);
             const elapsedTimeSeconds = (end_time - start_time) / 1000;
             if (elapsedTimeSeconds > 0) {
                 key_per_second = (correct_keys_count + incorrect_keys_count) / elapsedTimeSeconds;
+                console.log(`key_per_second: ${key_per_second}`);
             }
         }
         // toFixed(2) で小数点以下2桁に丸める
         const key_per_second_text = parseFloat(key_per_second.toFixed(2));
+        console.log(`key_per_second_text: ${key_per_second_text}`);
 
         let correct_keys_percent = 0;
         const total_keys = correct_keys_count + incorrect_keys_count;
@@ -1325,6 +1334,7 @@ function endGame() {
             setTimeout(() => {
                 const el = document.getElementById('result-keys-per-second');
                 if (el) {
+                    console.log(`Displaying key_per_second_text: ${key_per_second_text}`);
                     // 共通計算の結果を使用
                     el.textContent = `${key_per_second_text} キー/秒`;
                     setVisibilityById('result-keys-per-second', true);

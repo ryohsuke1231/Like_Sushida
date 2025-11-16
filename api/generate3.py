@@ -73,6 +73,7 @@ def generate_new_text_with_furigana(custom_prompt): # ★ 変更: promptを引�
 
     try:
         # ★ 変更: 引数の custom_prompt を safe_generate に渡す
+        custom_prompt = custom_prompt + " ただし、答える際はMarkdown記号（*, -, #, ` など）や絵文字、特殊記号（ASCII外）を一切使わないでください。 文章のみで回答してください。"
         response = safe_generate(custom_prompt) 
 
         if not response:
