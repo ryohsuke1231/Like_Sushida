@@ -14,7 +14,7 @@ let nokorijikan = 60;
 let start_time = 0;
 let end_time = 0;
 let buffer = "";
-let start = false; // ゲーム実行中フラグ
+let start = null; // ゲーム実行中フラグ
 let secondsTimer = null; // タイマーのID
 let ippatsu = false;
 const ippatsu_color = '#a0522d';
@@ -327,7 +327,7 @@ function resetGameState() {
     end_time = 0;
     buffer = "";
     renda_ends = 0;
-    start = false;
+    start = null;
     yomi = [];
     kanji = [];
     currentCourseConfig = {};
@@ -478,7 +478,7 @@ async function startCourse(config) {
         jikan.setAttribute('max', config.time); // 時間経過progressのmax
         jikan.value = 0;
         document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
-
+        document.getElementById('remaining-chars').style.display = 'none';
     }
     let plus = "";
     if (ippatsu === true) {
@@ -499,7 +499,7 @@ async function startCourse(config) {
     endBox.style.display = 'none'; // ★ 追加: 念のため非表示
     document.getElementById('wait-box').style.display = 'none'; // ★ 追加: 念のため非表示
     document.getElementById('ai-config-box').style.display = 'none';
-    document.getElementById('remaining-chars').style.display = 'none';
+    start = false;
 
     // start フラグは false のまま (handleKeyDown が Enter/Space を待つ)
 }
@@ -779,7 +779,7 @@ function startTimer() {
             if (secondsTimer) clearInterval(secondsTimer);
             secondsTimer = null;
 
-            start = false; // ゲーム終了
+            start = null; // ゲーム終了
 
             // 終了表示
             startBox.style.display = 'none';
@@ -1026,7 +1026,7 @@ function handleKeyDown(event) {
                  end_time = Date.now(); 
                  if (secondsTimer) clearInterval(secondsTimer);
                  secondsTimer = null;
-                 start = false; // ゲーム終了
+                 start = null; // ゲーム終了
 
                  // 終了表示
                  startBox.style.display = 'none';
@@ -1098,7 +1098,7 @@ function setNextWord(isFirstWord = false) {
         if (secondsTimer) clearInterval(secondsTimer);
         secondsTimer = null;
 
-        start = false; // ゲーム終了
+        start = null; // ゲーム終了
 
         // 終了表示
         startBox.style.display = 'none';

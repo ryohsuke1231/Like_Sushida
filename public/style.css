@@ -1258,9 +1258,10 @@ input.cmn-toggle-round-flat {
 .block:nth-child(4) { grid-column: 5 / span 2; grid-row: 1 / span 1; }
 .block:nth-child(5) { grid-column: 2 / span 2; grid-row: 2 / span 1; }
 .block:nth-child(9) { grid-column: 2 / span 2; grid-row: 3 / span 1; }
-.block:nth-child(11) { grid-column: 5 / span 2; grid-row: 4 / span 1; }
+.block:nth-child(11) { grid-column: 5 / span 1; grid-row: 4 / span 1; }
 .block:nth-child(12) { grid-column: 1 / span 2; grid-row: 5 / span 1; }
 .block:nth-child(14) { grid-column: 4 / span 2; grid-row: 5 / span 1; }
+.block:nth-child(16) { grid-column: 2 / span 1; grid-row: 4 / span 1; }
 
 
 /* * ★変更点: 横長ブロックに横アニメを適用
@@ -1293,6 +1294,7 @@ input.cmn-toggle-round-flat {
 .block:nth-child(13) { animation-delay: -2.88s; }
 .block:nth-child(14) { animation-delay: -3.12s; }
 .block:nth-child(15) { animation-delay: -3.36s; }
+.block:nth-child(16) { animation-delay: -3.60s; }
 
 
 /* * 縦アニメ (変更なし)
