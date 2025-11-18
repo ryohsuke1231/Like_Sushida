@@ -5,6 +5,18 @@ let judge; // TypingJudgeのインスタンス
 let currentCourseConfig = {}; // 現在選択中のコース設定
 let mapping = [];
 
+/**
+ * Convert normal spaces to non-breaking spaces so that a string
+ * containing only spaces (or leading/trailing spaces) remains visible
+ * when inserted via innerHTML. Also gracefully handles null/undefined.
+ * @param {string} s
+ * @returns {string}
+ */
+function toNBSP(s) {
+    if (s === null || s === undefined) return "";
+    return String(s).replace(/ /g, '\u00A0');
+}
+
 // ゲーム状態
 let i = 0; // 現在の単語インデックス
 let correct_keys_count = 0;
@@ -695,9 +707,9 @@ function startGame() {
         */
         // (1) yomi-text (ひらがな) の初期化
         if (currentCourseConfig.special !== true) {
-            yomiBox.innerHTML = `<span style="color: #444;">${yomi[i]}</span>`;
-            textBox.innerHTML = `<span style="color: #444;">${kanji[i]}</span>`;
-            possible_text.innerHTML = `<span style="color: #eee;">${judge.getBestMatch()}</span>`;
+            yomiBox.innerHTML = `<span style="color: #444;">${toNBSP(yomi[i])}</span>`;
+            textBox.innerHTML = `<span style="color: #444;">${toNBSP(kanji[i])}</span>`;
+            possible_text.innerHTML = `<span style="color: #eee;">${toNBSP(judge.getBestMatch())}</span>`;
             yomiBox.style.justifyContent = 'center';
             textBox.style.justifyContent = 'center';
             possible_text.style.justifyContent = 'center';
@@ -741,7 +753,7 @@ function startGame() {
             const romaContainerWidth = possible_text.clientWidth;
             const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
 
-            possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${initialRemaining}</span><span style="width: ${romaPadding}px;"></span>`;
+            possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${toNBSP(initialRemaining)}</span><span style="width: ${romaPadding}px;"></span>`;
             possible_text.scrollLeft = 0;
             // ★★★ 修正ここまで ★★★
             yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
@@ -862,82 +874,14 @@ function handleKeyDown(event) {
             renda.value = renda_count;
             buffer += event.key;
 
-            // ★★★ スクロールロジックの修正 ★★★
-            /*
-             // (1) possible_text (ローマ字) の計算
-             const remaining = judge.getBestMatch();
-             const romaContainerWidth = possible_text.clientWidth;
-             const romaPaddingLeft = romaContainerWidth / 2; // 左パディングの幅
-
-             possible_text.innerHTML = `
-               <span style="width: ${romaPaddingLeft}px;"></span>
-               <span style="color: #444;">${buffer}</span>
-               <span style="color: #eee;">${remaining}</span>
-             `;
-             const typedRomaSpan = possible_text.children[1]; // 2番目のspan (入力済みテキスト)
-             const typedRomaWidth = typedRomaSpan.offsetWidth;
-             // スクロール位置 = 入力済みテキストの幅
-             possible_text.scrollLeft = typedRomaWidth;
-
-             // (2) yomi-text (ひらがな) の計算
-             const completedHiraganaLength = judge.getCompletedHiraganaLength();
-             const fullYomi = yomi[i];
-             const completedYomi = fullYomi.substring(0, completedHiraganaLength);
-             const remainingYomi = fullYomi.substring(completedHiraganaLength);
-
-             const yomiContainerWidth = yomiBox.clientWidth;
-             const yomiPaddingLeft = yomiContainerWidth / 2; // 左パディングの幅
-
-             yomiBox.innerHTML = `
-               <span style="width: ${yomiPaddingLeft}px;"></span>
-               <span>${completedYomi}</span>
-               <span>${remainingYomi}</span>
-             `;
-             const typedYomiSpan = yomiBox.children[1]; // 2番目のspan
-             const typedYomiWidth = typedYomiSpan.offsetWidth;
-             // スクロール位置 = 入力済みテキストの幅
-             yomiBox.scrollLeft = typedYomiWidth;
-
-
-             // (3) box-text (漢字) の計算
-             const fullKanji = kanji[i];
-             const currentMapping = mapping[i];
-             let kanjiSplitIndex = 0;
-
-             if (completedHiraganaLength > 0 && currentMapping && currentMapping.length >= completedHiraganaLength) {
-               const lastKanjiIndex = currentMapping[completedHiraganaLength - 1];
-               if (lastKanjiIndex !== undefined && lastKanjiIndex >= 0) {
-                 kanjiSplitIndex = lastKanjiIndex + 1;
-               }
-             }
-             const completedKanji = fullKanji.substring(0, kanjiSplitIndex);
-             const remainingKanji = fullKanji.substring(kanjiSplitIndex);
-
-             const kanjiContainerWidth = textBox.clientWidth;
-             const kanjiPaddingLeft = kanjiContainerWidth / 2; // 左パディングの幅
-
-             textBox.innerHTML = `
-               <span style="width: ${kanjiPaddingLeft}px;"></span>
-               <span>${completedKanji}</span>
-               <span>${remainingKanji}</span>
-             `;
-             const typedKanjiSpan = textBox.children[1]; // 2番目のspan
-             const typedKanjiWidth = typedKanjiSpan.offsetWidth;
-             // スクロール位置 = 入力済みテキストの幅
-             textBox.scrollLeft = typedKanjiWidth;
-
-             // ★★★ 修正ここまで ★★★
-             */
-            // ★★★ スクロールロジックの修正 ★★★
-
             // (1) possible_text (ローマ字) の計算
             let remaining;
-            if (currentCourseConfig.special !== true) {
-                remaining = judge.getBestMatch();
-                possible_text.innerHTML = `
-                     <span style="color: #444;">${buffer}</span>
-                     <span style="color: #eee;">${remaining}</span>
-                `;
+             if (currentCourseConfig.special !== true) {
+             remaining = judge.getBestMatch();
+             possible_text.innerHTML = `
+                 <span style="color: #444;">${toNBSP(buffer)}</span>
+                 <span style="color: #eee;">${toNBSP(remaining)}</span>
+             `;
 
             } else {
                 remaining = judge.getBestMatch();
@@ -947,8 +891,8 @@ function handleKeyDown(event) {
 
                 possible_text.innerHTML = `
                    <span style="width: ${romaPadding}px;"></span>
-                   <span style="color: #444;">${buffer}</span>
-                   <span style="color: #eee;">${remaining}</span>
+                   <span style="color: #444;">${toNBSP(buffer)}</span>
+                   <span style="color: #eee;">${toNBSP(remaining)}</span>
                    <span style="width: ${romaPadding}px;"></span>
                `;
 
@@ -971,7 +915,7 @@ function handleKeyDown(event) {
 
                 // completedYomi / remainingYomi に含まれるスペースを保持するため、
                 // それらを含むスパンだけ 'white-space: pre' を指定します。
-                yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span style="white-space: pre;">${completedYomi}</span><span style="white-space: pre;">${remainingYomi}</span><span style="width: ${yomiPadding}px;"></span>`;
+                yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span style="white-space: pre;">${toNBSP(completedYomi)}</span><span style="white-space: pre;">${toNBSP(remainingYomi)}</span><span style="width: ${yomiPadding}px;"></span>`;
 
                 typed_chars = kakutei_typed_chars + completedHiraganaLength;
                 document.getElementById('remaining-chars').value = typed_chars;
@@ -1050,9 +994,9 @@ function handleKeyDown(event) {
 
                 textBox.innerHTML = `
                     <span style="width: ${kanjiPadding}px;"></span>
-                    <span id="typed-kanji">${completedKanji}</span>
-                    <span id="current-kanji">${currentKanji}</span>
-                    <span id="future-kanji">${futureKanji}</span>
+                    <span id="typed-kanji">${toNBSP(completedKanji)}</span>
+                    <span id="current-kanji">${toNBSP(currentKanji)}</span>
+                    <span id="future-kanji">${toNBSP(futureKanji)}</span>
                     <span style="width: ${kanjiPadding}px;"></span>
                 `;
 
@@ -1148,7 +1092,11 @@ function setNextWord(isFirstWord = false) {
     }
 
     if (i >= yomi.length) {
-        // ★ 完走した場合
+        // ★ 時間切れ
+        remainingTime.textContent = `残り時間: 0秒`;
+        jikan.value = currentCourseConfig.time;
+        end_time = Date.now();
+
         if (secondsTimer) clearInterval(secondsTimer);
         secondsTimer = null;
 
@@ -1161,8 +1109,6 @@ function setNextWord(isFirstWord = false) {
         endBox.style.display = 'flex';
         start_text.textContent = '終了！';
         //textBox.textContent = "終了！";
-        //yomiBox.textContent = "";
-        textBox.innerHTML = "";
         yomiBox.innerHTML = "";
         possible_text.innerHTML = "";
 
@@ -1183,10 +1129,10 @@ function setNextWord(isFirstWord = false) {
     */
     // (1) yomi-text (ひらがな) の初期化
     if (currentCourseConfig.special !== true) {
-        yomiBox.innerHTML = `<span style="color: #444;">${yomi[i]}</span>`;
-        textBox.innerHTML = `<span style="color: #444;">${kanji[i]}</span>`;
+        yomiBox.innerHTML = `<span style="color: #444;">${toNBSP(yomi[i])}</span>`;
+        textBox.innerHTML = `<span style="color: #444;">${toNBSP(kanji[i])}</span>`;
         possible_text.innerHTML = `
-            <span style="color: #eee;">${judge.getBestMatch()}</span>
+            <span style="color: #eee;">${toNBSP(judge.getBestMatch())}</span>
         `;
         yomiBox.style.justifyContent = 'center';
         textBox.style.justifyContent = 'center';
