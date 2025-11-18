@@ -1030,14 +1030,13 @@ input.cmn-toggle-round-flat {
 
 #ai-config-box textarea {
     width: 80%;
-    row
     font-size: 1.5rem;
     padding: 1rem;
     border: 2px solid #ccc;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
-    margin-top: 2rem
+    margin-top: 2rem;
     resize: none;
     overflow-y: auto;
     box-sizing: border-box;

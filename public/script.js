@@ -466,9 +466,12 @@ async function startCourse(config) {
             document.getElementById('remaining-chars').setAttribute('max', total_chars);
             document.getElementById('remaining-chars').value = 0;
             document.getElementById('remaining-chars').style.display = 'flex';
+            document.getElementById('remaining-chars-label').style.display = 'block';
 
             document.getElementById('haratta').textContent = ``;
             document.getElementById('wait-box').style.display = 'none';
+            renda.style.display = 'none';
+            document.getElementById('renda-label').style.display = 'none';
             //selectBox.style.display = 'none'; // (上で実施済み)
 
 
@@ -503,6 +506,9 @@ async function startCourse(config) {
         jikan.value = 0;
         document.getElementById('haratta').textContent = `${config.price}円 払って・・・`;
         document.getElementById('remaining-chars').style.display = 'none';
+        document.getElementById('remaining-chars-label').style.display = 'none';
+        renda.style.display = 'block';
+        document.getElementById('renda-label').style.display = 'block';
     }
     let plus = "";
     if (ippatsu === true) {

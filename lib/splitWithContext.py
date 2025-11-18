@@ -72,7 +72,13 @@ def split_with_context(text: str) -> list[dict]: # ★ 戻り値を list[dict] �
 
         cleaned_segment = text
 
-        # 元のJSは空になったセグメントを除去していないため、Pythonでもそのまま返す
+        # 元のJSは空になったセグメントを除去していないため、そのまま返していましたが
+        # "空白のみ" のセグメントは不要な出力を生むため除去します。
+        # ただし、先頭/末尾にスペースが残る（例: ' なお...') 場合はそのまま保持します。
+        if cleaned_segment.strip() == "":
+            # セグメントが空白のみ（スペースやタブ変換後）であればスキップ
+            continue
+
         cleaned_segments_data.append({
             'segment': cleaned_segment,
             'start': data['start'],
