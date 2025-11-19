@@ -29,6 +29,20 @@ JAPANESE_PATTERN = re.compile(r'[ぁ-んァ-ヶ\u4E00-\u9FAF]')
 
 # --- 削除: SUD_TOKENIZER の初期化は不要 ---
 
+# ★★★ lib/furigana.py からコピー ★★★
+def kata_to_hira(s):
+    """カタカナをひらがなに変換する (NFKC正規化を含む)"""
+    s = unicodedata.normalize('NFKC', s)
+    result = []
+    for ch in s:
+        code = ord(ch)
+        if 0x30A1 <= code <= 0x30F6:
+            result.append(chr(code - 0x60))
+        else:
+            result.append(ch)
+    return "".join(result)
+# ★★★ ここまで ★★★
+
 
 def get_furigana(message):
     """
@@ -73,6 +87,55 @@ def get_furigana(message):
     word_index_counter = 0
     kanji_index_offset = 0
 
+    # ★★★ lib/furigana.py からコピー ★★★
+    conversion_map = {
+        '『': '「',
+        '』': '」',
+        '（': '(',
+        '）': ')',
+        '［': '[',
+        '］': ']',
+        '｛': '{',
+        '｝': '}',
+        '＜': '<',
+        '＞': '>',
+        '？': '?',
+        '！': '!',
+        '・': '/',
+        '0': '0',
+        '1': '1',
+        '2': '2',
+        '3': '3',
+        '4': '4',
+        '5': '5',
+        '6': '6',
+        '7': '7',
+        '8': '8',
+        '9': '9',
+        '　': ' ',
+        '：': ':',
+        '；': ';',
+        '＆': '&',
+        '＃': '#',
+        '＠': '@',
+        '＄': '$',
+        '％': '%',
+        '＾': '^',
+        '＊': '*',
+        '－': '-',
+        '＿': '_',
+        '＋': '+',
+        '＝': '='
+    }
+
+    keep_symbols = {
+        '、', '。', '・', '「', '」', '(', ')', '[', ']', '{', '}', '<', '>',
+        '/', '?', '!', ' ', ',', '.', '-', '_', ':', ';', '&', '#', '@',
+        '$', '%', '^', '*', '+', '='
+    }
+    # ★★★ ここまで ★★★
+
+
     try:
         # --- 2. Sudachiの代わりにKoyeb APIを呼び出す ---
         url = f"{API_BASE_URL}/get_morphemes"
@@ -100,20 +163,22 @@ def get_furigana(message):
 
         for m in morphemes:
             # APIからのレスポンス(辞書)から値を取得
-            current_kanji = m.get("surface", "")
+            current_kanji = m.get("surface", "") # ★ NFKC正規化なし
             reading_kata = m.get("reading", "") # APIはカタカナで返す
 
             current_yomi = ""
             current_mapping_parts = []
 
-            # 3. 日本語かそれ以外かで処理を分岐 (元のコードと同じ)
+            # 3. 日本語かそれ以外かで処理を分岐
             is_japanese = bool(JAPANESE_PATTERN.search(current_kanji))
 
             if is_japanese:
                 # --- 3a. 日本語の場合 ---
-                # ★ pykakasi でカタカナ -> ひらがな に変換
+                # ★ pykakasi でカタカナ -> ひらがな に変換 (NFKC正規化も含む)
                 result_list = KKS.convert(reading_kata)
                 current_yomi = "".join([item['hira'] for item in result_list])
+                
+                # ★ current_kanji (surface) は正規化しない (Yahoo版 1, 2a と同じ)
 
                 # マッピング計算 (元のコードと同じ)
                 len_f = len(current_yomi)
@@ -128,10 +193,48 @@ def get_furigana(message):
                     current_mapping_parts.extend([kanji_index_offset] * len_f)
             
             else:
-                # --- 3b. 日本語以外の場合 --- (元のコードと同じ)
-                current_yomi = current_kanji
-                for i in range(len(current_yomi)):
-                    current_mapping_parts.append(i + kanji_index_offset)
+                # --- 3b. 日本語以外の場合 --- (★ Yahoo版の記号処理ロジックに置き換え)
+                
+                # ★ surface (current_kanji) に kata_to_hira (NFKC + ひらがな化) を適用 (Yahoo版 2b と同じ)
+                normalized_surface = kata_to_hira(current_kanji) 
+
+                temp_kanji = ""
+                temp_yomi = ""
+                temp_map = []
+
+                for char_idx, char in enumerate(normalized_surface):
+                    # 4a. 変換マップ
+                    if char in conversion_map:
+                        converted_char = conversion_map[char]
+                        temp_kanji += char  # カンジ側(表示用)は変換前の文字
+                        temp_yomi += converted_char  # ヨミ側(タイピング用)は変換後の文字
+                        temp_map.append(char_idx + kanji_index_offset)
+                        continue
+
+                    # 4b. ひらがな・長音記号・アルファベット
+                    code = ord(char)
+                    if (0x3041 <= code <= 0x309F) or \
+                       (code == 0x30FC) or \
+                       (0x0041 <= code <= 0x005A) or \
+                       (0x0061 <= code <= 0x007A):
+                        temp_kanji += char
+                        temp_yomi += char # ★ 小文字化しない (Yahoo版のロジックに合わせる)
+                        temp_map.append(char_idx + kanji_index_offset)
+                        continue
+
+                    # 4c. そのまま残す記号
+                    if char in keep_symbols:
+                        temp_kanji += char
+                        temp_yomi += char
+                        temp_map.append(char_idx + kanji_index_offset)
+                        continue
+
+                    # 4d. それ以外 (無視)
+
+                current_kanji = temp_kanji
+                current_yomi = temp_yomi
+                current_mapping_parts = temp_map
+                # ★★★ 置き換えここまで ★★★
 
             # --- 4. この word の処理終了、結果の格納 (元のコードと同じ) ---
             if current_yomi:
@@ -201,15 +304,15 @@ if __name__ == "__main__":
         print("例: export FURIGANA_API_KEY=your_secret_key")
         print("="*30)
     else:
-        test_text = "テスト（TEST）"
+        test_text = "テスト（TEST）" # ★ 記号処理のテスト
         print(f"Input: {test_text}")
         result = get_furigana(test_text)
         if result:
             yomi, mapping, word_map, words_data = result
-            print(f"Yomi: {yomi}")
+            print(f"Yomi: {yomi}") # ★ 期待値: 'てすと(TEST)'
             print(f"Mapping: {mapping}")
             print(f"Word Map: {word_map}")
-            print(f"Words Data: {words_data}")
+            print(f"Words Data: {words_data}") # ★ 期待値: [{'kanji': 'テスト', 'yomi': 'てすと'}, {'kanji': '（', 'yomi': '('}, {'kanji': 'TEST', 'yomi': 'TEST'}, {'kanji': '）', 'yomi': ')'}]
             print(
                 f"Yomi Len: {len(yomi)}, Map Len: {len(mapping)}, Word Map Len: {len(word_map)}"
             )
