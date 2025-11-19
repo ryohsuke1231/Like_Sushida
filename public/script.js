@@ -384,6 +384,15 @@ function resetGameState() {
     textBox.innerHTML = "";
     yomiBox.innerHTML = "";
     possible_text.innerHTML = "";
+    
+    // jikan-plus をリセット（前回の +N 表示が残るのを防ぐ）
+    const jikanPlusEl = document.getElementById('jikan-plus');
+    if (jikanPlusEl) {
+        jikanPlusEl.textContent = "　"; // 全角スペースで幅を維持
+        jikanPlusEl.classList.remove('fade');
+        void jikanPlusEl.offsetWidth; // 再描画トリガー
+        jikanPlusEl.classList.add('fade');
+    }
 }
 
 /**
@@ -764,11 +773,11 @@ function startGame() {
             possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${toNBSP(initialRemaining)}</span><span style="width: ${romaPadding}px;"></span>`;
             //possible_text.scrollLeft = 0;
             // ★★★ 修正ここまで ★★★
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 yomiBox.scrollLeft = 0;
                 textBox.scrollLeft = 0;
                 possible_text.scrollLeft = 0;
-            }, 0);
+            });
             yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
             textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
             possible_text.style.scrollBehavior = 'smooth';
@@ -1080,14 +1089,15 @@ function updateRendaTime() {
     }
 
     if (addedTime > 0) {
-        nokorijikan += addedTime;
-        remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
-        const jikan_plus = document.getElementById('jikan-plus');
-        jikan_plus.textContent = `+${addedTime}`;
-        jikan_plus.classList.remove('fade');
-        void jikan_plus.offsetWidth; // 再描画トリガー
-        jikan_plus.classList.add('fade');
-        if (currentCourseConfig.special === true) {
+        if (currentCourseConfig.special !== true) {
+            nokorijikan += addedTime;
+            remainingTime.textContent = `残り時間: ${nokorijikan}秒`;
+            const jikan_plus = document.getElementById('jikan-plus');
+            jikan_plus.textContent = `+${addedTime}`;
+            jikan_plus.classList.remove('fade');
+            void jikan_plus.offsetWidth; // 再描画トリガー
+            jikan_plus.classList.add('fade');
+        } else {
             document.getElementById('total_got_odai').textContent = `連打メーター：${renda_ends}周`;
         }
     }

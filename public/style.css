@@ -296,6 +296,8 @@ tfoot td {
     font-weight: 600;
     text-align: center;
     color: #000;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 progress {
