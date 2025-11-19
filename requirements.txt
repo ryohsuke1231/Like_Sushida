@@ -2,3 +2,6 @@ Flask
 requests
 openai
 google.generativeai
+sudachipy
+sudachidict_full
+pykakasi

@@ -10,7 +10,7 @@ from threading import Thread
 import time
 
 # ★ 新規: furigana.py からインポート
-from lib.furigana import get_furigana
+from lib.furigana_sudachi import get_furigana
 from lib.splitWithContext import split_with_context
 
 
