@@ -25,7 +25,7 @@ except Exception as e:
     KKS = None
 
 # 日本語判定パターン (クライアント側で必要)
-JAPANESE_PATTERN = re.compile(r'[ぁ-んァ-ヶ\u4e-00-\u9faf]')
+JAPANESE_PATTERN = re.compile(r'[ぁ-んァ-ヶ\u4E00-\u9FAF]')
 
 # --- 削除: SUD_TOKENIZER の初期化は不要 ---
 
