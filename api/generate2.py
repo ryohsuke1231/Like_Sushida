@@ -166,72 +166,75 @@ def generate_text():
             yomi_segments_data = split_with_context(yomi_text)
             yomi_split = []
             kanji_split = []
-            final_mapping_segments = [] # ★ 追加
+            final_mapping_segments = []
 
+            # ▼▼▼ [フォールバック] ループ開始 (wiki.py と同じロジック) ▼▼▼
             for data in yomi_segments_data:
-                yomi_split.append(data['segment']) 
                 start, end = data['start'], data['end']
 
-                # ★★★ 修正 (wiki.py と同じ) ★★★
-                if start >= len(yomi_text):
+                # --- (1) スライス取得 ---
+                if start >= len(yomi_text) or start >= len(mapping_list) or start >= len(word_map):
                     continue
-                end = min(end, len(yomi_text)) 
+                end = min(end, len(yomi_text), len(mapping_list), len(word_map))
                 yomi_slice_raw = yomi_text[start:end]
-                # ★★★ 修正ここまで ★★★
+                mapping_slice_raw = mapping_list[start:end]
+                word_map_slice = word_map[start:end]
 
-                # (1) kanji ロジック
-                if start >= len(word_map):
-                    kanji_split.append("") # ★ kanji_split を使う
-                else:
-                    word_map_end = min(end, len(word_map)) 
-                    word_map_slice = word_map[start:word_map_end]
-
-                    if len(yomi_slice_raw) != len(word_map_slice):
-                        logging.warning(f"Generate2 (Fallback): Mismatch yomi_slice/word_map_slice length. Skipping segment.")
-                        kanji_split.append("")
-                    else:
-                        kanji_segment_chars = []
-                        last_word_index = -1 
-                        for i in range(len(yomi_slice_raw)):
-                            yomi_char = yomi_slice_raw[i]
-                            #if yomi_char.isspace():
-                            #    continue 
-                            current_word_index = word_map_slice[i]
-                            if current_word_index != last_word_index:
-                                try:
-                                    kanji_segment_chars.append(words_data[current_word_index]['kanji'])
-                                    last_word_index = current_word_index
-                                except IndexError:
-                                    logging.warning(f"Generate2 (Fallback): Word map index {current_word_index} out of bounds.")
-                                    kanji_segment_chars.append(yomi_char)
-                                    last_word_index = -1
-                        kanji_split.append("".join(kanji_segment_chars))
-
-                # (2) mapping ロジック
-                if start >= len(mapping_list): 
-                    final_mapping_segments.append([])
+                if not (len(yomi_slice_raw) == len(mapping_slice_raw) == len(word_map_slice)):
+                    logging.warning(f"Generate2 (Fallback): Mismatch raw slice lengths. Skipping segment.")
                     continue
 
-                mapping_end = min(end, len(mapping_list))
-                mapping_slice_raw = mapping_list[start:mapping_end]
+                # --- (2) クリーンアップ (空白除去) ---
+                cleaned_yomi_chars = []
+                cleaned_mapping = []
+                cleaned_word_map = []
+                is_leading = True 
 
-                if len(yomi_slice_raw) != len(mapping_slice_raw):
-                    logging.warning(f"Generate2 (Fallback): Mismatch yomi_slice/mapping_slice length. Appending empty map.")
-                    final_mapping_segments.append([])
-                    continue
-
-                mapping_segment = []
-                kanji_segment_start_index = -1
                 for i in range(len(yomi_slice_raw)):
                     yomi_char = yomi_slice_raw[i]
-                    #if yomi_char.isspace():
-                    #    continue
-                    original_kanji_index = mapping_slice_raw[i]
+                    if yomi_char == '　': yomi_char = ' '
+                    if yomi_char != ' ' and yomi_char.isspace(): continue
+                    if is_leading and yomi_char == ' ': continue
+                    is_leading = False
+                    cleaned_yomi_chars.append(yomi_char)
+                    cleaned_mapping.append(mapping_slice_raw[i])
+                    cleaned_word_map.append(word_map_slice[i])
+
+                if not cleaned_yomi_chars:
+                    continue
+                
+                # --- (3) final リストへの追加 ---
+                
+                # (3a) yomi
+                yomi_split.append("".join(cleaned_yomi_chars))
+
+                # (3b) kanji
+                kanji_segment_chars = []
+                last_word_index = -1
+                for i in range(len(cleaned_yomi_chars)):
+                    yomi_char = cleaned_yomi_chars[i]
+                    current_word_index = cleaned_word_map[i]
+                    if current_word_index != last_word_index:
+                        try:
+                            kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                            last_word_index = current_word_index
+                        except IndexError:
+                            logging.warning(f"Generate2 (Fallback): Word map index {current_word_index} out of bounds.")
+                            kanji_segment_chars.append(yomi_char) 
+                            last_word_index = -1
+                kanji_split.append("".join(kanji_segment_chars))
+
+                # (3c) mapping
+                mapping_segment = []
+                kanji_segment_start_index = -1 
+                for i in range(len(cleaned_yomi_chars)):
+                    original_kanji_index = cleaned_mapping[i]
                     if kanji_segment_start_index == -1:
                         kanji_segment_start_index = original_kanji_index
                     relative_kanji_index = original_kanji_index - kanji_segment_start_index
                     mapping_segment.append(relative_kanji_index)
                 final_mapping_segments.append(mapping_segment)
+            # ▲▲▲ [フォールバック] ループ終了 ▲▲▲
 
             response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=final_mapping_segments) 
             response = make_response(response_data)
@@ -266,70 +269,73 @@ def generate_text():
     kanji_split = []
     final_mapping_segments = [] # ★ 追加
 
+    # ▼▼▼ [キャッシュ] ループ開始 (wiki.py と同じロジック) ▼▼▼
     for data in yomi_segments_data:
-        yomi_split.append(data['segment'])
         start, end = data['start'], data['end']
 
-        # ★★★ 修正 (wiki.py と同じ) ★★★
-        if start >= len(yomi_text):
+        # --- (1) スライス取得 ---
+        if start >= len(yomi_text) or start >= len(mapping_list) or start >= len(word_map):
             continue
-        end = min(end, len(yomi_text))
+        end = min(end, len(yomi_text), len(mapping_list), len(word_map))
         yomi_slice_raw = yomi_text[start:end]
-        # ★★★ 修正ここまで ★★★
+        mapping_slice_raw = mapping_list[start:end]
+        word_map_slice = word_map[start:end]
 
-        # (1) kanji ロジック (★ 修正: キャッシュヒット時のバグ修正)
-        if start >= len(word_map):
-            kanji_split.append("") # ★ kanji_split を使う
-        else:
-            word_map_end = min(end, len(word_map)) 
-            word_map_slice = word_map[start:word_map_end]
-
-            if len(yomi_slice_raw) != len(word_map_slice):
-                logging.warning("Generate2 (Cache): Mismatch yomi_slice/word_map_slice length. Skipping segment.")
-                kanji_split.append("") # ★ kanji_split を使う
-            else:
-                kanji_segment_chars = []
-                last_word_index = -1 
-                for i in range(len(yomi_slice_raw)):
-                    yomi_char = yomi_slice_raw[i]
-                    #if yomi_char.isspace():
-                    #    continue
-                    current_word_index = word_map_slice[i]
-                    if current_word_index != last_word_index:
-                        try:
-                            kanji_segment_chars.append(words_data[current_word_index]['kanji'])
-                            last_word_index = current_word_index
-                        except IndexError:
-                            logging.warning(f"Generate2 (Cache): Word map index {current_word_index} out of bounds.")
-                            kanji_segment_chars.append(yomi_char)
-                            last_word_index = -1
-                kanji_split.append("".join(kanji_segment_chars)) # ★ kanji_split を使う
-
-        # (2) mapping ロジック
-        if start >= len(mapping_list):
-            final_mapping_segments.append([])
+        if not (len(yomi_slice_raw) == len(mapping_slice_raw) == len(word_map_slice)):
+            logging.warning(f"Generate2 (Cache): Mismatch raw slice lengths. Skipping segment.")
             continue
 
-        mapping_end = min(end, len(mapping_list))
-        mapping_slice_raw = mapping_list[start:mapping_end]
+        # --- (2) クリーンアップ (空白除去) ---
+        cleaned_yomi_chars = []
+        cleaned_mapping = []
+        cleaned_word_map = []
+        is_leading = True 
 
-        if len(yomi_slice_raw) != len(mapping_slice_raw):
-            logging.warning(f"Generate2 (Cache): Mismatch yomi_slice/mapping_slice length. Appending empty map.")
-            final_mapping_segments.append([])
-            continue
-
-        mapping_segment = []
-        kanji_segment_start_index = -1
         for i in range(len(yomi_slice_raw)):
             yomi_char = yomi_slice_raw[i]
-            #if yomi_char.isspace():
-            #    continue
-            original_kanji_index = mapping_slice_raw[i]
+            if yomi_char == '　': yomi_char = ' '
+            if yomi_char != ' ' and yomi_char.isspace(): continue
+            if is_leading and yomi_char == ' ': continue
+            is_leading = False
+            cleaned_yomi_chars.append(yomi_char)
+            cleaned_mapping.append(mapping_slice_raw[i])
+            cleaned_word_map.append(word_map_slice[i])
+
+        if not cleaned_yomi_chars:
+            continue
+        
+        # --- (3) final リストへの追加 ---
+
+        # (3a) yomi
+        yomi_split.append("".join(cleaned_yomi_chars))
+
+        # (3b) kanji
+        kanji_segment_chars = []
+        last_word_index = -1
+        for i in range(len(cleaned_yomi_chars)):
+            yomi_char = cleaned_yomi_chars[i]
+            current_word_index = cleaned_word_map[i]
+            if current_word_index != last_word_index:
+                try:
+                    kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                    last_word_index = current_word_index
+                except IndexError:
+                    logging.warning(f"Generate2 (Cache): Word map index {current_word_index} out of bounds.")
+                    kanji_segment_chars.append(yomi_char) 
+                    last_word_index = -1
+        kanji_split.append("".join(kanji_segment_chars))
+
+        # (3c) mapping
+        mapping_segment = []
+        kanji_segment_start_index = -1 
+        for i in range(len(cleaned_yomi_chars)):
+            original_kanji_index = cleaned_mapping[i]
             if kanji_segment_start_index == -1:
                 kanji_segment_start_index = original_kanji_index
             relative_kanji_index = original_kanji_index - kanji_segment_start_index
             mapping_segment.append(relative_kanji_index)
         final_mapping_segments.append(mapping_segment)
+    # ▲▲▲ [キャッシュ] ループ終了 ▲▲▲
 
     # --- ループ終了後 ---
 

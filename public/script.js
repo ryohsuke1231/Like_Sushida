@@ -678,7 +678,93 @@ function startGame() {
     start = 1;
     // 1秒待ってからゲーム画面へ
     const odai_box = document.getElementById('odai-box');
+    // 最初の単語 (yomi[0]) で Judge を初期化
 
+    // 最初の単語をセット
+    // ★★★ 修正点 2 ★★★
+    // 最初の単語 (yomi[0]) で Judge を初期化
+    // ゲームが本当に始まるこの瞬間に new する
+    judge = new TypingJudge2(yomi[0]);
+
+    // 最初の単語をセット
+    i = 0;
+
+    // ★★★ 修正点 3 ★★★
+    // setNextWord(true) は内部で setProblem(yomi[0]) を呼ぶが、
+    // judge は既に yomi[0] で初期化済み。
+    // 無駄な再構築を防ぐため、setNextWord の中身をここに展開し、
+    // setProblem を呼ばないようにする。
+
+    // setNextWord(true); // ← この呼び出しを削除し、
+
+    // ↓↓↓ setNextWord(true) の中身を展開 (setProblem以外)
+    buffer = "";
+    // judge.setProblem(yomi[i]); // ← 呼ばない (既に yomi[0] で初期化済み)
+    // ★★★ 修正 (textContent を使用) ★★★
+    /*
+    textBox.textContent = kanji[i]; // i=0
+    yomiBox.textContent = yomi[i]; // i=0
+    */
+    // (1) yomi-text (ひらがな) の初期化
+    if (currentCourseConfig.special !== true) {
+        yomiBox.innerHTML = `<span style="color: #444;">${toNBSP(yomi[i])}</span>`;
+        textBox.innerHTML = `<span style="color: #444;">${toNBSP(kanji[i])}</span>`;
+        possible_text.innerHTML = `<span style="color: #eee;">${toNBSP(judge.getBestMatch())}</span>`;
+        yomiBox.style.justifyContent = 'center';
+        textBox.style.justifyContent = 'center';
+        possible_text.style.justifyContent = 'center';
+        yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+        textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+        possible_text.style.scrollBehavior = 'auto';
+    } else {
+        yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+        textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
+        possible_text.style.scrollBehavior = 'auto';
+        yomiBox.style.justifyContent = 'flex-start';
+        textBox.style.justifyContent = 'flex-start';
+        possible_text.style.justifyContent = 'flex-start';
+        // スペースは保持したいが、親要素に 'pre' を設定すると
+        // テンプレート内の改行文字がそのまま反映され縦並びになるため、
+        // テキストを含むスパンのみ 'white-space: pre' にします。
+        const fullYomi = yomi[i];
+        const yomiContainerWidth = yomiBox.clientWidth;
+        const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
+
+        yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span></span><span style="white-space: pre;">${fullYomi}</span><span style="width: ${yomiPadding}px;"></span>`;
+        // children[0] = 左パディング
+        // children[1] = 入力済みスパン (最初は空)
+        // children[2] = 未入力スパン
+        // children[3] = 右パディング
+
+        //yomiBox.scrollLeft = 0; // スクロール位置をリセット
+
+
+        // (2) box-text (漢字) の初期化
+        const fullKanji = kanji[i];
+        const kanjiContainerWidth = textBox.clientWidth;
+        const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
+
+        textBox.innerHTML = `<span style="width: ${kanjiPadding}px;"></span><span></span><span style="white-space: pre;">${fullKanji}</span><span style="width: ${kanjiPadding}px;"></span>`;
+        //textBox.scrollLeft = 0;
+
+
+        // (3) possible_text (ローマ字) の初期化
+        const initialRemaining = judge.getBestMatch();
+        const romaContainerWidth = possible_text.clientWidth;
+        const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
+
+        possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${toNBSP(initialRemaining)}</span><span style="width: ${romaPadding}px;"></span>`;
+        //possible_text.scrollLeft = 0;
+        // ★★★ 修正ここまで ★★★
+        setTimeout(() => {
+            yomiBox.scrollLeft = 0;
+            textBox.scrollLeft = 0;
+            possible_text.scrollLeft = 0;
+        }, 100);
+        yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+        textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
+        possible_text.style.scrollBehavior = 'smooth';
+    }
 
     setTimeout(() => {
         /*
@@ -695,93 +781,7 @@ function startGame() {
         start = true;
         start_time = Date.now();
 
-        // 最初の単語 (yomi[0]) で Judge を初期化
-
-        // 最初の単語をセット
-        // ★★★ 修正点 2 ★★★
-        // 最初の単語 (yomi[0]) で Judge を初期化
-        // ゲームが本当に始まるこの瞬間に new する
-        judge = new TypingJudge2(yomi[0]);
-
-        // 最初の単語をセット
-        i = 0;
-
-        // ★★★ 修正点 3 ★★★
-        // setNextWord(true) は内部で setProblem(yomi[0]) を呼ぶが、
-        // judge は既に yomi[0] で初期化済み。
-        // 無駄な再構築を防ぐため、setNextWord の中身をここに展開し、
-        // setProblem を呼ばないようにする。
-
-        // setNextWord(true); // ← この呼び出しを削除し、
-
-        // ↓↓↓ setNextWord(true) の中身を展開 (setProblem以外)
-        buffer = "";
-        // judge.setProblem(yomi[i]); // ← 呼ばない (既に yomi[0] で初期化済み)
-        // ★★★ 修正 (textContent を使用) ★★★
-        /*
-        textBox.textContent = kanji[i]; // i=0
-        yomiBox.textContent = yomi[i]; // i=0
-        */
-        // (1) yomi-text (ひらがな) の初期化
-        if (currentCourseConfig.special !== true) {
-            yomiBox.innerHTML = `<span style="color: #444;">${toNBSP(yomi[i])}</span>`;
-            textBox.innerHTML = `<span style="color: #444;">${toNBSP(kanji[i])}</span>`;
-            possible_text.innerHTML = `<span style="color: #eee;">${toNBSP(judge.getBestMatch())}</span>`;
-            yomiBox.style.justifyContent = 'center';
-            textBox.style.justifyContent = 'center';
-            possible_text.style.justifyContent = 'center';
-            yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
-            textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
-            possible_text.style.scrollBehavior = 'auto';
-        } else {
-            yomiBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
-            textBox.style.scrollBehavior = 'auto'; // スクロールを即座に変更
-            possible_text.style.scrollBehavior = 'auto';
-            yomiBox.style.justifyContent = 'flex-start';
-            textBox.style.justifyContent = 'flex-start';
-            possible_text.style.justifyContent = 'flex-start';
-            // スペースは保持したいが、親要素に 'pre' を設定すると
-            // テンプレート内の改行文字がそのまま反映され縦並びになるため、
-            // テキストを含むスパンのみ 'white-space: pre' にします。
-            const fullYomi = yomi[i];
-            const yomiContainerWidth = yomiBox.clientWidth;
-            const yomiPadding = yomiContainerWidth / 2; // 左右のパディング幅
-
-            yomiBox.innerHTML = `<span style="width: ${yomiPadding}px;"></span><span></span><span style="white-space: pre;">${fullYomi}</span><span style="width: ${yomiPadding}px;"></span>`;
-            // children[0] = 左パディング
-            // children[1] = 入力済みスパン (最初は空)
-            // children[2] = 未入力スパン
-            // children[3] = 右パディング
-
-            //yomiBox.scrollLeft = 0; // スクロール位置をリセット
-
-
-            // (2) box-text (漢字) の初期化
-            const fullKanji = kanji[i];
-            const kanjiContainerWidth = textBox.clientWidth;
-            const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
-
-            textBox.innerHTML = `<span style="width: ${kanjiPadding}px;"></span><span></span><span style="white-space: pre;">${fullKanji}</span><span style="width: ${kanjiPadding}px;"></span>`;
-            //textBox.scrollLeft = 0;
-
-
-            // (3) possible_text (ローマ字) の初期化
-            const initialRemaining = judge.getBestMatch();
-            const romaContainerWidth = possible_text.clientWidth;
-            const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
-
-            possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${toNBSP(initialRemaining)}</span><span style="width: ${romaPadding}px;"></span>`;
-            //possible_text.scrollLeft = 0;
-            // ★★★ 修正ここまで ★★★
-            requestAnimationFrame(() => {
-                yomiBox.scrollLeft = 0;
-                textBox.scrollLeft = 0;
-                possible_text.scrollLeft = 0;
-            });
-            yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
-            textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
-            possible_text.style.scrollBehavior = 'smooth';
-        }
+        
         // タイマースタート
         if (currentCourseConfig.special !== true) {
             startTimer();

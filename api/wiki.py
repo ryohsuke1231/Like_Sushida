@@ -176,90 +176,98 @@ def api_get_wiki():
 
         yomi_segments_data = split_with_context(yomi_text)
 
+        # ▼▼▼ このループの中身を入れ替える ▼▼▼
         for data in yomi_segments_data:
-            final_yomi_list.append(data['segment'])
+            # data['segment'] は使わない（api側でクリーンアップするため）
             start, end = data['start'], data['end']
 
-            # ★★★ ここから修正 (変数の先行定義) ★★★
-            if start >= len(yomi_text):
+            # --- (1) 元のテキストからスライスを取得 ---
+            
+            # スライス開始点が各リストの範囲外ならスキップ
+            if start >= len(yomi_text) or start >= len(mapping_list) or start >= len(word_map):
                 continue
-            end = min(end, len(yomi_text)) 
+            
+            # スライス終了点を各リストの範囲内に収める
+            end = min(end, len(yomi_text), len(mapping_list), len(word_map))
 
             yomi_slice_raw = yomi_text[start:end]
-            # ★★★ 修正ここまで ★★★
+            mapping_slice_raw = mapping_list[start:end]
+            word_map_slice = word_map[start:end]
 
-
-            # (1) 既存の kanji_segment_chars 生成ロジック
-
-            # ★ 漢字ロジックに必要な word_map_slice もここで定義
-            if start >= len(word_map):
-                final_kanji_list.append("")
-                # この後のマッピング処理のために continue しない
-            else:
-                # ★ 修正: word_map の範囲内に収める
-                word_map_end = min(end, len(word_map)) 
-                word_map_slice = word_map[start:word_map_end]
-
-                if len(yomi_slice_raw) != len(word_map_slice):
-                    logging.warning(f"Wiki: Mismatch yomi_slice/word_map_slice length. Skipping segment.")
-                    final_kanji_list.append("")
-                else:
-                    kanji_segment_chars = []
-                    last_word_index = -1
-
-                    # ▼▼▼ エラー箇所 (修正後は yomi_slice_raw が定義済み) ▼▼▼
-                    for i in range(len(yomi_slice_raw)):
-                        yomi_char = yomi_slice_raw[i]
-
-                        #if yomi_char.isspace():
-                            #continue 
-
-                        current_word_index = word_map_slice[i]
-
-                        if current_word_index != last_word_index:
-                            try:
-                                kanji_segment_chars.append(words_data[current_word_index]['kanji'])
-                                last_word_index = current_word_index
-                            except IndexError:
-                                logging.warning(f"Word map index {current_word_index} out of bounds.")
-                                kanji_segment_chars.append(yomi_char) 
-                                last_word_index = -1
-                        # else:
-                        #   pass (同じ word なので kanji を重複追加しない)
-
-                    final_kanji_list.append("".join(kanji_segment_chars))
-
-
-            # (2) mapping セグメント生成ロジック
-            if start >= len(mapping_list):
-                final_mapping_segments.append([]) 
+            # スライス間で長さが違う場合はスキップ (安全のため)
+            if not (len(yomi_slice_raw) == len(mapping_slice_raw) == len(word_map_slice)):
+                logging.warning(f"Wiki: Mismatch raw slice lengths. Skipping segment.")
                 continue
 
-            # ★ 修正: mapping_list の範囲内に収める
-            mapping_end = min(end, len(mapping_list))
-            mapping_slice_raw = mapping_list[start:mapping_end] 
+            # --- (2) クリーンアップ (空白除去) ---
+            # yomi, mapping, word_map を同時にフィルタリングする
+            
+            cleaned_yomi_chars = []
+            cleaned_mapping = []
+            cleaned_word_map = []
+            is_leading = True # ★ 先頭文字かどうかを判定するフラグ
 
-            # ★ 修正: yomi_slice_raw は上で定義済みのためチェックのみ
-            if len(yomi_slice_raw) != len(mapping_slice_raw):
-                logging.warning(f"Wiki: Mismatch yomi_slice/mapping_slice length. Appending empty map.")
-                final_mapping_segments.append([])
+            for i in range(len(yomi_slice_raw)):
+                yomi_char = yomi_slice_raw[i]
+
+                # 全角スペースを半角に (splitWithContext の挙動と合わせる)
+                if yomi_char == '　':
+                    yomi_char = ' '
+
+                # 改行・タブなど (半角スペース以外) はスキップ (splitWithContext の re.sub に相当)
+                if yomi_char != ' ' and yomi_char.isspace():
+                    continue
+
+                # ★ ご要望の「先頭のスペース」を除去
+                if is_leading and yomi_char == ' ':
+                    continue
+                
+                # 空白以外の文字 or 先頭ではないスペースが来たら、以降は先頭ではない
+                is_leading = False
+
+                # 保持するデータを各リストに追加
+                cleaned_yomi_chars.append(yomi_char)
+                cleaned_mapping.append(mapping_slice_raw[i])
+                cleaned_word_map.append(word_map_slice[i])
+
+            # クリーンアップの結果、空になったセグメントはスキップ
+            # (splitWithContext の .strip() == "" チェックに相当)
+            if not cleaned_yomi_chars:
                 continue
+            
+            # --- (3) final リストへの追加 (クリーンアップ後のデータを使用) ---
 
-            # ... (以降のマッピングロジックは変更なし) ...
+            # (3a) yomi
+            final_yomi_list.append("".join(cleaned_yomi_chars))
+
+            # (3b) kanji (クリーンアップ後のデータを使用)
+            kanji_segment_chars = []
+            last_word_index = -1
+            for i in range(len(cleaned_yomi_chars)):
+                yomi_char = cleaned_yomi_chars[i]
+                current_word_index = cleaned_word_map[i] # cleaned_word_map を使用
+
+                if current_word_index != last_word_index:
+                    try:
+                        kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                        last_word_index = current_word_index
+                    except IndexError:
+                        logging.warning(f"Word map index {current_word_index} out of bounds.")
+                        kanji_segment_chars.append(yomi_char) 
+                        last_word_index = -1
+            final_kanji_list.append("".join(kanji_segment_chars))
+
+            # (3c) mapping (クリーンアップ後のデータを使用)
             mapping_segment = []
             kanji_segment_start_index = -1 
-            for i in range(len(yomi_slice_raw)):
-                #yomi_char = yomi_slice_raw[i]
-                #if yomi_char.isspace():
-                #    continue 
-
-                original_kanji_index = mapping_slice_raw[i]
+            for i in range(len(cleaned_yomi_chars)):
+                original_kanji_index = cleaned_mapping[i] # cleaned_mapping を使用
                 if kanji_segment_start_index == -1:
                     kanji_segment_start_index = original_kanji_index
 
                 relative_kanji_index = original_kanji_index - kanji_segment_start_index
                 mapping_segment.append(relative_kanji_index)
-
+            
             final_mapping_segments.append(mapping_segment)
 
     # --- ループ終了後 ---
