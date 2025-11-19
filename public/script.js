@@ -472,6 +472,7 @@ async function startCourse(config) {
             document.getElementById('wait-box').style.display = 'none';
             renda.style.display = 'none';
             document.getElementById('renda-label').style.display = 'none';
+            document.getElementById('total_got_odai').style.display = 'none';
             //selectBox.style.display = 'none'; // (上で実施済み)
 
 
@@ -509,6 +510,7 @@ async function startCourse(config) {
         document.getElementById('remaining-chars-label').style.display = 'none';
         renda.style.display = 'block';
         document.getElementById('renda-label').style.display = 'block';
+        document.getElementById('total_got_odai').style.display = 'block';
     }
     let plus = "";
     if (ippatsu === true) {
@@ -742,7 +744,7 @@ function startGame() {
             // children[2] = 未入力スパン
             // children[3] = 右パディング
 
-            yomiBox.scrollLeft = 0; // スクロール位置をリセット
+            //yomiBox.scrollLeft = 0; // スクロール位置をリセット
 
 
             // (2) box-text (漢字) の初期化
@@ -751,7 +753,7 @@ function startGame() {
             const kanjiPadding = kanjiContainerWidth / 2; // 左右のパディング幅
 
             textBox.innerHTML = `<span style="width: ${kanjiPadding}px;"></span><span></span><span style="white-space: pre;">${fullKanji}</span><span style="width: ${kanjiPadding}px;"></span>`;
-            textBox.scrollLeft = 0;
+            //textBox.scrollLeft = 0;
 
 
             // (3) possible_text (ローマ字) の初期化
@@ -760,8 +762,13 @@ function startGame() {
             const romaPadding = romaContainerWidth / 2; // 左右のパディング幅
 
             possible_text.innerHTML = `<span style="width: ${romaPadding}px;"></span><span style="color: #444;"></span><span style="color: #eee; white-space: pre;">${toNBSP(initialRemaining)}</span><span style="width: ${romaPadding}px;"></span>`;
-            possible_text.scrollLeft = 0;
+            //possible_text.scrollLeft = 0;
             // ★★★ 修正ここまで ★★★
+            setTimeout(() => {
+                yomiBox.scrollLeft = 0;
+                textBox.scrollLeft = 0;
+                possible_text.scrollLeft = 0;
+            }, 0);
             yomiBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
             textBox.style.scrollBehavior = 'smooth'; // スクロールをスムーズに変更
             possible_text.style.scrollBehavior = 'smooth';
