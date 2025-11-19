@@ -18,7 +18,7 @@ try:
     # dictionary.Dictionary(...).create() が返すオブジェクトが
     # トークナイザ（.tokenize() メソッドを持つ）本体です。
     try:
-        SUD_TOKENIZER = dictionary.Dictionary(dict="full").create()
+        SUD_TOKENIZER = dictionary.Dictionary(dict="core").create()
     except:
         logging.warning("sudachidict_full not found. Falling back to core.")
         SUD_TOKENIZER = dictionary.Dictionary(dict="core").create()

@@ -3,5 +3,5 @@ requests
 openai
 google.generativeai
 sudachipy
-sudachidict_full
+sudachidict_core
 pykakasi
