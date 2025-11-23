@@ -8,20 +8,15 @@ import random
 import logging
 from threading import Thread
 import time
+from queue import Queue
 
-# ★ 新規: furigana.py からインポート
 from lib.furigana_sudachi import get_furigana
 from lib.splitWithContext import split_with_context
-
 
 LAST_GENERATE_TIME = 0
 MIN_INTERVAL = 8 # APIのレート制限のための待機時間
 
-
 app = Flask(__name__)
-
-# --- 設定 (Configuration) ---
-
 logging.basicConfig(level=logging.INFO)
 
 gemini_api_key = os.environ.get('GEMINI_API_KEY')
@@ -30,213 +25,152 @@ if not gemini_api_key:
 else:
     try:
         genai.configure(api_key=gemini_api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash-lite') # モデル名は適宜調整してください
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
     except Exception as e:
         logging.error(f"Failed to configure Gemini: {e}")
         model = None
 
-# ★ 変更: デフォルトプロンプトとして保持（クライアント指定がない場合に使用）
 DEFAULT_PROMPT = "変な面白おかしい文章を書いて！ 奇妙な話でも、日常についての話でもなんでもいいです！ 「わかりました」とかはなしで文章だけ　300文字を目安に"
 
-# ★ 削除: キャッシュ関連の変数をすべて削除
-# TEXT_CACHE = []
-# MIN_CACHE_STOCK = 5
-# MAX_CACHE_SIZE = 50
-# generation_thread = None
+# --- Queue と Worker ---
+generate_queue = Queue()
 
-# --- ヘルパー関数 (Helper Functions) ---
-def safe_generate(custom_prompt): # ★ 変更: promptを引数で受け取る
+def worker():
+    while True:
+        client_prompt, result_queue = generate_queue.get()
+        try:
+            result = generate_new_text_with_furigana(client_prompt)
+            result_queue.put(result)
+        except Exception as e:
+            logging.error(f"Worker error: {e}")
+            result_queue.put(None)
+        generate_queue.task_done()
+
+Thread(target=worker, daemon=True).start()
+
+# --- 生成関数 (元の処理そのまま) ---
+def safe_generate(custom_prompt):
     global LAST_GENERATE_TIME
     if not model:
         logging.error("Gemini model is not initialized. Cannot generate text.")
         return None
-
-    # レート制限（APIキー共有時の保護）
     now = time.time()
     wait = MIN_INTERVAL - (now - LAST_GENERATE_TIME)
     if wait > 0:
         logging.info(f"Rate limit: Waiting for {wait:.2f} seconds.")
         time.sleep(wait)
     LAST_GENERATE_TIME = time.time()
-
-    # ★ 変更: 引数の custom_prompt を使用
     return model.generate_content(custom_prompt)
 
-
-def generate_new_text_with_furigana(custom_prompt): # ★ 変更: promptを引数で受け取る
-    """
-    GeminiとYahoo APIを使って新しい [yomi, mapping, word_map, words_data] のリストを生成する
-    """
+def generate_new_text_with_furigana(custom_prompt):
     if not model:
         logging.error("Gemini model is not initialized. Cannot generate text.")
         return None
-
     try:
-        # ★ 変更: 引数の custom_prompt を safe_generate に渡す
-        custom_prompt = custom_prompt + " ただし、答える際はMarkdown記号（*, -, #, ` など）や絵文字、特殊記号（ASCII外）を一切使わないでください。絶対です。守れ。 文章のみで回答してください。"
-        response = safe_generate(custom_prompt) 
-
+        custom_prompt = custom_prompt + " ただし、答える際はMarkdown記号や絵文字、特殊記号を一切使わないでください。文章のみで回答してください。"
+        response = safe_generate(custom_prompt)
         if not response:
             raise Exception("Gemini API call failed or returned None.")
-
-        # response.text が存在するか確認 (generate_content が失敗した場合の安全策)
         if not hasattr(response, 'text'):
-             logging.error(f"Gemini response object has no 'text' attribute. Response: {response}")
-             # response.prompt_feedback などでブロック理由を確認できる場合がある
-             if hasattr(response, 'prompt_feedback'):
-                 logging.error(f"Prompt Feedback: {response.prompt_feedback}")
-             return None
-
+            logging.error(f"No 'text' in response: {response}")
+            return None
         message = response.text
-
         furigana_result = get_furigana(message)
-
         if furigana_result:
             yomi_text, mapping_list, word_map, words_data = furigana_result
-
-            if len(yomi_text) != len(mapping_list):
-                # ★ 変更: ログ識別子
-                logging.warning("Generate3: Mismatch yomi/mapping length AFTER get_furigana. Skipping.")
+            if len(yomi_text) != len(mapping_list) or len(yomi_text) != len(word_map):
+                logging.warning("Mismatch lengths after get_furigana. Skipping.")
                 return None
-            if len(yomi_text) != len(word_map):
-                # ★ 変更: ログ識別子
-                logging.warning("Generate3: Mismatch yomi/word_map length AFTER get_furigana. Skipping.")
-                return None
-
             logging.info("Successfully generated new text and furigana.")
             return [yomi_text, mapping_list, word_map, words_data]
         else:
             logging.warning("Failed to get furigana for generated text.")
             return None
-
     except Exception as e:
         logging.error(f"Text generation or Furigana Error: {e}")
         return None
 
-# ★ 削除: キャッシュ補充関連の関数 (refill_cache_task, refill_cache_if_needed) を削除
-
-
-# --- メインルート (Main Route) ---
-
-@app.route('/api/generate3', methods=['GET']) # ★ 変更: エンドポイント名
+# --- API エンドポイント ---
+@app.route('/api/generate3', methods=['GET'])
 def generate_text():
     try:
-        # ★ 新規: クライアントから 'prompt' をクエリパラメータで受け取る
         client_prompt = request.args.get('prompt')
-
-        # ★ 新規: プロンプトが指定されていない、または空の場合はデフォルトを使用
         if not client_prompt or client_prompt.strip() == "":
-            logging.info("No prompt provided by client, using default.")
-            current_prompt = DEFAULT_PROMPT
-        else:
-            logging.info(f"Using custom prompt: {client_prompt[:50]}...") # 長すぎる場合に備えて一部だけログ出力
-            current_prompt = client_prompt
+            logging.info("No prompt provided, using default.")
+            client_prompt = DEFAULT_PROMPT
+        logging.info(f"Queueing prompt: {client_prompt[:50]}...")
 
-        # ★ 変更: キャッシュロジックを削除し、常に同期生成
-        logging.info("Attempting synchronous generation with selected prompt...")
-        new_data = generate_new_text_with_furigana(current_prompt) # ★ 変更: 決定したプロンプトを渡す
+        # --- Queue に入れて結果を待つ ---
+        result_queue = Queue()
+        generate_queue.put((client_prompt, result_queue))
+        new_data = result_queue.get()  # await 的にブロック
 
-        if new_data:
-            # ★ 変更: キャッシュへの追加ロジックを削除
+        if not new_data:
+            return jsonify(error="Failed to generate text."), 500
 
-            # ★ 変更: 元のフォールバック処理をメインロジックとして使用
-            yomi_text = new_data[0]
-            mapping_list = new_data[1]
-            word_map = new_data[2]
-            words_data = new_data[3]
+        # --- 元の Generate3 処理まるごと ---
+        yomi_text = new_data[0]
+        mapping_list = new_data[1]
+        word_map = new_data[2]
+        words_data = new_data[3]
 
-            yomi_segments_data = split_with_context(yomi_text)
-            yomi_split = []
-            kanji_split = []
-            final_mapping_segments = [] 
+        yomi_segments_data = split_with_context(yomi_text)
+        yomi_split = []
+        kanji_split = []
+        final_mapping_segments = []
 
-            # ▼▼▼ [Generate3] ループ開始 (先頭スペース除去ロジック適用) ▼▼▼
-            for data in yomi_segments_data:
-                # data['segment'] は使わない
-                start, end = data['start'], data['end']
+        for data in yomi_segments_data:
+            start, end = data['start'], data['end']
+            if start >= len(yomi_text) or start >= len(mapping_list) or start >= len(word_map):
+                continue
+            end = min(end, len(yomi_text), len(mapping_list), len(word_map))
+            yomi_slice_raw = yomi_text[start:end]
+            mapping_slice_raw = mapping_list[start:end]
+            word_map_slice = word_map[start:end]
+            if not (len(yomi_slice_raw) == len(mapping_slice_raw) == len(word_map_slice)):
+                logging.warning("Mismatch raw slice lengths. Skipping segment.")
+                continue
+            cleaned_yomi_chars = []
+            cleaned_mapping = []
+            cleaned_word_map = []
+            is_leading = True
+            for i in range(len(yomi_slice_raw)):
+                yomi_char = yomi_slice_raw[i]
+                if yomi_char == '　': yomi_char = ' '
+                if yomi_char != ' ' and yomi_char.isspace(): continue
+                if is_leading and yomi_char == ' ': continue
+                is_leading = False
+                cleaned_yomi_chars.append(yomi_char)
+                cleaned_mapping.append(mapping_slice_raw[i])
+                cleaned_word_map.append(word_map_slice[i])
+            if not cleaned_yomi_chars: continue
+            yomi_split.append("".join(cleaned_yomi_chars))
+            kanji_segment_chars = []
+            last_word_index = -1
+            for i in range(len(cleaned_yomi_chars)):
+                current_word_index = cleaned_word_map[i]
+                if current_word_index != last_word_index:
+                    try:
+                        kanji_segment_chars.append(words_data[current_word_index]['kanji'])
+                        last_word_index = current_word_index
+                    except IndexError:
+                        logging.warning(f"Word map index {current_word_index} out of bounds.")
+                        kanji_segment_chars.append(cleaned_yomi_chars[i])
+                        last_word_index = -1
+            kanji_split.append("".join(kanji_segment_chars))
+            mapping_segment = []
+            kanji_segment_start_index = -1
+            for i in range(len(cleaned_yomi_chars)):
+                original_kanji_index = cleaned_mapping[i]
+                if kanji_segment_start_index == -1:
+                    kanji_segment_start_index = original_kanji_index
+                mapping_segment.append(original_kanji_index - kanji_segment_start_index)
+            final_mapping_segments.append(mapping_segment)
 
-                # --- (1) スライス取得 ---
-                if start >= len(yomi_text) or start >= len(mapping_list) or start >= len(word_map):
-                    continue
-                end = min(end, len(yomi_text), len(mapping_list), len(word_map))
-                yomi_slice_raw = yomi_text[start:end]
-                mapping_slice_raw = mapping_list[start:end]
-                word_map_slice = word_map[start:end]
-
-                if not (len(yomi_slice_raw) == len(mapping_slice_raw) == len(word_map_slice)):
-                    logging.warning(f"Generate3 (Sync): Mismatch raw slice lengths. Skipping segment.")
-                    continue
-
-                # --- (2) クリーンアップ (空白除去) ---
-                cleaned_yomi_chars = []
-                cleaned_mapping = []
-                cleaned_word_map = []
-                is_leading = True 
-
-                for i in range(len(yomi_slice_raw)):
-                    yomi_char = yomi_slice_raw[i]
-                    if yomi_char == '　': yomi_char = ' '
-                    if yomi_char != ' ' and yomi_char.isspace(): continue
-                    if is_leading and yomi_char == ' ': continue # ★ 先頭スペースを除去
-                    is_leading = False # ★ 有効文字 or 先頭以外のスペースが来た
-                    cleaned_yomi_chars.append(yomi_char)
-                    cleaned_mapping.append(mapping_slice_raw[i])
-                    cleaned_word_map.append(word_map_slice[i])
-
-                if not cleaned_yomi_chars: # 空になったらスキップ
-                    continue
-                
-                # --- (3) final リストへの追加 (クリーンアップ後のデータを使用) ---
-
-                # (3a) yomi
-                yomi_split.append("".join(cleaned_yomi_chars))
-
-                # (3b) kanji
-                kanji_segment_chars = []
-                last_word_index = -1
-                for i in range(len(cleaned_yomi_chars)):
-                    yomi_char = cleaned_yomi_chars[i]
-                    current_word_index = cleaned_word_map[i] # cleaned_word_map を使用
-                    if current_word_index != last_word_index:
-                        try:
-                            kanji_segment_chars.append(words_data[current_word_index]['kanji'])
-                            last_word_index = current_word_index
-                        except IndexError:
-                            logging.warning(f"Generate3 (Sync): Word map index {current_word_index} out of bounds.")
-                            kanji_segment_chars.append(yomi_char) 
-                            last_word_index = -1
-                kanji_split.append("".join(kanji_segment_chars))
-
-                # (3c) mapping
-                mapping_segment = []
-                kanji_segment_start_index = -1 
-                for i in range(len(cleaned_yomi_chars)):
-                    original_kanji_index = cleaned_mapping[i] # cleaned_mapping を使用
-                    if kanji_segment_start_index == -1:
-                        kanji_segment_start_index = original_kanji_index
-                    relative_kanji_index = original_kanji_index - kanji_segment_start_index
-                    mapping_segment.append(relative_kanji_index)
-                final_mapping_segments.append(mapping_segment)
-            # ▲▲▲ [Generate3] ループ終了 ▲▲▲
-
-            response_data = jsonify(kanji=kanji_split, yomi=yomi_split, mapping=final_mapping_segments)
-            response = make_response(response_data)
-
-            # ★ 削除: Cookie (used_indices) の設定を削除
-
-            return response
-        else:
-            # ★ 変更: エラーメッセージ
-            return jsonify(error="Failed to generate new text. API keys might be missing or generation failed."), 500
-
-    # ★ 変更: キャッシュヒットのロジックをすべて削除
-
+        return jsonify(kanji=kanji_split, yomi=yomi_split, mapping=final_mapping_segments)
     except Exception as e:
-        logging.error(f"An unexpected error occurred in /api/generate3: {e}")
-        return jsonify(error="An internal server error occurred."), 500
+        logging.error(f"API error: {e}")
+        return jsonify(error="Internal server error."), 500
 
-
-# --- サーバー起動（開発用） ---
 if __name__ == '__main__':
-    # ★ 削除: 起動時のキャッシュ初期化 (priming) を削除
     app.run(debug=True, port=5000)
